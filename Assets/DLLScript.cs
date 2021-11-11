@@ -28,7 +28,8 @@ public struct Vector3f
     public float x, y, z;
 }
 
-public class ICPPWrapper {
+public class ICPPWrapper
+{
 
     public ICPPWrapper()
     {
@@ -124,8 +125,8 @@ public class DLLScript : MonoBehaviour
         Debug.Log("Thread Counter = " + cpp.GetThreadCounter());
 
         vertexArray = cpp.GetVertices(out int count);
-        
-        if(nVertices != count)
+
+        if (nVertices != count)
         {
             /*Extend array*/
             nVertices = count;
@@ -138,7 +139,7 @@ public class DLLScript : MonoBehaviour
         {
             Vector3f* vectorPointer = (Vector3f*)vertexArray.ToPointer();
 
-            for(int i = 0; i < count; i++)
+            for (int i = 0; i < count; i++)
             {
                 vertices[i].x = vectorPointer[i].x;
                 vertices[i].y = vectorPointer[i].y;
@@ -156,4 +157,18 @@ public class DLLScript : MonoBehaviour
     IntPtr vertexArray;
     int nVertices = 0;
     Vector3[] vertices;
+
+#if UNITY_EDITOR
+    private void OnDrawGizmos()
+    {
+        if (!Application.isPlaying)
+            return;
+
+        Gizmos.color = Color.white;
+        foreach (Vector3 v in vertices)
+        {
+            Gizmos.DrawSphere(v, .5f);
+        }
+    }
+#endif
 }
