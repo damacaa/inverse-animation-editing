@@ -167,7 +167,7 @@ public class DLLScript : MonoBehaviour
         Gizmos.color = Color.white;
         foreach (Vector3 v in vertices)
         {
-            Gizmos.DrawSphere(v, 0.1f);
+            Gizmos.DrawSphere(v, .5f);
         }
     }
 #endif
