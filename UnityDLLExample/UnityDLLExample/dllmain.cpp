@@ -3,15 +3,16 @@
 #include "types.h"
 #include "Node.h"
 #include <math.h>   
+#include <vector>
+#include "Object.h"
 
 bool initialized = false;
 bool updated = false;
 
 MyCounter* counter = 0;
-Vector3f* vertexArray = 0;
-Vector3f* vertexArray2 = 0;
-Node* nodeArray = 0;
-const int nVertices = 1000;
+
+std::vector<Object*> objects;
+
 int nUpdates = 0;
 std::mutex vertexMutex;
 std::mutex vertexMutex2;
@@ -56,23 +57,7 @@ extern "C" {
 		if (!initialized) {
 			counter = new MyCounter();
 			threadCounter = new MyCounter();
-
-			vertexArray = new Vector3f[nVertices];
-			vertexArray2 = new Vector3f[nVertices];
-			nodeArray = new Node[nVertices];
-
-			int side = sqrt(nVertices);
-			int c = 0;
-			for (int i = 0; i < side; i++) {
-				for (int j = 0; j < side; j++)
-				{
-					vertexArray[c].x = i;
-					vertexArray[c].y = 0.0;
-					vertexArray[c].z = j;
-					nodeArray[c].position = vertexArray[c];
-					c++;
-				}
-			}
+			objects = std::vector<Object*>();
 
 			running = true;
 			myThread = std::thread(&StartFunction); /*Create new thread that is executing StartFunction*/
@@ -80,6 +65,13 @@ extern "C" {
 
 			initialized = true;
 		}
+	}
+
+	__declspec(dllexport) int AddObject(Vector3f position) {
+		Object* o = new Object(position);
+		o->id = objects.size();
+		objects.push_back(o);
+		return o->id;
 	}
 
 	__declspec(dllexport) void Destroy() {
@@ -92,14 +84,16 @@ extern "C" {
 
 			delete counter;
 			delete threadCounter;
-			delete[] vertexArray;
-			delete[] vertexArray2;
+
+			for (int i = 0; i < objects.size(); i++)
+			{
+				delete objects[i];
+			}
+			objects.clear();
+
 
 			counter = 0;
 			threadCounter = 0;
-			vertexArray = 0;
-			vertexArray2 = 0;
-
 			/*Since the variables below are global variables, they exist as long the DLL is loaded. In case of Unity,
 			the DLL remains loaded until we close Unity. Therefore we need to reset these variables in order to
 			allow Unity to correctly run the simulation again.*/
@@ -130,27 +124,31 @@ extern "C" {
 		return threadCounter->GetCounter();
 	}
 
-	__declspec(dllexport) void Update(Vector3f position) {
-		if (vertexArray) {
-			std::lock_guard<std::mutex> lock(vertexMutex); /*Locks mutex and releases mutex once the guard is (implicitly) destroyed*/
+	__declspec(dllexport) void Update() {
 
-			simulationTime += delta;
+		std::lock_guard<std::mutex> lock(vertexMutex); /*Locks mutex and releases mutex once the guard is (implicitly) destroyed*/
 
-			/*This may take a long time, depending on your simulation.*/
-			for (int i = 0; i < nVertices; i++) {
-				nodeArray[i].Update(simulationTime, delta);
-				vertexArray[i] = nodeArray[i].position;
-			}
+		simulationTime += delta;
 
-			updated = true;
-
-			nUpdates++;
+		/*This may take a long time, depending on your simulation.*/
+		for (int i = 0; i < objects.size(); i++)
+		{
+			objects[i]->Update(simulationTime, delta);
 		}
+
+		updated = true;
+
+		nUpdates++;
+
 	}
 
-	__declspec(dllexport) Vector3f* GetVertices(int* count) {
+	__declspec(dllexport) Vector3f* GetVertices(int* id, int* count) {
+
+		if (*id >= objects.size())
+			return new Vector3f(*id, objects.size(), 0);
+
 		if (count) {
-			*count = nVertices;
+			*count = objects[*id]->nVertices;
 		}
 
 		/*Depending on how Update is being executed, vertexArray might being updated at the same time. To prevent race conditions, we have to wait
@@ -160,12 +158,11 @@ extern "C" {
 		std::lock_guard<std::mutex> lock(vertexMutex);
 		if (updated) {
 			std::lock_guard<std::mutex> lock(vertexMutex2);
-
-			memcpy(vertexArray2, vertexArray, sizeof(Vector3f) * nVertices); /*Copy data only if vertexArray has been updated.*/
-
 			updated = false;
+			return objects[*id]->GetVertices();
 		}
-		return vertexArray2;
+
+		return objects[*id]->vertexArray2;
 	}
 #ifdef __cplusplus
 }

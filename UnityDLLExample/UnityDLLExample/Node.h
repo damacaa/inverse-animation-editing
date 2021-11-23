@@ -11,6 +11,7 @@ public:
 	}
 
 	Vector3f position;
+	bool locked = false;
 	void Update(float time, float h);
 };
 
