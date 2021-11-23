@@ -3,5 +3,6 @@
 
 void Node::Update(float time, float h)
 {
-	this->position.y = sinf(this->position.x + this->position.z + time);
+	if (!this->locked)
+		this->position.y = sinf(this->position.x + this->position.z + time);
 }

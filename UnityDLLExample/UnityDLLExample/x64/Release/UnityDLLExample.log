@@ -1,18 +1,18 @@
 ﻿  dllmain.cpp
-D:\Projects\UnityDLL\UnityDLLExample\UnityDLLExample\dllmain.cpp(64,13): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-D:\Projects\UnityDLL\UnityDLLExample\UnityDLLExample\dllmain.cpp(69,25): warning C4244: '=': conversion from 'int' to 'T', possible loss of data
+D:\Projects\UnityDLL\UnityDLLExample\UnityDLLExample\dllmain.cpp(72,25): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+D:\Projects\UnityDLL\UnityDLLExample\UnityDLLExample\dllmain.cpp(148,41): warning C4244: 'argument': conversion from 'unsigned __int64' to 'T', possible loss of data
           with
           [
               T=float
           ]
-D:\Projects\UnityDLL\UnityDLLExample\UnityDLLExample\dllmain.cpp(71,25): warning C4244: '=': conversion from 'int' to 'T', possible loss of data
+D:\Projects\UnityDLL\UnityDLLExample\UnityDLLExample\dllmain.cpp(148,24): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
           with
           [
               T=float
           ]
      Creating library D:\Projects\UnityDLL\UnityDLLExample\x64\Release\UnityDLLExample.lib and object D:\Projects\UnityDLL\UnityDLLExample\x64\Release\UnityDLLExample.exp
   Generating code
-  1 of 115 functions ( 0.9%) were compiled, the rest were copied from previous compilation.
+  1 of 205 functions ( 0.5%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
