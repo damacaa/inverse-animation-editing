@@ -82,7 +82,7 @@ public class ICPPWrapper
     /************************************************************
      *                      C++ Functions
      * **********************************************************/
-    private const string moduleName = "UnityDLLExample";
+    private const string moduleName = "UnityDLL";
 
     public class CPPWrapper
     {

@@ -1,8 +1,0 @@
-﻿  Object.cpp
-     Creating library D:\Projects\UnityDLL\UnityDLLExample\x64\Release\UnityDLLExample.lib and object D:\Projects\UnityDLL\UnityDLLExample\x64\Release\UnityDLLExample.exp
-  Generating code
-  2 of 204 functions ( 1.0%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    0 functions had inline decision re-evaluated but remain unchanged
-  Finished generating code
-  UnityDLLExample.vcxproj -> D:\Projects\UnityDLL\UnityDLLExample\x64\Release\UnityDLLExample.dll
