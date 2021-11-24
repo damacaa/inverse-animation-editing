@@ -25,10 +25,11 @@ typedef Vector3<double>  Vector3d;
 
 #pragma pack(push, 1) /*Force compiler to remove 4 or 8 byte memory alignment for all structs below, i.e., pack all variables without unused spaces. */
 struct Edge {
-	Edge() :a(-1), b(-1) {}
-	Edge(int _a, int _b) :a(_a), b(_b) {}
+	Edge() :a(-1), b(-1), other(-1) {}
+	Edge(int _a, int _b) :a(_a), b(_b), other(-1) {}
+	Edge(int _a, int _b, int _other) :a(_a), b(_b), other(_other) {}
 
-	int a, b;
+	int a, b, other;
 };
 #pragma pack(pop) /*Remove last #pragma, i.e., disable packing -> enable compiler optimization for memory alignment.*/
 
