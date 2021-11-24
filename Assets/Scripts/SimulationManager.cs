@@ -27,29 +27,15 @@ public class SimulationManager : MonoBehaviour
 
     public int AddObject(Vector3 position, Vector3[] vertices)
     {
-        IntPtr vertexArray;
-        
-        unsafe
+        Vector3f[] __vertices = new Vector3f[vertices.Length];
+        for (int i = 0; i < vertices.Length; i++)
         {
-            vertexArray = Marshal.AllocCoTaskMem(vertices.Length * sizeof(Vector3f));
-            Vector3f* vectorPointer = (Vector3f*)vertexArray.ToPointer();
-
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                Debug.Log("//////////////////");
-                Debug.Log(vertices[i]);
-
-                vectorPointer[i].x = (float)vertices[i].x;
-                vectorPointer[i].y = (float)vertices[i].y;
-                vectorPointer[i].z = (float)vertices[i].z;
-
-                Debug.Log(vectorPointer[i].x + ", " +
-                    vectorPointer[i].y + ", " +
-                    vectorPointer[i].z);
-            }
+            __vertices[i].x = vertices[i].x;
+            __vertices[i].y = vertices[i].y;
+            __vertices[i].z = vertices[i].z;
         }
 
-        return cpp.AddObject(position, vertexArray, vertices.Length);
+        return cpp.AddObject(position, __vertices, vertices.Length);
     }
 
     public Vector3[] GetVertices(int id)
@@ -79,8 +65,6 @@ public class SimulationManager : MonoBehaviour
                 vertices[i].x = vectorPointer[i].x;
                 vertices[i].y = vectorPointer[i].y;
                 vertices[i].z = vectorPointer[i].z;
-
-                Debug.Log(vertices[i]);
             }
         }
 

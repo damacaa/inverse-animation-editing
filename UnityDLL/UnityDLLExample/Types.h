@@ -23,6 +23,15 @@ typedef Vector3<double>  Vector3d;
 
 #pragma pack(pop) /*Remove last #pragma, i.e., disable packing -> enable compiler optimization for memory alignment.*/
 
+#pragma pack(push, 1) /*Force compiler to remove 4 or 8 byte memory alignment for all structs below, i.e., pack all variables without unused spaces. */
+struct Edge {
+	Edge() :a(-1), b(-1) {}
+	Edge(int _a, int _b) :a(_a), b(_b) {}
+
+	int a, b;
+};
+#pragma pack(pop) /*Remove last #pragma, i.e., disable packing -> enable compiler optimization for memory alignment.*/
+
 class MyCounter {
 public:
 	void IncreaseCounter() {

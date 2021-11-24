@@ -32,10 +32,10 @@ Object::~Object()
 
 void Object::Update(float time, float h)
 {
-	/*for (int i = 0; i < nVertices; i++) {
+	for (int i = 0; i < nVertices; i++) {
 		nodeArray[i].Update(time, h);
 		vertexArray[i] = nodeArray[i].position;
-	}*/
+	}
 }
 
 Vector3f* Object::GetVertices()

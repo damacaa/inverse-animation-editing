@@ -44,7 +44,7 @@ public class ICPPWrapper
         CPPWrapper.Destroy();
     }
 
-    public int AddObject(in Vector3 position, in IntPtr vertices, in int nVertices)
+    public int AddObject(in Vector3 position, Vector3f[] vertices, int nVertices)
     {
         return CPPWrapper.AddObject(new Vector3f(position), vertices, nVertices);
     }
@@ -55,9 +55,9 @@ public class ICPPWrapper
         CPPWrapper.Update(); /*Converts from Unity.Vector3 to our packed Vector3f struct*/
     }
 
-    public IntPtr GetVertices(in int id, out int count)
+    public IntPtr GetVertices(int id, out int count)
     {
-        return CPPWrapper.GetVertices(in id, out count);
+        return CPPWrapper.GetVertices(id, out count);
     }
 
 
@@ -105,10 +105,10 @@ public class ICPPWrapper
         public static extern void Update();
 
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr GetVertices(in int id, out int count);
+        public static extern IntPtr GetVertices(int id, out int count);
 
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int AddObject(in Vector3f position, in IntPtr vertices, in int nVertices);
+        public static extern int AddObject(Vector3f position, Vector3f[] vertices, int nVertices);
     }
     #endregion
 }

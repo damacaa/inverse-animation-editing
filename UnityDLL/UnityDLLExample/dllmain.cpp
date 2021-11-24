@@ -67,8 +67,8 @@ extern "C" {
 		}
 	}
 
-	__declspec(dllexport) int AddObject(Vector3f position, Vector3f* vertices, int* nVertices) {//, int* triangles, int* nTriangles) {
-		Object* o = new Object(position, vertices, *nVertices);
+	__declspec(dllexport) int AddObject(Vector3f position, Vector3f* vertices, int nVertices) {//, int* triangles, int* nTriangles) {
+		Object* o = new Object(position, vertices, nVertices);
 		o->id = objects.size();
 		objects.push_back(o);
 		return o->id;
@@ -142,13 +142,13 @@ extern "C" {
 
 	}
 
-	__declspec(dllexport) Vector3f* GetVertices(int* id, int* count) {
+	__declspec(dllexport) Vector3f* GetVertices(int id, int* count) {
 
-		if (*id >= objects.size())
-			return new Vector3f(*id, objects.size(), 0);
+		if (id >= objects.size())
+			return new Vector3f(id, objects.size(), 0);
 
 		if (count) {
-			*count = objects[*id]->nVertices;
+			*count = objects[id]->nVertices;
 		}
 
 		/*Depending on how Update is being executed, vertexArray might being updated at the same time. To prevent race conditions, we have to wait
@@ -159,10 +159,10 @@ extern "C" {
 		if (updated) {
 			std::lock_guard<std::mutex> lock(vertexMutex2);
 			updated = false;
-			return objects[*id]->GetVertices();
+			return objects[id]->GetVertices();
 		}
 
-		return objects[*id]->vertexArray2;
+		return objects[id]->vertexArray2;
 	}
 #ifdef __cplusplus
 }
