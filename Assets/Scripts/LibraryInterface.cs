@@ -44,9 +44,9 @@ public class ICPPWrapper
         CPPWrapper.Destroy();
     }
 
-    public int AddObject(in Vector3 position)
+    public int AddObject(in Vector3 position, in IntPtr vertices, in int nVertices)
     {
-        return CPPWrapper.AddObject(new Vector3f(position));
+        return CPPWrapper.AddObject(new Vector3f(position), vertices, nVertices);
     }
 
 
@@ -108,7 +108,7 @@ public class ICPPWrapper
         public static extern IntPtr GetVertices(in int id, out int count);
 
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int AddObject(in Vector3f position);
+        public static extern int AddObject(in Vector3f position, in IntPtr vertices, in int nVertices);
     }
     #endregion
 }

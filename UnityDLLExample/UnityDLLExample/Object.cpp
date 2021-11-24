@@ -1,33 +1,25 @@
 #include "pch.h"
 #include "Object.h"
 
-Object::Object(Vector3f pos)
+Object::Object(Vector3f pos, Vector3f* vertices, int nVerts)
 {
 	positon = pos;
-	int side = 10;
-	nVertices = side * side;
+	nVertices = nVerts;
 
 	vertexArray = new Vector3f[nVertices];
 	vertexArray2 = new Vector3f[nVertices];
 	nodeArray = new Node[nVertices];
 
-	int c = 0;
-	for (int i = 0; i < side; i++) {
-		for (int j = 0; j < side; j++)
-		{
-			vertexArray[c].x = pos.x + i;
-			vertexArray[c].y = pos.y;
-			vertexArray[c].z = pos.z + j;
-
-			nodeArray[c].position = vertexArray[c];
-			c++;
-		}
+	for (int i = 0; i < nVertices; i++) {
+		vertexArray[i] = (Vector3f)vertices[i];
+		nodeArray[i].position = vertexArray[i];
 	}
 }
 
 Object::~Object()
 {
-	delete[] vertexArray;
+
+	delete[] vertexArray; //IS THIS OKAY??????????
 	delete[] vertexArray2;
 	delete[] nodeArray;
 
@@ -38,10 +30,10 @@ Object::~Object()
 
 void Object::Update(float time, float h)
 {
-	for (int i = 0; i < nVertices; i++) {
+	/*for (int i = 0; i < nVertices; i++) {
 		nodeArray[i].Update(time, h);
 		vertexArray[i] = nodeArray[i].position;
-	}
+	}*/
 }
 
 Vector3f* Object::GetVertices()

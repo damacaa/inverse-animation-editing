@@ -67,8 +67,8 @@ extern "C" {
 		}
 	}
 
-	__declspec(dllexport) int AddObject(Vector3f position) {
-		Object* o = new Object(position);
+	__declspec(dllexport) int AddObject(Vector3f position, Vector3f* vertices, int* nVertices) {
+		Object* o = new Object(position, vertices, *nVertices);
 		o->id = objects.size();
 		objects.push_back(o);
 		return o->id;
