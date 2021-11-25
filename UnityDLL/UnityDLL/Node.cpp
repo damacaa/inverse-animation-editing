@@ -4,7 +4,7 @@
 void Node::UpdateSymplectic(float h)
 {
 	ComputeForces();
-	acc = force / (volume * density);// nodeMass
+	acc = force / (volume * density);
 
 	vel += acc * h;
 	position += vel * h;
@@ -14,7 +14,7 @@ void Node::UpdateSymplectic(float h)
 
 void Node::ComputeForces()
 {
-	force += (volume * density) * Eigen::Vector3f(0.0f, 1.0f, 0.0f) * gravity;// nodeMass
+	force += (volume * density) * Eigen::Vector3f(0.0f, 1.0f, 0.0f) * gravity;
 	force += -damping * vel;
 }
 

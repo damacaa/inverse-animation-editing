@@ -12,7 +12,7 @@ public:
 	float length0 = 0;
 	float length = 0;
 
-	float stiffness = 100.0f;
+	float stiffness = 150.0f;
 
 	float volume = 0;
 	float damping = 0;

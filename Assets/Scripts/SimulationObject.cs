@@ -27,7 +27,7 @@ public class SimulationObject : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         mesh.vertices = SimulationManager.instance.GetVertices(id);
         mesh.RecalculateNormals();

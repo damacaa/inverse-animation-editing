@@ -14,7 +14,7 @@ public:
 
 	int id = -1;
 	bool updated = false;
-	int substeps = 10;
+	int substeps = 5;
 	float damping = 1;
 
 	Eigen::Vector3f positon;

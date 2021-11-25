@@ -74,7 +74,7 @@ public class SimulationManager : MonoBehaviour
             }
         }
 
-        Debug.Log(vertices[1]);
+        //Debug.Log(vertices[1]);
 
         return vertices;
     }
@@ -85,7 +85,7 @@ public class SimulationManager : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         cpp.Update();
         cpp.IncreaseCounter();
