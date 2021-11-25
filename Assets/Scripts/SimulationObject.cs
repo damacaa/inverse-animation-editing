@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 public class SimulationObject : MonoBehaviour
@@ -21,7 +22,7 @@ public class SimulationObject : MonoBehaviour
 
     void Start()
     {
-        id = SimulationManager.instance.AddObject(transform.position, mesh.vertices);
+        id = SimulationManager.instance.AddObject(transform.position, mesh.vertices, mesh.triangles);
         gameObject.name = "Id: " + id;
     }
 
@@ -29,19 +30,20 @@ public class SimulationObject : MonoBehaviour
     void Update()
     {
         mesh.vertices = SimulationManager.instance.GetVertices(id);
+        mesh.RecalculateNormals();
+        mesh.RecalculateTangents();
     }
 
 #if UNITY_EDITOR
-    /*private void OnDrawGizmos()
+    private void OnDrawGizmos()
     {
         if (!Application.isPlaying)
             return;
 
-        Gizmos.color = Color.white;
-        foreach (Vector3 v in vertices)
+        for (int i = 0; i < mesh.vertices.Length; i++)
         {
-            Gizmos.DrawSphere(v, .5f);
+            Handles.Label(transform.TransformPoint(mesh.vertices[i]), i.ToString());
         }
-    }*/
+    }
 #endif
 }

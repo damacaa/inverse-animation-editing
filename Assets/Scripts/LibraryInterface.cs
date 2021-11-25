@@ -29,9 +29,24 @@ public struct Vector3f
     public float x, y, z;
 }
 
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct Int
+{
+    public Int(int _i)
+    {
+        i = _i;
+    }
+
+    public int UnityInt()
+    {
+        return i;
+    }
+
+    public int i;
+}
+
 public class ICPPWrapper
 {
-
     public ICPPWrapper()
     {
         CPPWrapper.Destroy();
@@ -44,9 +59,9 @@ public class ICPPWrapper
         CPPWrapper.Destroy();
     }
 
-    public int AddObject(in Vector3 position, Vector3f[] vertices, int nVertices)
+    public int AddObject(in Vector3 position, Vector3f[] vertices, Int[] triangles)
     {
-        return CPPWrapper.AddObject(new Vector3f(position), vertices, nVertices);
+        return CPPWrapper.AddObject(new Vector3f(position), vertices, vertices.Length, triangles, triangles.Length);
     }
 
 
@@ -108,7 +123,7 @@ public class ICPPWrapper
         public static extern IntPtr GetVertices(int id, out int count);
 
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int AddObject(Vector3f position, Vector3f[] vertices, int nVertices);
+        public static extern int AddObject(Vector3f position, Vector3f[] vertices, int nVertices, Int[] triangles, int nTriangles);
     }
     #endregion
 }

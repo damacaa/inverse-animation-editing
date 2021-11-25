@@ -25,7 +25,7 @@ public class SimulationManager : MonoBehaviour
         cpp = new ICPPWrapper();
     }
 
-    public int AddObject(Vector3 position, Vector3[] vertices)
+    public int AddObject(Vector3 position, Vector3[] vertices, int[] triangles)
     {
         Vector3f[] __vertices = new Vector3f[vertices.Length];
         for (int i = 0; i < vertices.Length; i++)
@@ -35,7 +35,13 @@ public class SimulationManager : MonoBehaviour
             __vertices[i].z = vertices[i].z;
         }
 
-        return cpp.AddObject(position, __vertices, vertices.Length);
+        Int[] _triangles = new Int[triangles.Length];
+        for (int i = 0; i < triangles.Length; i++)
+        {
+            _triangles[i].i = triangles[i];
+        }
+
+        return cpp.AddObject(position, __vertices, _triangles);
     }
 
     public Vector3[] GetVertices(int id)
@@ -67,6 +73,8 @@ public class SimulationManager : MonoBehaviour
                 vertices[i].z = vectorPointer[i].z;
             }
         }
+
+        Debug.Log(vertices[1]);
 
         return vertices;
     }

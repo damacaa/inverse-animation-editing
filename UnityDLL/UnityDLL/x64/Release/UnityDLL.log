@@ -1,0 +1,9 @@
+﻿  Object.cpp
+D:\Projects\UnityDLL\UnityDLL\UnityDLL\Object.cpp(91,29): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+     Creating library D:\Projects\UnityDLL\UnityDLL\x64\Release\UnityDLL.lib and object D:\Projects\UnityDLL\UnityDLL\x64\Release\UnityDLL.exp
+  Generating code
+  1 of 887 functions ( 0.1%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    3 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  UnityDLL.vcxproj -> D:\Projects\UnityDLL\UnityDLL\x64\Release\UnityDLL.dll
