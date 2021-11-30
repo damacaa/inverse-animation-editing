@@ -2,11 +2,12 @@
 #include "Types.h"
 #include "Node.h"
 #include "Spring.h"
+#include "Fixer.h"
 
 class Object
 {
 private:
-	Eigen::Vector3f GetNormal(Eigen::Vector3f a, Eigen::Vector3f b, Eigen::Vector3f c);
+	//Eigen::Vector3f GetNormal(Eigen::Vector3f a, Eigen::Vector3f b, Eigen::Vector3f c);
 	
 public:
 	Object(Vector3f pos, Vector3f* vertices, int nVerts, int* triangles, int nTriangles);
@@ -15,7 +16,8 @@ public:
 	int id = -1;
 	bool updated = false;
 	int substeps = 5;
-	float damping = 1;
+	float damping = 1.0f;
+	float stiffness = 150.0f;
 
 	Eigen::Vector3f positon;
 
@@ -31,6 +33,7 @@ public:
 	int nSprings = 0;
 
 	void Update(float time, float h);
+	void FixNodes(Fixer* f);
 
 	Vector3f* GetVertices();
 };

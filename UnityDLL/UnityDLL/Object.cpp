@@ -31,11 +31,6 @@ Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, in
 		nodeArray[i].damping = damping;
 	}
 
-	nodeArray[0].locked = true;
-	nodeArray[10].locked = true;
-	nodeArray[110].locked = true;
-	nodeArray[120].locked = true;
-
 	//Creating springs
 	int* triangles = new int[nTriangles];
 	memcpy(triangles, _triangles, sizeof(int) * nTriangles);
@@ -45,10 +40,13 @@ Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, in
 	Spring* newSprings = new Spring[3];
 	for (int i = 0; i < nTriangles; i += 3)
 	{
-		newSprings[0] = Spring(&nodeArray[triangles[i]], &nodeArray[triangles[i + 1]], damping);
-		newSprings[1] = Spring(&nodeArray[triangles[i]], &nodeArray[triangles[i + 2]], damping);
-		newSprings[2] = Spring(&nodeArray[triangles[i + 1]], &nodeArray[triangles[i + 2]], damping);
+		newSprings[0] = Spring(&nodeArray[triangles[i]], &nodeArray[triangles[i + 1]], stiffness, damping);
+		newSprings[1] = Spring(&nodeArray[triangles[i]], &nodeArray[triangles[i + 2]], stiffness, damping);
+		newSprings[2] = Spring(&nodeArray[triangles[i + 1]], &nodeArray[triangles[i + 2]], stiffness, damping);
 
+		newSprings[0].oppositeNode = &nodeArray[triangles[i + 2]];
+		newSprings[1].oppositeNode = &nodeArray[triangles[i + 1]];
+		newSprings[2].oppositeNode = &nodeArray[triangles[i]];
 
 		Eigen::Vector3f side1 = nodeArray[triangles[i + 1]].position - nodeArray[triangles[i]].position;
 		Eigen::Vector3f side2 = nodeArray[triangles[i + 2]].position - nodeArray[triangles[i]].position;
@@ -66,6 +64,20 @@ Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, in
 
 			if (it != springMap.end())
 			{
+				Node* a = newSprings[x].oppositeNode;
+				Node* b = springMap[newSprings[x].id].oppositeNode;
+
+				Spring extraSpring = Spring(a, b, stiffness / 2, damping);
+				it = springMap.find(extraSpring.id);
+				if (it != springMap.end())
+				{
+					springMap[newSprings[x].id].volume += area;
+				}
+				else {
+					springMap[extraSpring.id] = extraSpring;
+				}
+
+
 				//La arista está en el diccionario
 				/*if (useBendingSprings)
 				{
@@ -77,6 +89,7 @@ Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, in
 						edgeDictionary.Add(newEdge, newEdge);
 					}
 				}*/
+
 			}
 			else
 			{
@@ -88,7 +101,7 @@ Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, in
 		}
 	}
 
-	nSprings = springMap.size();
+	nSprings = (int)springMap.size();
 	springArray = new Spring[nSprings];
 
 	std::map<std::string, Spring>::iterator it;
@@ -134,6 +147,16 @@ void Object::Update(float time, float h)
 	updated = true;
 }
 
+void Object::FixNodes(Fixer* f)
+{
+	for (size_t i = 0; i < nVertices; i++)
+	{
+		if (f->CheckNodeInside(&nodeArray[i])) {
+			nodeArray[i].isFixed = true;
+		}
+	}
+}
+
 Vector3f* Object::GetVertices()
 {
 	for (int i = 0; i < nVertices; i++) {
@@ -146,6 +169,6 @@ Vector3f* Object::GetVertices()
 	memcpy(vertexArray2, vertexArray, sizeof(Vector3f) * nVertices); /*Copy data only if vertexArray has been updated.*/
 
 	updated = false;
-	
+
 	return vertexArray2;
 }

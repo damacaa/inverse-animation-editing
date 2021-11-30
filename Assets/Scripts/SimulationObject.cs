@@ -22,14 +22,28 @@ public class SimulationObject : MonoBehaviour
 
     void Start()
     {
-        id = SimulationManager.instance.AddObject(transform.position, mesh.vertices, mesh.triangles);
+        Vector3[] vertices = mesh.vertices;
+
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            vertices[i] = transform.TransformPoint(vertices[i]);
+        }
+
+        id = SimulationManager.instance.AddObject(transform.position, vertices, mesh.triangles);
         gameObject.name = "Id: " + id;
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
-        mesh.vertices = SimulationManager.instance.GetVertices(id);
+        Vector3[] vertices = SimulationManager.instance.GetVertices(id);
+
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            vertices[i] = transform.InverseTransformPoint(vertices[i]);
+        }
+
+        mesh.vertices = vertices;
         mesh.RecalculateNormals();
         mesh.RecalculateTangents();
     }

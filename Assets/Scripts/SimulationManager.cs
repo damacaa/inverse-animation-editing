@@ -44,6 +44,11 @@ public class SimulationManager : MonoBehaviour
         return cpp.AddObject(position, __vertices, _triangles);
     }
 
+    public void AddFixer(Vector3 position, Vector3 scale)
+    {
+        cpp.AddFixer(position, scale);
+    }
+
     public Vector3[] GetVertices(int id)
     {
         IntPtr vertexArray = cpp.GetVertices(id, out int count);

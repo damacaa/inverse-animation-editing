@@ -12,7 +12,7 @@ private:
 	void ComputeForces();
 
 public:
-	Node() : locked(false) {};
+	Node() : isFixed(false) {};
 
 	Eigen::Vector3f position = Eigen::Vector3f(0.0f, 0.0f, 0.0f);
 	Eigen::Vector3f vel = Eigen::Vector3f(0.0f, 0.0f, 0.0f);
@@ -27,7 +27,7 @@ public:
 	float volume = 1;
 	float density = 1;
 
-	bool locked;
+	bool isFixed;
 
 	std::string id = "";
 

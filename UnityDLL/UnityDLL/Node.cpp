@@ -20,7 +20,7 @@ void Node::ComputeForces()
 
 void Node::Update(float time, float h)
 {
-	if (this->locked)
+	if (this->isFixed)
 		return;
 
 	UpdateSymplectic(h);

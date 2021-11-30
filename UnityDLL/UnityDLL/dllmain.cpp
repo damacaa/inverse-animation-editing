@@ -5,13 +5,15 @@
 #include <math.h>   
 #include <vector>
 #include "Object.h"
+#include "Fixer.h"
 
 bool initialized = false;
-//bool updated = false;
+bool newFixers = false;
 
 MyCounter* counter = 0;
 
 std::vector<Object*> objects;
+std::vector<Fixer*> fixers;
 
 int nUpdates = 0;
 std::mutex vertexMutex;
@@ -69,11 +71,28 @@ extern "C" {
 
 	__declspec(dllexport) int AddObject(Vector3f position, Vector3f* vertices, int nVertices, int* triangles, int nTriangles) {//, int* triangles, int* nTriangles) {
 		std::lock_guard<std::mutex> lock(vertexMutex); /*Locks mutex and releases mutex once the guard is (implicitly) destroyed*/
-		
+
 		Object* o = new Object(position, vertices, nVertices, triangles, nTriangles);
-		o->id = objects.size();
+		o->id = (int)objects.size();
 		objects.push_back(o);
+
+		for (size_t i = 0; i < fixers.size(); i++)
+		{
+			o->FixNodes(fixers[i]);
+		}
+
 		return o->id;
+	}
+
+	__declspec(dllexport) void AddFixer(Vector3f position, Vector3f scale) {
+		std::lock_guard<std::mutex> lock(vertexMutex);
+		Fixer* f = new Fixer(position, scale);
+		fixers.push_back(f);
+
+		for (size_t i = 0; i < objects.size(); i++)
+		{
+			objects[i]->FixNodes(f);
+		}
 	}
 
 	__declspec(dllexport) void Destroy() {
@@ -93,6 +112,12 @@ extern "C" {
 			}
 			objects.clear();
 
+			for (int i = 0; i < fixers.size(); i++)
+			{
+				delete fixers[i];
+			}
+			fixers.clear();
+
 
 			counter = 0;
 			threadCounter = 0;
@@ -101,7 +126,7 @@ extern "C" {
 			allow Unity to correctly run the simulation again.*/
 
 			initialized = false;
-			
+
 
 			nUpdates = 0;
 
@@ -135,7 +160,7 @@ extern "C" {
 		/*This may take a long time, depending on your simulation.*/
 		for (int i = 0; i < objects.size(); i++)
 		{
-				objects[i]->Update(simulationTime , delta);
+			objects[i]->Update(simulationTime, delta);
 		}
 
 		nUpdates++;
@@ -145,7 +170,7 @@ extern "C" {
 	__declspec(dllexport) Vector3f* GetVertices(int id, int* count) {
 
 		if (id >= objects.size())
-			return new Vector3f(id, objects.size(), 0);
+			return new Vector3f((float)id, (float)objects.size(), 0.0f);
 
 		if (count) {
 			*count = objects[id]->nVertices;

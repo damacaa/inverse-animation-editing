@@ -8,6 +8,7 @@ private:
 public:
 	Node* nodeA = 0;
 	Node* nodeB = 0;
+	Node* oppositeNode = 0;
 
 	float length0 = 0;
 	float length = 0;
@@ -28,13 +29,8 @@ public:
 
 	Spring() {};
 
-	Spring(Node* A, Node* B, float _damping)
+	Spring(Node* A, Node* B, float _stiffness, float _damping) : nodeA(A), nodeB(B), stiffness(_stiffness), damping(_damping)
 	{
-		nodeA = A;
-		nodeB = B;
-
-		damping = _damping;
-
 		length = (nodeA->position - nodeB->position).norm();
 		length0 = length;
 
@@ -46,26 +42,6 @@ public:
 		}
 	}
 
-	Spring(Node* A, Node* B, float _volume, float _stiffness, float _damping, SpringType _springType)
-	{
-		nodeA = A;
-		nodeB = B;
-
-		volume = _volume;
-		stiffness = _stiffness;
-		damping = _damping;
-		springType = _springType;
-
-		length = (nodeA->position - nodeB->position).norm();
-		length0 = length;
-
-		if (nodeA->id > nodeB->id) {
-			id = nodeA->id + nodeB->id;
-		}
-		else {
-			id = nodeB->id + nodeA->id;
-		}
-	}
 	void ComputeForces();
 
 	bool operator==(const Spring& p) const {

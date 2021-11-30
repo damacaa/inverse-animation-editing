@@ -1,23 +1,8 @@
-﻿  Node.cpp
-  Object.cpp
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Object.cpp(91,29): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-  Spring.cpp
-  dllmain.cpp
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\dllmain.cpp(74,25): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\dllmain.cpp(148,40): warning C4244: 'argument': conversion from 'unsigned __int64' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\dllmain.cpp(148,24): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
+﻿  Object.cpp
      Creating library D:\Projects\UnityDLL\UnityDLL\x64\Release\UnityDLL.lib and object D:\Projects\UnityDLL\UnityDLL\x64\Release\UnityDLL.exp
   Generating code
-  7 of 887 functions ( 0.8%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    5 functions had inline decision re-evaluated but remain unchanged
+  3 of 990 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
+    1 functions were new in current compilation
+    6 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   UnityDLL.vcxproj -> D:\Projects\UnityDLL\UnityDLL\x64\Release\UnityDLL.dll
