@@ -76,20 +76,6 @@ Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, in
 				else {
 					springMap[extraSpring.id] = extraSpring;
 				}
-
-
-				//La arista está en el diccionario
-				/*if (useBendingSprings)
-				{
-					edge.volume += area;
-					Edge newEdge = new Edge(edge.other, otherEdge.other, -1, SpringType.Bending);
-
-					if (!edgeDictionary.TryGetValue(newEdge, out otherEdge))
-					{
-						edgeDictionary.Add(newEdge, newEdge);
-					}
-				}*/
-
 			}
 			else
 			{
