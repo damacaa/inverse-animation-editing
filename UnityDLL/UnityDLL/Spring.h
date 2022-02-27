@@ -4,6 +4,7 @@
 class Spring
 {
 private:
+	Eigen::Vector3d dir;
 
 public:
 	Node* nodeA = 0;
@@ -43,6 +44,14 @@ public:
 	}
 
 	void ComputeForces();
+
+	void Initialize(float stiffness, float damping);
+
+	void UpdateState();
+
+	void GetForce(Eigen::VectorXd* force);
+
+	void GetForceJacobian(Eigen::MatrixXd* dFdx, Eigen::MatrixXd* dFdv);
 
 	bool operator==(const Spring& p) const {
 		return (nodeA == p.nodeA && nodeB == p.nodeB) ||

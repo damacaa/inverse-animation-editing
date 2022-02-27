@@ -4,16 +4,13 @@
 #include "Node.h"
 #include <math.h>   
 #include <vector>
-#include "Object.h"
-#include "Fixer.h"
+
+#include "PhysicsManager.h"
 
 bool initialized = false;
 bool newFixers = false;
 
 MyCounter* counter = 0;
-
-std::vector<Object*> objects;
-std::vector<Fixer*> fixers;
 
 int nUpdates = 0;
 std::mutex vertexMutex;
@@ -24,6 +21,8 @@ bool running = false;
 std::thread myThread;
 float simulationTime = 0;
 float delta = 0.01f;
+
+PhysicsManager* physicsManager;
 
 
 #ifdef __cplusplus
@@ -57,9 +56,11 @@ extern "C" {
 
 	__declspec(dllexport) void Initialize() {
 		if (!initialized) {
+			physicsManager = new PhysicsManager();
+
 			counter = new MyCounter();
 			threadCounter = new MyCounter();
-			objects = std::vector<Object*>();
+
 
 			running = true;
 			myThread = std::thread(&StartFunction); /*Create new thread that is executing StartFunction*/
@@ -71,28 +72,12 @@ extern "C" {
 
 	__declspec(dllexport) int AddObject(Vector3f position, Vector3f* vertices, int nVertices, int* triangles, int nTriangles) {//, int* triangles, int* nTriangles) {
 		std::lock_guard<std::mutex> lock(vertexMutex); /*Locks mutex and releases mutex once the guard is (implicitly) destroyed*/
-
-		Object* o = new Object(position, vertices, nVertices, triangles, nTriangles);
-		o->id = (int)objects.size();
-		objects.push_back(o);
-
-		for (size_t i = 0; i < fixers.size(); i++)
-		{
-			o->FixNodes(fixers[i]);
-		}
-
-		return o->id;
+		return physicsManager->AddObject(position, vertices, nVertices, triangles, nTriangles);
 	}
 
 	__declspec(dllexport) void AddFixer(Vector3f position, Vector3f scale) {
 		std::lock_guard<std::mutex> lock(vertexMutex);
-		Fixer* f = new Fixer(position, scale);
-		fixers.push_back(f);
-
-		for (size_t i = 0; i < objects.size(); i++)
-		{
-			objects[i]->FixNodes(f);
-		}
+		physicsManager->AddFixer(position, scale);
 	}
 
 	__declspec(dllexport) void Destroy() {
@@ -105,19 +90,8 @@ extern "C" {
 
 			delete counter;
 			delete threadCounter;
-
-			for (int i = 0; i < objects.size(); i++)
-			{
-				delete objects[i];
-			}
-			objects.clear();
-
-			for (int i = 0; i < fixers.size(); i++)
-			{
-				delete fixers[i];
-			}
-			fixers.clear();
-
+			delete physicsManager;
+			physicsManager = nullptr;
 
 			counter = 0;
 			threadCounter = 0;
@@ -158,10 +132,7 @@ extern "C" {
 
 		std::lock_guard<std::mutex> lock(vertexMutex); /*Locks mutex and releases mutex once the guard is (implicitly) destroyed*/
 		/*This may take a long time, depending on your simulation.*/
-		for (int i = 0; i < objects.size(); i++)
-		{
-			objects[i]->Update(simulationTime, delta);
-		}
+		physicsManager->Update(simulationTime, delta);
 
 		nUpdates++;
 
@@ -169,11 +140,11 @@ extern "C" {
 
 	__declspec(dllexport) Vector3f* GetVertices(int id, int* count) {
 
-		if (id >= objects.size())
-			return new Vector3f((float)id, (float)objects.size(), 0.0f);
+		if (id >= physicsManager->SimObjects.size())
+			return new Vector3f();
 
 		if (count) {
-			*count = objects[id]->nVertices;
+			*count = physicsManager->SimObjects[id]->nVertices;
 		}
 
 		/*Depending on how Update is being executed, vertexArray might being updated at the same time. To prevent race conditions, we have to wait
@@ -181,12 +152,12 @@ extern "C" {
 		the data in the first array can be updated.*/
 
 		std::lock_guard<std::mutex> lock(vertexMutex);
-		if (objects[id]->updated) {
+		if (physicsManager->SimObjects[id]->updated) {
 			std::lock_guard<std::mutex> lock(vertexMutex2);
-			return objects[id]->GetVertices();
+			return physicsManager->SimObjects[id]->GetVertices();
 		}
 
-		return objects[id]->vertexArray2;
+		return physicsManager->SimObjects[id]->vertexArray2;
 	}
 #ifdef __cplusplus
 }
