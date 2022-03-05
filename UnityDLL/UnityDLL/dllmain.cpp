@@ -1,7 +1,6 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "pch.h"
 #include "types.h"
-#include "Node.h"
 #include <math.h>   
 #include <vector>
 
@@ -143,21 +142,20 @@ extern "C" {
 		if (id >= physicsManager->SimObjects.size())
 			return new Vector3f();
 
-		if (count) {
-			*count = physicsManager->SimObjects[id]->nVertices;
-		}
+		//if (count)
+			
 
 		/*Depending on how Update is being executed, vertexArray might being updated at the same time. To prevent race conditions, we have to wait
 		for the lock of vertexArray and copy all data to a second array. Unity/C# will process the data in the second array. In the meantime
 		the data in the first array can be updated.*/
 
 		std::lock_guard<std::mutex> lock(vertexMutex);
-		if (physicsManager->SimObjects[id]->updated) {
+		if (physicsManager->Updated) {
 			std::lock_guard<std::mutex> lock(vertexMutex2);
-			return physicsManager->SimObjects[id]->GetVertices();
+			return physicsManager->GetVertices(id, count);
 		}
 
-		return physicsManager->SimObjects[id]->vertexArray2;
+		return physicsManager->GetVertices(id, count);
 	}
 #ifdef __cplusplus
 }

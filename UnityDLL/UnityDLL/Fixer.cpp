@@ -1,15 +1,16 @@
 #include "pch.h"
 #include "Fixer.h"
+#include "Node.h"
 
 bool Fixer::CheckNodeInside(Node* n)
 {
-	float x = n->position.x();
-	float y = n->position.y();
-	float z = n->position.z();
-
-	float i = scale.x() / 2.0f;
-	float j = scale.y() / 2.0f;
-	float k = scale.z() / 2.0f;
+	double x = n->position.x();
+	double y = n->position.y();
+	double z = n->position.z();
+	
+	double i = scale.x() / 2.0f;
+	double j = scale.y() / 2.0f;
+	double k = scale.z() / 2.0f;
 
 	if (x > position.x() + i)
 		return false;

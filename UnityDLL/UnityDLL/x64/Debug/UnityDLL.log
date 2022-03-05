@@ -1,25 +1,4 @@
-﻿  Fixer.cpp
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Fixer.cpp(6,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Fixer.cpp(7,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Fixer.cpp(8,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Fixer.cpp(10,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Fixer.cpp(11,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Fixer.cpp(12,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-  Node.cpp
-  Object.cpp
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Spring.h(35,52): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Object.cpp(58,50): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Object.cpp(71,52): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Object.cpp(83,50): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
-  PhysicsManager.cpp
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Spring.h(35,52): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-  Spring.cpp
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Spring.h(35,52): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Spring.cpp(9,17): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Spring.cpp(30,19): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-  dllmain.cpp
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Spring.h(35,52): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-  Generating Code...
+﻿  PhysicsManager.cpp
   LINK : D:\Projects\UnityDLL\UnityDLL\x64\Debug\UnityDLL.dll not found or not built by the last incremental link; performing full link
      Creating library D:\Projects\UnityDLL\UnityDLL\x64\Debug\UnityDLL.lib and object D:\Projects\UnityDLL\UnityDLL\x64\Debug\UnityDLL.exp
   UnityDLL.vcxproj -> D:\Projects\UnityDLL\UnityDLL\x64\Debug\UnityDLL.dll

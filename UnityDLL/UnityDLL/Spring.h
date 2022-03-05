@@ -1,7 +1,8 @@
 #pragma once
 #include "Types.h"
-#include "Node.h"
-class Spring
+
+class Node;
+class Spring 
 {
 private:
 	Eigen::Vector3d dir;
@@ -30,18 +31,7 @@ public:
 
 	Spring() {};
 
-	Spring(Node* A, Node* B, float _stiffness, float _damping) : nodeA(A), nodeB(B), stiffness(_stiffness), damping(_damping)
-	{
-		length = (nodeA->position - nodeB->position).norm();
-		length0 = length;
-
-		if (nodeA->id > nodeB->id) {
-			id = nodeA->id + nodeB->id;
-		}
-		else {
-			id = nodeB->id + nodeA->id;
-		}
-	}
+	Spring(Node* A, Node* B, float _stiffness, float _damping);
 
 	void ComputeForces();
 
@@ -51,12 +41,9 @@ public:
 
 	void GetForce(Eigen::VectorXd* force);
 
-	void GetForceJacobian(Eigen::MatrixXd* dFdx, Eigen::MatrixXd* dFdv);
+	void GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel);
 
-	bool operator==(const Spring& p) const {
-		return (nodeA == p.nodeA && nodeB == p.nodeB) ||
-			(nodeA == p.nodeB && nodeB == p.nodeA);
-	}
+	bool operator==(const Spring& p) const;
 };
 
 

@@ -1,16 +1,8 @@
-﻿  Object.cpp
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Spring.h(35,52): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Object.cpp(58,50): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Object.cpp(71,52): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Object.cpp(83,50): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
-  PhysicsManager.cpp
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Spring.h(35,52): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-  dllmain.cpp
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\Spring.h(35,52): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+﻿  PhysicsManager.cpp
      Creating library D:\Projects\UnityDLL\UnityDLL\x64\Release\UnityDLL.lib and object D:\Projects\UnityDLL\UnityDLL\x64\Release\UnityDLL.exp
   Generating code
-  204 of 1058 functions (19.3%) were compiled, the rest were copied from previous compilation.
-    2 functions were new in current compilation
-    34 functions had inline decision re-evaluated but remain unchanged
+  1 of 2479 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    12 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   UnityDLL.vcxproj -> D:\Projects\UnityDLL\UnityDLL\x64\Release\UnityDLL.dll

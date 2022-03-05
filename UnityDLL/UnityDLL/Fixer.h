@@ -1,9 +1,9 @@
 #pragma once
-#include "Node.h"
 #include <vector>
+#include "Types.h"
+class Node;
 class Fixer
 {
-
 public:
 	Fixer() : position(Eigen::Vector3d(0, 0, 0)), scale(Eigen::Vector3d(1, 1, 1)) {}
 	Fixer(Vector3f _position, Vector3f _scale) {

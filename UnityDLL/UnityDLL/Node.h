@@ -1,9 +1,6 @@
 #pragma once
 #include "Types.h"
 #include <math.h>   
-#include <Eigen/Core>
-#include <Eigen/Dense>
-
 
 class Node
 {
@@ -26,7 +23,7 @@ private:
 public:
 	Node() : isFixed(false) {};
 
-	int index = 0;
+	Eigen::Index index = 0;
 	Eigen::Vector3d position = Eigen::Vector3d(0.0f, 0.0f, 0.0f);
 	Eigen::Vector3d vel = Eigen::Vector3d(0.0f, 0.0f, 0.0f);
 	Eigen::Vector3d acc = Eigen::Vector3d(0.0f, 0.0f, 0.0f);
@@ -45,30 +42,34 @@ public:
 
 	std::string id = "";
 
-	inline void Initialize(int ind, float mass, float damping) {};
-	inline void GetForce(Eigen::VectorXd* force) {};
-	inline void GetForceJacobian(Eigen::MatrixXd* dFdx, Eigen::MatrixXd* dFdv) {};
-	inline void GetPosition(Eigen::VectorXd* pos) {};
-	inline void SetPosition(Eigen::VectorXd* pos) {};
-	inline void GetVelocity(Eigen::VectorXd* _vel) {};
-	inline void SetVelocity(Eigen::VectorXd* _vel) {};
-	inline void GetMass(Eigen::MatrixXd* mass) {};
-	inline void GetMassInverse(Eigen::MatrixXd* massInv) {};
-	inline void FixVector(Eigen::VectorXd* v) {};
-	inline void FixMatrix(Eigen::MatrixXd* M) {};
+	void Initialize(int ind);
 
-	inline void Update(float time, float h) {
-		if (this->isFixed)
-			return;
+	void GetPosition(Eigen::VectorXd* pos);
 
-		ComputeForces();
-		acc = force / (volume * density);
-		if (this->isFixed)
-			return;
+	void SetPosition(Eigen::VectorXd* pos);
 
-		vel += acc * h;
-		position += vel * h;
-		force = Eigen::Vector3d(0, 0, 0);
-	};
+	void GetVelocity(Eigen::VectorXd* _vel);
+
+	void SetVelocity(Eigen::VectorXd* _vel);
+
+	void GetMass(Eigen::MatrixXd* Mass);
+
+	void GetMass(std::vector<T>* massTripletVector);
+
+	void GetMassInverse(Eigen::MatrixXd* massInv);
+
+	void GetMassInv(std::vector<T>* massTripletVector);
+
+	void GetForce(Eigen::VectorXd* force);
+
+	void GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel);
+
+	void FixVector(Eigen::VectorXd* v);
+
+	void FixMatrix(Eigen::MatrixXd* M);
+
+	void FixMatrix(SpMat* M);
+
+	void UpdateOld(float time, float h);
 };
 

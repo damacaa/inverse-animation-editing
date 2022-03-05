@@ -3,12 +3,10 @@
 #include <set>
 #include <map>
 
-
-
 Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, int nTriangles)
 {
 	nVertices = nVerts;
-	positon = Eigen::Vector3d((double)pos.x, (double)pos.y, (double)pos.z);
+	//positon = Eigen::Vector3d((double)pos.x, (double)pos.y, (double)pos.z);
 
 	vertexArray = new Vector3f[nVertices];
 	vertexArray2 = new Vector3f[nVertices];
@@ -48,7 +46,7 @@ Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, in
 		Eigen::Vector3d side1 = nodeArray[triangles[i + 1]].position - nodeArray[triangles[i]].position;
 		Eigen::Vector3d side2 = nodeArray[triangles[i + 2]].position - nodeArray[triangles[i]].position;
 
-		double area = 0.5f * side1.cross(side2).norm();
+		float area = 0.5f * (float)side1.cross(side2).norm();
 
 		//float area = 0.1f;
 
@@ -123,17 +121,12 @@ void Object::Update(float time, float h)
 		}
 
 		for (int i = 0; i < nVertices; i++) {
-			nodeArray[i].Update(time, newH);
+			nodeArray[i].UpdateOld(time, newH);
 		}
 	}
 
 	updated = true;
 }
-
-/*Vector3f* Object::GetVertices()
-{
-	
-}*/
 
 void Object::FixnodeArray(Fixer* f)
 {
@@ -145,15 +138,16 @@ void Object::FixnodeArray(Fixer* f)
 	}
 }
 
-/*
-void Object::FixNodes(Fixer* f)
+void Object::Initialize(int* ind)
 {
-}
+	index = *ind;
 
+	// Start scene nodes/edges
+	for (int i = 0; i < nVertices; ++i)
+		nodeArray[i].Initialize(index + 3 * i); // Prepare
 
-
-void Object::Initialize(int ind)
-{
+	for (int i = 0; i < nSprings; ++i)
+		springArray[i].Initialize(stiffness, damping); // Prepare
 }
 
 int Object::GetNumDoFs()
@@ -173,6 +167,8 @@ void Object::SetPosition(Eigen::VectorXd* position)
 		nodeArray[i].SetPosition(position);
 	for (int i = 0; i < nSprings; ++i)
 		springArray[i].UpdateState();
+
+	updated = true;
 }
 
 void Object::GetVelocity(Eigen::VectorXd* velocity)
@@ -195,15 +191,29 @@ void Object::GetForce(Eigen::VectorXd* force)
 		springArray[i].GetForce(force);
 }
 
-void Object::GetForceJacobian(Eigen::MatrixXd* dFdx, Eigen::MatrixXd* dFdv)
+void Object::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel)
 {
 	for (int i = 0; i < nVertices; ++i)
-		nodeArray[i].GetForceJacobian(dFdx, dFdv);
+		nodeArray[i].GetForceJacobian(derivPos, derivVel);
 	for (int i = 0; i < nSprings; ++i)
-		springArray[i].GetForceJacobian(dFdx, dFdv);
+		springArray[i].GetForceJacobian(derivPos, derivVel);
 }
 
 void Object::GetMass(Eigen::MatrixXd* mass)
+{
+	for (int i = 0; i < nVertices; ++i)
+		nodeArray[i].GetMass(mass);
+}
+
+void Object::GetFixedIndices(std::vector<bool>* fixedIndices)
+{
+	for (size_t i = 0; i < nVertices; i++)
+	{
+		(*fixedIndices)[nodeArray[i].index] = nodeArray[i].isFixed;
+	}
+}
+
+void Object::GetMass(std::vector<T>* mass)
 {
 	for (int i = 0; i < nVertices; ++i)
 		nodeArray[i].GetMass(mass);
@@ -213,6 +223,12 @@ void Object::GetMassInverse(Eigen::MatrixXd* massInv)
 {
 	for (int i = 0; i < nVertices; ++i)
 		nodeArray[i].GetMassInverse(massInv);
+}
+
+void Object::GetMassInverse(std::vector<T>* massInv)
+{
+	for (int i = 0; i < nVertices; ++i)
+		nodeArray[i].GetMassInv(massInv);
 }
 
 void Object::FixVector(Eigen::VectorXd* v)
@@ -229,4 +245,25 @@ void Object::FixMatrix(Eigen::MatrixXd* M)
 	{
 		nodeArray[i].FixMatrix(M);
 	}
-}*/
+}
+
+void Object::FixMatrix(SpMat* M)
+{
+	for (int i = 0; i < nVertices; i++)
+		nodeArray[i].FixMatrix(M);
+}
+
+Vector3f* Object::GetVertices() {
+	for (int i = 0; i < nVertices; i++) {
+		vertexArray[i] = Vector3f(
+			(float)nodeArray[i].position.x(),
+			(float)nodeArray[i].position.y(),
+			(float)nodeArray[i].position.z());
+	}
+
+	memcpy(vertexArray2, vertexArray, sizeof(Vector3f) * nVertices); //Copy data only if vertexArray has been updated.
+
+	updated = false;
+
+	return vertexArray2;
+}

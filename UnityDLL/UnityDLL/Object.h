@@ -13,13 +13,14 @@ private:
 public:
 	PhysicsManager* manager;
 
-	int id = -1;
+	int id = -1;//Id to return vertices
+	int index = -1;//Id in matrix
 	bool updated = false;
-	int substeps = 5;
+	int substeps = 5;//Quitar
 	float damping = 1.0f;
 	float stiffness = 150.0f;
 
-	Eigen::Vector3d positon;
+	//Eigen::Vector3d positon;
 
 	Vector3f* vertexArray = 0;
 	Vector3f* vertexArray2 = 0;
@@ -37,37 +38,40 @@ public:
 
 	void Update(float time, float h);
 
-	inline void Initialize(int ind) {};
-	inline int GetNumDoFs() { return 0; };
+	void Initialize(int* ind);
 
-	inline void GetPosition(Eigen::VectorXd* position) {};
-	inline void SetPosition(Eigen::VectorXd* position) {};
-	inline void GetVelocity(Eigen::VectorXd* velocity) {};
-	inline void SetVelocity(Eigen::VectorXd* velocity) {};
+	int GetNumDoFs();
 
-	inline void GetForce(Eigen::VectorXd* force) {};
-	inline void GetForceJacobian(Eigen::MatrixXd* dFdx, Eigen::MatrixXd* dFdv) {};
+	void GetPosition(Eigen::VectorXd* position);
 
-	inline void GetMass(Eigen::MatrixXd* mass) {};
-	inline void GetMassInverse(Eigen::MatrixXd* massInv) {};
+	void SetPosition(Eigen::VectorXd* position);
 
-	inline void FixMatrix(Eigen::MatrixXd* M) {};
-	inline void FixVector(Eigen::VectorXd* v) {};
+	void GetVelocity(Eigen::VectorXd* velocity);
+
+	void SetVelocity(Eigen::VectorXd* velocity);
+
+	void GetForce(Eigen::VectorXd* force);
+
+	void GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel);
+
+	void GetMass(Eigen::MatrixXd* mass);
+
+	void GetMass(std::vector<T>* mass);
+
+	void GetMassInverse(Eigen::MatrixXd* massInv);
+
+	void GetMassInverse(std::vector<T>* massTripletVector);
+
+	void FixVector(Eigen::VectorXd* v);
+
+	void FixMatrix(Eigen::MatrixXd* M);
+
+	void FixMatrix(SpMat* M);
 
 	void FixnodeArray(Fixer* f);
-	inline Vector3f* GetVertices() {
-		for (int i = 0; i < nVertices; i++) {
-			vertexArray[i] = Vector3f(
-				(float)nodeArray[i].position.x(),
-				(float)nodeArray[i].position.y(),
-				(float)nodeArray[i].position.z());
-		}
 
-		memcpy(vertexArray2, vertexArray, sizeof(Vector3f) * nVertices); //Copy data only if vertexArray has been updated.
+	void GetFixedIndices(std::vector<bool>* fixedIndices);
 
-		updated = false;
-
-		return vertexArray2;
-	};
+	Vector3f* GetVertices();
 };
 

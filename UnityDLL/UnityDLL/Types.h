@@ -1,6 +1,11 @@
 #pragma once
 
 #include <mutex>
+#include <Eigen/Core>
+#include <Eigen/Dense>
+#include <Eigen/Sparse>
+typedef Eigen::SparseMatrix<double> SpMat; // declares a column-major sparse matrix type of double
+typedef Eigen::Triplet<double> T;
 
 #pragma pack(push, 1) /*Force compiler to remove 4 or 8 byte memory alignment for all structs below, i.e., pack all variables without unused spaces. */
 template<typename T>

@@ -1,12 +1,9 @@
-#pragma once
-#include "Node.h"
-#include <math.h>   
+#pragma once 
 #include <vector>
-#include "Fixer.h"
-#include "Spring.h"
-#include "Object.h"
+#include "Types.h"
 
-
+class Object;
+class Fixer;
 class PhysicsManager
 {
 private:
@@ -20,12 +17,13 @@ private:
 	bool Paused = false;
 	float TimeStep;
 	Vector3f Gravity;
-	Integration IntegrationMethod = PhysicsManager::Integration::Symplectic;
+	Integration IntegrationMethod = PhysicsManager::Integration::Implicit;
 
 	std::vector<Fixer*> Fixers;
 	int m_numDoFs;
 
 public:
+	bool Updated = false;
 	std::vector<Object*> SimObjects;
 
 
@@ -40,9 +38,16 @@ public:
 	void Start();
 	void Update(float time, float h);
 
-	void StepSymplectic(float time, float h);
+	void StepSymplecticOld(float time, float h);
 
-	void StepImplicit();
+	void StepSymplecticDense(float time, float h);
+
+	void StepSymplecticSparse(float time, float h);
+
+
+	void StepImplicit(float time, float h);
+
+	Vector3f* GetVertices(int id, int* count);
 
 };
 
