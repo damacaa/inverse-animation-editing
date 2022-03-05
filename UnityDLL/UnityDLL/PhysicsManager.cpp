@@ -18,9 +18,9 @@ PhysicsManager::~PhysicsManager()
 	Fixers.clear();
 }
 
-int PhysicsManager::AddObject(Vector3f position, Vector3f* vertices, int nVertices, int* triangles, int nTriangles)
+int PhysicsManager::AddObject(Vector3f position, Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass)
 {
-	Object* o = new Object(position, vertices, nVertices, triangles, nTriangles);
+	Object* o = new Object(position, vertices, nVertices, triangles, nTriangles, stiffness, mass);
 	o->id = (int)SimObjects.size();
 	SimObjects.push_back(o);
 
@@ -160,10 +160,18 @@ void PhysicsManager::StepSymplecticSparse(float time, float h)
 		SimObjects[i]->GetFixedIndices(&fixedIndices);
 	}
 
+	for (size_t i = 0; i < massesInv.size(); i += 3)
+	{
+		int id = massesInv[i].col() / 3;
+		if (fixedIndices[id]) {
+			massesInv[i] = T(massesInv[i].col(), massesInv[i].row(), massesInv[i].value());
+		}
+	}
+
 	Minv.setFromTriplets(massesInv.begin(), massesInv.end());
 	v = (v * 0.99) + h * (Minv * f);
 
-	for (size_t i = 0; i < m_numDoFs; i+=3)
+	for (size_t i = 0; i < fixedIndices.size(); i += 3)
 	{
 		if (fixedIndices[i]) {
 			v[i] = 0;
@@ -183,19 +191,15 @@ void PhysicsManager::StepSymplecticSparse(float time, float h)
 
 void PhysicsManager::StepImplicit(float time, float h)
 {
+	Eigen::VectorXd x = Eigen::VectorXd(m_numDoFs);//Positions
+	Eigen::VectorXd v = Eigen::VectorXd(m_numDoFs);//Velocities
+	Eigen::VectorXd f = Eigen::VectorXd::Constant(m_numDoFs, 0.0);//Forces
 
-	Eigen::VectorXd x = Eigen::VectorXd(m_numDoFs);
-	Eigen::VectorXd v = Eigen::VectorXd(m_numDoFs);
-	Eigen::VectorXd f = Eigen::VectorXd::Constant(m_numDoFs, 0.0);
-
-	SpMat M(m_numDoFs, m_numDoFs);
-	SpMat Minv(m_numDoFs, m_numDoFs);
-
+	SpMat M(m_numDoFs, m_numDoFs);//Masses
 	SpMat dFdx(m_numDoFs, m_numDoFs);
 	SpMat dFdv(m_numDoFs, m_numDoFs);
 
 	std::vector<T> masses = std::vector<T>();
-	std::vector<T> massesInv = std::vector<T>();
 	std::vector<T> derivPos = std::vector<T>();
 	std::vector<T> derivVel = std::vector<T>();
 
@@ -203,34 +207,22 @@ void PhysicsManager::StepImplicit(float time, float h)
 	{
 		SimObjects[i]->GetPosition(&x);
 		SimObjects[i]->GetVelocity(&v);
-		SimObjects[i]->GetForce(&f);
 
+		SimObjects[i]->GetForce(&f);
 		SimObjects[i]->GetForceJacobian(&derivPos, &derivVel);
-		SimObjects[i]->GetMassInverse(&massesInv);
 		SimObjects[i]->GetMass(&masses);
 	}
 
+	//For future reference
+	//https://stackoverflow.com/questions/45301305/set-sparsity-pattern-of-eigensparsematrix-without-memory-overhead
 	M.setFromTriplets(masses.begin(), masses.end());
-	Minv.setFromTriplets(massesInv.begin(), massesInv.end());
-	dFdx.setFromTriplets(derivPos.begin(), derivPos.end());
-	dFdv.setFromTriplets(derivVel.begin(), derivVel.end());
-
-/*	double dx[11][11];
-	for (size_t i = 0; i < dFdx.rows(); i++)
-	{
-		for (size_t j = 0; j < dFdx.cols(); j++)
-		{
-			dx[i][j] = dFdx.coeff(i, j);
-		}
-	}*/
-
-
-	//v += (Minv + TimeStep * TimeStep * spring.Stiffness)) * (nodeLow.Mass * nodeLow.Vel + TimeStep * nodeLow.Force);
+	dFdx.setFromTriplets(derivPos.begin(), derivPos.end(), [](const double& a, const double& b) { return a + b; });
+	dFdv.setFromTriplets(derivVel.begin(), derivVel.end(), [](const double& a, const double& b) { return a + b; });
 
 	std::vector<bool> fixedIndices(m_numDoFs);
 	for (int i = 0; i < SimObjects.size(); i++)
 		SimObjects[i]->GetFixedIndices(&fixedIndices);
-	
+
 
 
 	/*for (size_t i = 0; i < derivPos.size(); i++)
@@ -247,15 +239,23 @@ void PhysicsManager::StepImplicit(float time, float h)
 		}
 	}*/
 
-	
-	SpMat A = M - TimeStep * TimeStep * dFdx;
-	Eigen::VectorXd b = M * v + TimeStep * f;
+	SpMat A = M - h * dFdv - h * h * dFdx;
+	Eigen::VectorXd b = (M - h * dFdv) * v + h * f;
 
 	//A.Solve(b, v);
 	Eigen::SimplicialCholesky<SpMat> chol(A);
 	v = chol.solve(b);
 
-	x += TimeStep * v;
+	for (size_t i = 0; i < m_numDoFs; i += 3)
+	{
+		if (fixedIndices[i]) {
+			v[i] = 0;
+			v[i + 1] = 0;
+			v[i + 2] = 0;
+		}
+	}
+
+	x += h * v;
 
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
@@ -266,6 +266,9 @@ void PhysicsManager::StepImplicit(float time, float h)
 
 Vector3f* PhysicsManager::GetVertices(int id, int* count)
 {
+	if (id >= SimObjects.size())
+		return new Vector3f();
+
 	*count = SimObjects[id]->nVertices;
 
 	return SimObjects[id]->GetVertices();

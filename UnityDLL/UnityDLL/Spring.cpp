@@ -67,25 +67,28 @@ void Spring::GetForce(Eigen::VectorXd* force)
 // Get Force Jacobian
 void Spring::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel)
 {
-	// TO BE COMPLETED
-	/* Vector3 u = nodeA.Pos - nodeB.Pos;
-		Length = u.magnitude;
-		u = u / Length;
+	Eigen::Matrix3d dirMat = dir * dir.transpose();
 
-		VectorXD U = new DenseVectorXD(3);
-		U[0] = u.x;
-		U[1] = u.y;
-		U[2] = u.z;
+	Eigen::Matrix3d dFadxa = (-stiffness * (length - length0) / length * Eigen::Matrix3d::Identity()) - (stiffness * length0 / length * dirMat);
+	Eigen::Matrix3d dFadva = -damping * dirMat;
 
-		MatrixXD dFadxa = (-Stiffness * (Length - Length0) / Length * DenseMatrixXD.CreateIdentity(3)) - (Stiffness * Length0 / Length * U.OuterProduct(U));
+	for (size_t i = 0; i < 3; i++)
+	{
+		for (size_t j = 0; j < length; j++)
+		{
+			derivPos->push_back(T(nodeA->index + i, nodeA->index + i, dFadxa(i, j)));
+			derivPos->push_back(T(nodeB->index + i, nodeB->index + i, dFadxa(i, j)));
+			derivPos->push_back(T(nodeA->index + i, nodeB->index + i, -dFadxa(i, j)));
+			derivPos->push_back(T(nodeB->index + i, nodeA->index + i, -dFadxa(i, j)));
 
-		MatrixXD dFadva = -Damping * U.OuterProduct(U);
+			derivVel->push_back(T(nodeA->index + i, nodeA->index + i, dFadva(i, j)));
+			derivVel->push_back(T(nodeB->index + i, nodeB->index + i, dFadva(i, j)));
+			derivVel->push_back(T(nodeA->index + i, nodeB->index + i, -dFadva(i, j)));
+			derivVel->push_back(T(nodeB->index + i, nodeA->index + i, -dFadva(i, j)));
+		}
+	}
 
 
-		dFdx.SetSubMatrix(nodeA.index, nodeA.index, dFdx.SubMatrix(nodeA.index, 3, nodeA.index, 3) + dFadxa);
-		dFdx.SetSubMatrix(nodeB.index, nodeB.index, dFdx.SubMatrix(nodeB.index, 3, nodeB.index, 3) + dFadxa);
-		dFdx.SetSubMatrix(nodeA.index, nodeB.index, dFdx.SubMatrix(nodeA.index, 3, nodeB.index, 3) - dFadxa);
-		dFdx.SetSubMatrix(nodeB.index, nodeA.index, dFdx.SubMatrix(nodeB.index, 3, nodeA.index, 3) - dFadxa);*/
 }
 
 bool Spring::operator==(const Spring& p) const

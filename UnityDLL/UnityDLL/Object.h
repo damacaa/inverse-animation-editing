@@ -16,9 +16,9 @@ public:
 	int id = -1;//Id to return vertices
 	int index = -1;//Id in matrix
 	bool updated = false;
-	int substeps = 5;//Quitar
 	float damping = 1.0f;
 	float stiffness = 150.0f;
+	float mass = 1.0f;
 
 	//Eigen::Vector3d positon;
 
@@ -33,7 +33,7 @@ public:
 	//int* triangles = 0;
 	//int nTriangles = 0;
 
-	Object(Vector3f pos, Vector3f* vertices, int nVerts, int* triangles, int nTriangles);
+	Object(Vector3f pos, Vector3f* vertices, int nVerts, int* triangles, int nTriangles, float stiffness, float mass);
 	~Object();
 
 	void Update(float time, float h);

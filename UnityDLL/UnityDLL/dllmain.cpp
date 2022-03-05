@@ -69,9 +69,9 @@ extern "C" {
 		}
 	}
 
-	__declspec(dllexport) int AddObject(Vector3f position, Vector3f* vertices, int nVertices, int* triangles, int nTriangles) {//, int* triangles, int* nTriangles) {
+	__declspec(dllexport) int AddObject(Vector3f position, Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass) {//, int* triangles, int* nTriangles) {
 		std::lock_guard<std::mutex> lock(vertexMutex); /*Locks mutex and releases mutex once the guard is (implicitly) destroyed*/
-		return physicsManager->AddObject(position, vertices, nVertices, triangles, nTriangles);
+		return physicsManager->AddObject(position, vertices, nVertices, triangles, nTriangles, stiffness, mass);
 	}
 
 	__declspec(dllexport) void AddFixer(Vector3f position, Vector3f scale) {
@@ -138,12 +138,6 @@ extern "C" {
 	}
 
 	__declspec(dllexport) Vector3f* GetVertices(int id, int* count) {
-
-		if (id >= physicsManager->SimObjects.size())
-			return new Vector3f();
-
-		//if (count)
-			
 
 		/*Depending on how Update is being executed, vertexArray might being updated at the same time. To prevent race conditions, we have to wait
 		for the lock of vertexArray and copy all data to a second array. Unity/C# will process the data in the second array. In the meantime

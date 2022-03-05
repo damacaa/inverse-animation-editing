@@ -25,7 +25,7 @@ public class SimulationManager : MonoBehaviour
         cpp = new ICPPWrapper();
     }
 
-    public int AddObject(Vector3 position, Vector3[] vertices, int[] triangles)
+    public int AddObject(Vector3 position, Vector3[] vertices, int[] triangles, float stiffness, float mass)
     {
         Vector3f[] __vertices = new Vector3f[vertices.Length];
         for (int i = 0; i < vertices.Length; i++)
@@ -41,7 +41,7 @@ public class SimulationManager : MonoBehaviour
             _triangles[i].i = triangles[i];
         }
 
-        return cpp.AddObject(position, __vertices, _triangles);
+        return cpp.AddObject(position, __vertices, _triangles, stiffness, mass);
     }
 
     public void AddFixer(Vector3 position, Vector3 scale)

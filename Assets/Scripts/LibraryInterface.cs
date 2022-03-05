@@ -59,9 +59,9 @@ public class ICPPWrapper
         CPPWrapper.Destroy();
     }
 
-    public int AddObject(in Vector3 position, Vector3f[] vertices, Int[] triangles)
+    public int AddObject(in Vector3 position, Vector3f[] vertices, Int[] triangles, float stiffness, float mass)
     {
-        return CPPWrapper.AddObject(new Vector3f(position), vertices, vertices.Length, triangles, triangles.Length);
+        return CPPWrapper.AddObject(new Vector3f(position), vertices, vertices.Length, triangles, triangles.Length, stiffness, mass);
     }
 
     public void AddFixer(Vector3 position, Vector3 scale)
@@ -128,7 +128,7 @@ public class ICPPWrapper
         public static extern IntPtr GetVertices(int id, out int count);
 
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int AddObject(Vector3f position, Vector3f[] vertices, int nVertices, Int[] triangles, int nTriangles);
+        public static extern int AddObject(Vector3f position, Vector3f[] vertices, int nVertices, Int[] triangles, int nTriangles, float stiffness, float mass);
 
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void AddFixer(Vector3f position, Vector3f scale);

@@ -3,8 +3,10 @@
 #include <set>
 #include <map>
 
-Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, int nTriangles)
+Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, int nTriangles, float stiffness, float mass)
 {
+	this->stiffness = stiffness;
+	this->mass = mass;
 	nVertices = nVerts;
 	//positon = Eigen::Vector3d((double)pos.x, (double)pos.y, (double)pos.z);
 
@@ -110,20 +112,11 @@ Object::~Object()
 
 void Object::Update(float time, float h)
 {
-	float newH = h / (float)substeps;
+	for (int i = 0; i < nSprings; i++)
+		springArray[i].ComputeForces();
 
-	for (size_t i = 0; i < substeps; i++)
-	{
-
-		for (int i = 0; i < nSprings; i++)
-		{
-			springArray[i].ComputeForces();
-		}
-
-		for (int i = 0; i < nVertices; i++) {
-			nodeArray[i].UpdateOld(time, newH);
-		}
-	}
+	for (int i = 0; i < nVertices; i++)
+		nodeArray[i].UpdateOld(time, h);
 
 	updated = true;
 }

@@ -14,6 +14,11 @@ public class SimulationObject : MonoBehaviour
     MeshFilter meshFilter;
     Mesh mesh;
 
+    [SerializeField]
+    float mass = 1.0f;
+    [SerializeField]
+    float stiffness = 100f;
+
     private void Awake()
     {
         meshFilter = GetComponent<MeshFilter>();
@@ -29,7 +34,7 @@ public class SimulationObject : MonoBehaviour
             vertices[i] = transform.TransformPoint(vertices[i]);
         }
 
-        id = SimulationManager.instance.AddObject(transform.position, vertices, mesh.triangles);
+        id = SimulationManager.instance.AddObject(transform.position, vertices, mesh.triangles, stiffness, mass);
         gameObject.name = "Id: " + id;
     }
 
