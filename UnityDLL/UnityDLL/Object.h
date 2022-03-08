@@ -16,7 +16,7 @@ public:
 	int id = -1;//Id to return vertices
 	int index = -1;//Id in matrix
 	bool updated = false;
-	float damping = 1.0f;
+	float damping = 0.5f;
 	float stiffness = 150.0f;
 	float mass = 1.0f;
 

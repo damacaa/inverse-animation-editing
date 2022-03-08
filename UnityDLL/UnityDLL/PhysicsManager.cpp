@@ -59,6 +59,9 @@ void PhysicsManager::Start()
 		// Retrieve pos and vel size
 		m_numDoFs += SimObjects[i]->GetNumDoFs();
 	}
+
+	initialized = false;
+	_v = Eigen::VectorXd(m_numDoFs);//Velocities
 }
 
 void PhysicsManager::Update(float time, float h)
@@ -168,8 +171,10 @@ void PhysicsManager::StepSymplecticSparse(float time, float h)
 		}
 	}
 
+	//Matriz a triplets, fixing y luego vuelve
+
 	Minv.setFromTriplets(massesInv.begin(), massesInv.end());
-	v = (v * 0.99) + h * (Minv * f);
+	v += h * (Minv * f);
 
 	for (size_t i = 0; i < fixedIndices.size(); i += 3)
 	{
@@ -203,6 +208,9 @@ void PhysicsManager::StepImplicit(float time, float h)
 	std::vector<T> derivPos = std::vector<T>();
 	std::vector<T> derivVel = std::vector<T>();
 
+	SpMat Minv(m_numDoFs, m_numDoFs);//Masses
+	std::vector<T> massesInv = std::vector<T>();
+
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
 		SimObjects[i]->GetPosition(&x);
@@ -211,18 +219,35 @@ void PhysicsManager::StepImplicit(float time, float h)
 		SimObjects[i]->GetForce(&f);
 		SimObjects[i]->GetForceJacobian(&derivPos, &derivVel);
 		SimObjects[i]->GetMass(&masses);
+
+		SimObjects[i]->GetMassInverse(&massesInv);
 	}
+
+
+	std::vector<bool> fixedIndices(m_numDoFs);
+	for (int i = 0; i < SimObjects.size(); i++)
+		SimObjects[i]->GetFixedIndices(&fixedIndices);
+
+	/*for (size_t i = 0; i < fixedIndices.size(); i++)
+	{
+		for (size_t x = 0; x < derivPos.size(); x++)
+		{
+			if (i == derivPos[x].col() / 3) {
+
+				if (derivPos[x].col() == derivPos[x].row())
+					derivPos[x] = T(derivPos[x].row(), derivPos[x].col(), 1);
+				else
+					derivPos[x] = T(derivPos[x].row(), derivPos[x].col(), 0);
+
+			}
+		}
+	}*/
 
 	//For future reference
 	//https://stackoverflow.com/questions/45301305/set-sparsity-pattern-of-eigensparsematrix-without-memory-overhead
 	M.setFromTriplets(masses.begin(), masses.end());
 	dFdx.setFromTriplets(derivPos.begin(), derivPos.end(), [](const double& a, const double& b) { return a + b; });
 	dFdv.setFromTriplets(derivVel.begin(), derivVel.end(), [](const double& a, const double& b) { return a + b; });
-
-	std::vector<bool> fixedIndices(m_numDoFs);
-	for (int i = 0; i < SimObjects.size(); i++)
-		SimObjects[i]->GetFixedIndices(&fixedIndices);
-
 
 
 	/*for (size_t i = 0; i < derivPos.size(); i++)
@@ -243,8 +268,25 @@ void PhysicsManager::StepImplicit(float time, float h)
 	Eigen::VectorXd b = (M - h * dFdv) * v + h * f;
 
 	//A.Solve(b, v);
-	Eigen::SimplicialCholesky<SpMat> chol(A);
-	v = chol.solve(b);
+	//Eigen::SimplicialCholesky<SpMat> chol(A);
+	//v = chol.solve(b);
+
+	Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::UnitLower | Eigen::UnitUpper> cg;
+	//cg.compute(A);
+	cg.factorize(A);
+
+	if (initialized) {
+		//Minv.setFromTriplets(massesInv.begin(), massesInv.end());
+		//_v = _v + h * (Minv * f);
+		v = cg.solveWithGuess(b, _v);
+	}
+	else {
+		v = cg.solve(b);
+		initialized = true;
+	}
+	_v = v;
+
+	//v = cg.solve(b);
 
 	for (size_t i = 0; i < m_numDoFs; i += 3)
 	{

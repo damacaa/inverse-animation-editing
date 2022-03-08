@@ -1,10 +1,8 @@
-﻿  dllmain.cpp
-  Object.cpp
-  PhysicsManager.cpp
+﻿  PhysicsManager.cpp
      Creating library D:\Projects\UnityDLL\UnityDLL\x64\Release\UnityDLL.lib and object D:\Projects\UnityDLL\UnityDLL\x64\Release\UnityDLL.exp
   Generating code
-  3 of 2872 functions ( 0.1%) were compiled, the rest were copied from previous compilation.
-    2 functions were new in current compilation
-    22 functions had inline decision re-evaluated but remain unchanged
+  151 of 2950 functions ( 5.1%) were compiled, the rest were copied from previous compilation.
+    119 functions were new in current compilation
+    114 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   UnityDLL.vcxproj -> D:\Projects\UnityDLL\UnityDLL\x64\Release\UnityDLL.dll

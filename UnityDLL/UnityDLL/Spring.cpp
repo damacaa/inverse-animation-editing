@@ -20,22 +20,6 @@ Spring::Spring(Node* A, Node* B, float _stiffness, float _damping)
 	}
 }
 
-void Spring::ComputeForces()
-{
-	Eigen::Vector3d u = nodeA->position - nodeB->position;
-
-	length = u.norm();
-
-	u.normalize();
-
-	Eigen::Vector3d force = -(volume / (length0 * length0)) * stiffness * (length - length0) * u;
-
-	force += -damping * u.dot(nodeA->vel - nodeB->vel) * u;
-
-	nodeA->force += force;
-	nodeB->force -= force;
-}
-
 void Spring::Initialize(float stiffness, float damping)
 {
 	UpdateState();
@@ -54,6 +38,7 @@ void Spring::UpdateState()
 void Spring::GetForce(Eigen::VectorXd* force)
 {
 	Eigen::Vector3d f = -stiffness * (length - length0) * dir;
+	f += -damping * dir.dot(nodeA->vel - nodeB->vel) * dir;
 
 	(*force)[nodeA->index] += f.x();
 	(*force)[nodeA->index + 1] += f.y();
@@ -74,17 +59,17 @@ void Spring::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel
 
 	for (size_t i = 0; i < 3; i++)
 	{
-		for (size_t j = 0; j < length; j++)
+		for (size_t j = 0; j < 3; j++)
 		{
-			derivPos->push_back(T(nodeA->index + i, nodeA->index + i, dFadxa(i, j)));
-			derivPos->push_back(T(nodeB->index + i, nodeB->index + i, dFadxa(i, j)));
-			derivPos->push_back(T(nodeA->index + i, nodeB->index + i, -dFadxa(i, j)));
-			derivPos->push_back(T(nodeB->index + i, nodeA->index + i, -dFadxa(i, j)));
+			derivPos->push_back(T(nodeA->index + i, nodeA->index + j, dFadxa(i, j)));
+			derivPos->push_back(T(nodeB->index + i, nodeB->index + j, dFadxa(i, j)));
+			derivPos->push_back(T(nodeA->index + i, nodeB->index + j, -dFadxa(i, j)));
+			derivPos->push_back(T(nodeB->index + i, nodeA->index + j, -dFadxa(i, j)));
 
-			derivVel->push_back(T(nodeA->index + i, nodeA->index + i, dFadva(i, j)));
-			derivVel->push_back(T(nodeB->index + i, nodeB->index + i, dFadva(i, j)));
-			derivVel->push_back(T(nodeA->index + i, nodeB->index + i, -dFadva(i, j)));
-			derivVel->push_back(T(nodeB->index + i, nodeA->index + i, -dFadva(i, j)));
+			derivVel->push_back(T(nodeA->index + i, nodeA->index + j, dFadva(i, j)));
+			derivVel->push_back(T(nodeB->index + i, nodeB->index + j, dFadva(i, j)));
+			derivVel->push_back(T(nodeA->index + i, nodeB->index + j, -dFadva(i, j)));
+			derivVel->push_back(T(nodeB->index + i, nodeA->index + j, -dFadva(i, j)));
 		}
 	}
 
@@ -95,4 +80,20 @@ bool Spring::operator==(const Spring& p) const
 {
 	return (nodeA == p.nodeA && nodeB == p.nodeB) ||
 		(nodeA == p.nodeB && nodeB == p.nodeA);
+}
+
+void Spring::ComputeForces()
+{
+	Eigen::Vector3d u = nodeA->position - nodeB->position;
+
+	length = u.norm();
+
+	u.normalize();
+
+	Eigen::Vector3d force = -(volume / (length0 * length0)) * stiffness * (length - length0) * u;
+
+	force += -damping * u.dot(nodeA->vel - nodeB->vel) * u;
+
+	nodeA->force += force;
+	nodeB->force -= force;
 }

@@ -23,6 +23,10 @@ private:
 	std::vector<Fixer*> Fixers;
 	int m_numDoFs;
 
+	bool initialized = false;
+	Eigen::VectorXd _v;
+	float vDecrease = 1.0f;
+
 public:
 	bool Updated = false;
 

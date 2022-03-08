@@ -60,14 +60,21 @@ void Node::GetMassInv(std::vector<T>* massTripletVector)
 
 void Node::GetForce(Eigen::VectorXd* force)
 {
-	(*force)[index] = 0;
-	(*force)[index + 1] = mass * -9.81;
-	(*force)[index + 2] = 0;
+	Eigen::Vector3d forceV = Eigen::Vector3d(0, -mass * 9.81, 0);
+	forceV += -damping * vel;
+
+	(*force)[index] = forceV.x();
+	(*force)[index + 1] = forceV.y();
+	(*force)[index + 2] = forceV.z();
 }
 
 void Node::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel)
 {
-	(*derivPos).push_back(T(index + 1, index + 1, mass * -9.81));
+	derivPos->push_back(T(index + 1, index + 1, mass * -9.81));
+
+	derivVel->push_back(T(index, index, -damping * vel.x()));
+	derivVel->push_back(T(index + 1, index + 1, -damping * vel.y()));
+	derivVel->push_back(T(index + 2, index + 2, -damping * vel.z()));
 }
 
 void Node::FixVector(Eigen::VectorXd* v)
@@ -101,7 +108,7 @@ void Node::FixMatrix(Eigen::MatrixXd* M)
 
 void Node::FixMatrix(SpMat* M)
 {
-	
+
 }
 
 void Node::UpdateOld(float time, float h)
