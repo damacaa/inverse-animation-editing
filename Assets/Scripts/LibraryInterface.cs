@@ -47,10 +47,10 @@ public struct Int
 
 public class ICPPWrapper
 {
-    public ICPPWrapper()
+    public ICPPWrapper(Integration integrationMethod, float timeStep)
     {
         CPPWrapper.Destroy();
-        CPPWrapper.Initialize();
+        CPPWrapper.Initialize((int)integrationMethod,  timeStep);
     }
 
     public void Destroy()
@@ -107,7 +107,7 @@ public class ICPPWrapper
     public class CPPWrapper
     {
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void Initialize();
+        public static extern void Initialize(int integrationMethod, float timeStep);
 
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void Destroy();

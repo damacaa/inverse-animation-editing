@@ -4,20 +4,23 @@
 
 class Object;
 class Fixer;
+
+enum class Integration
+{
+	Explicit = 0,
+	Symplectic = 1,
+	Implicit = 2,
+};
+
 class PhysicsManager
 {
 private:
-	enum class Integration
-	{
-		Explicit = 0,
-		Symplectic = 1,
-		Implicit = 2,
-	};
+	
 
 	bool Paused = false;
 	float TimeStep;
 	Vector3f Gravity;
-	Integration IntegrationMethod = PhysicsManager::Integration::Implicit;
+	Integration integrationMethod = Integration::Implicit;
 
 	std::vector<Object*> SimObjects;
 	std::vector<Fixer*> Fixers;
@@ -27,10 +30,14 @@ private:
 	Eigen::VectorXd _v;
 	float vDecrease = 1.0f;
 
+	void PrintMat(SpMat mat, std::string name = "test");
+
 public:
 	bool Updated = false;
+	
 
-	PhysicsManager() {
+	PhysicsManager(Integration _IntegrationMethod) {
+		integrationMethod = _IntegrationMethod;
 		SimObjects = std::vector<Object*>();
 	}
 	~PhysicsManager();
@@ -50,6 +57,8 @@ public:
 	void StepImplicit(float time, float h);
 
 	Vector3f* GetVertices(int id, int* count);
+
+
 
 };
 

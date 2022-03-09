@@ -53,9 +53,10 @@ extern "C" {
 		}
 	}
 
-	__declspec(dllexport) void Initialize() {
+	__declspec(dllexport) void Initialize(int integrationMethod, float timeStep) {
 		if (!initialized) {
-			physicsManager = new PhysicsManager();
+			physicsManager = new PhysicsManager((Integration)integrationMethod);
+			delta = timeStep;
 
 			counter = new MyCounter();
 			threadCounter = new MyCounter();

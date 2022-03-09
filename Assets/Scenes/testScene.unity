@@ -264,6 +264,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e574c45ae3e46f488cf9b8e9f126c57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  integrationMethod: 2
+  timeStep: 0.01
 --- !u!23 &568410414
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -346,7 +348,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &569222091
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -359,6 +361,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e07beb4f46a9b9468cf6efc90ebd0a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  hideMesh: 0
 --- !u!65 &569222092
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -454,7 +457,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &699657456
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -467,6 +470,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e07beb4f46a9b9468cf6efc90ebd0a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  hideMesh: 0
 --- !u!65 &699657457
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -652,7 +656,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mass: 0.1
-  stiffness: 10000
+  stiffness: 100000
 --- !u!1 &942612671
 GameObject:
   m_ObjectHideFlags: 0
@@ -788,7 +792,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!65 &1330907955
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -877,6 +881,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e07beb4f46a9b9468cf6efc90ebd0a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  hideMesh: 1
 --- !u!1 &1386524596 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: b355611afddb6d345b727605b1f6e5bc,
@@ -896,7 +901,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mass: 1
-  stiffness: 500
+  stiffness: 2500
 --- !u!1 &1432531395
 GameObject:
   m_ObjectHideFlags: 0

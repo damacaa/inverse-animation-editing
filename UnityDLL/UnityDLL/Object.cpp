@@ -203,6 +203,8 @@ void Object::GetFixedIndices(std::vector<bool>* fixedIndices)
 	for (size_t i = 0; i < nVertices; i++)
 	{
 		(*fixedIndices)[nodeArray[i].index] = nodeArray[i].isFixed;
+		(*fixedIndices)[nodeArray[i].index + 1] = nodeArray[i].isFixed;
+		(*fixedIndices)[nodeArray[i].index + 2] = nodeArray[i].isFixed;
 	}
 }
 

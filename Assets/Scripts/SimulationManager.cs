@@ -10,6 +10,10 @@ using Random = UnityEngine.Random;
 public class SimulationManager : MonoBehaviour
 {
     public static SimulationManager instance;
+    [SerializeField]
+    Integration integrationMethod = Integration.Implicit;
+    [SerializeField]
+    float timeStep = 0.01f;
 
     ICPPWrapper cpp;
     private void Awake()
@@ -22,7 +26,7 @@ public class SimulationManager : MonoBehaviour
             instance = this;
 
         Debug.Log("Awake");
-        cpp = new ICPPWrapper();
+        cpp = new ICPPWrapper(integrationMethod, timeStep);
     }
 
     public int AddObject(Vector3 position, Vector3[] vertices, int[] triangles, float stiffness, float mass)
@@ -100,3 +104,10 @@ public class SimulationManager : MonoBehaviour
     }
 
 }
+
+public enum Integration
+{
+    Explicit = 0,
+	Symplectic = 1,
+	Implicit = 2,
+};

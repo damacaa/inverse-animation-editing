@@ -2,6 +2,47 @@
 #include "PhysicsManager.h"
 #include "Object.h"
 
+#include <iostream>
+#include <fstream>  
+
+
+void PhysicsManager::PrintMat(SpMat mat, std::string name)
+{
+	std::ofstream outfile(name + ".txt");
+
+	for (size_t x = 0; x < mat.rows(); x++)
+	{
+		for (size_t y = 0; y < mat.cols(); y++)
+		{
+			std::string a = std::to_string(mat.coeff(x, y));
+			if (a[0] != '-')
+				a = " " + a;
+			if (a == " 0.000000")
+				a = "         ";
+
+			outfile << a << " ";
+		}
+		outfile << std::endl;
+	}
+
+	outfile.close();
+
+	std::ofstream outfile2(name + "2.txt");
+
+	for (int i = 0; i < mat.outerSize(); i++) {
+
+		for (typename Eigen::SparseMatrix<double>::InnerIterator it(mat, i); it; ++it) {
+			std::string a = std::to_string(mat.coeff(it.row(), it.col()));
+			if (a[0] != '-')
+				a = " " + a;
+
+			outfile2 << a << " ";
+		}
+		outfile2 << std::endl;
+	}
+
+	outfile2.close();
+}
 
 PhysicsManager::~PhysicsManager()
 {
@@ -72,14 +113,14 @@ void PhysicsManager::Update(float time, float h)
 		return; // Not simulating
 
 	// Select integration method
-	switch (IntegrationMethod)
+	switch (integrationMethod)
 	{
-	case PhysicsManager::Integration::Explicit:
+	case Integration::Explicit:
 		break;
-	case PhysicsManager::Integration::Symplectic:
+	case Integration::Symplectic:
 		StepSymplecticSparse(time, h);
 		break;
-	case PhysicsManager::Integration::Implicit:
+	case Integration::Implicit:
 		StepImplicit(time, h);
 		break;
 	default:
@@ -223,49 +264,36 @@ void PhysicsManager::StepImplicit(float time, float h)
 		SimObjects[i]->GetMassInverse(&massesInv);
 	}
 
-
 	std::vector<bool> fixedIndices(m_numDoFs);
 	for (int i = 0; i < SimObjects.size(); i++)
 		SimObjects[i]->GetFixedIndices(&fixedIndices);
 
-	/*for (size_t i = 0; i < fixedIndices.size(); i++)
-	{
-		for (size_t x = 0; x < derivPos.size(); x++)
-		{
-			if (i == derivPos[x].col() / 3) {
-
-				if (derivPos[x].col() == derivPos[x].row())
-					derivPos[x] = T(derivPos[x].row(), derivPos[x].col(), 1);
-				else
-					derivPos[x] = T(derivPos[x].row(), derivPos[x].col(), 0);
-
-			}
-		}
-	}*/
-
-	//For future reference
+	//For future reference maybe
 	//https://stackoverflow.com/questions/45301305/set-sparsity-pattern-of-eigensparsematrix-without-memory-overhead
 	M.setFromTriplets(masses.begin(), masses.end());
 	dFdx.setFromTriplets(derivPos.begin(), derivPos.end(), [](const double& a, const double& b) { return a + b; });
 	dFdv.setFromTriplets(derivVel.begin(), derivVel.end(), [](const double& a, const double& b) { return a + b; });
 
-
-	/*for (size_t i = 0; i < derivPos.size(); i++)
-	{
-		//fila y columna coinciden y fijo = 1
-		//fila y columna no coinciden y fila O columna fijo = 0
-		int nodeIndex = derivPos[i].col() / 3;
-
-		if (fixedIndices[nodeIndex]) {
-			if (derivPos[i].col() == derivPos[i].row())
-				derivPos[i] = T(derivPos[i].row(), derivPos[i].col(), 1);
-			else
-				derivPos[i] = T(derivPos[i].row(), derivPos[i].col(), 0);
-		}
-	}*/
-
 	SpMat A = M - h * dFdv - h * h * dFdx;
 	Eigen::VectorXd b = (M - h * dFdv) * v + h * f;
+
+	//FIXING
+	std::vector<T> tripletsA;
+	for (int i = 0; i < A.outerSize(); i++)
+		for (typename Eigen::SparseMatrix<double>::InnerIterator it(A, i); it; ++it) {
+			if (!fixedIndices[it.row()] && !fixedIndices[it.col()])
+				tripletsA.emplace_back(it.row(), it.col(), it.value());
+			else if (it.row() == it.col())
+				tripletsA.emplace_back(it.row(), it.col(), 1);
+		}
+	A.setFromTriplets(tripletsA.begin(), tripletsA.end());
+
+	for (size_t i = 0; i < m_numDoFs; i ++)
+	{
+		if (fixedIndices[i]) {
+			b[i] = 0;
+		}
+	}
 
 	//A.Solve(b, v);
 	//Eigen::SimplicialCholesky<SpMat> chol(A);
@@ -286,16 +314,14 @@ void PhysicsManager::StepImplicit(float time, float h)
 	}
 	_v = v;
 
-	//v = cg.solve(b);
-
-	for (size_t i = 0; i < m_numDoFs; i += 3)
+	/*for (size_t i = 0; i < m_numDoFs; i += 3)
 	{
 		if (fixedIndices[i]) {
 			v[i] = 0;
 			v[i + 1] = 0;
 			v[i + 2] = 0;
 		}
-	}
+	}*/
 
 	x += h * v;
 
