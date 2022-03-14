@@ -24,6 +24,7 @@ Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, in
 			(double)vertexArray[i].x,
 			(double)vertexArray[i].y,
 			(double)vertexArray[i].z);
+
 		nodeArray[i].id = std::to_string(i);
 		nodeArray[i].damping = damping;
 	}
@@ -119,6 +120,14 @@ void Object::Update(float time, float h)
 		nodeArray[i].UpdateOld(time, h);
 
 	updated = true;
+}
+
+void Object::SetParameter(float parameter)
+{
+	for (size_t i = 0; i < nSprings; i++)
+	{
+		springArray[i].stiffness = parameter;
+	}
 }
 
 void Object::FixnodeArray(Fixer* f)

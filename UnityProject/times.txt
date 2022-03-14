@@ -1,0 +1,7 @@
+Set up: 0.098600 --> 0%
+Calculating forces: 11.587200 --> 40%
+Building matrices from triples: 6.490500 --> 22%
+Calculating A and b: 2.245900 --> 8%
+Fixing: 3.416500 --> 12%
+Solving: 5.418400 --> 19%
+Total: 29.257100

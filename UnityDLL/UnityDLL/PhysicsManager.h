@@ -15,7 +15,7 @@ enum class Integration
 class PhysicsManager
 {
 private:
-	
+
 
 	bool Paused = false;
 	float TimeStep;
@@ -27,14 +27,22 @@ private:
 	int m_numDoFs;
 
 	bool initialized = false;
-	Eigen::VectorXd _v;
-	float vDecrease = 1.0f;
+	Eigen::VectorXd* x;
+	Eigen::VectorXd* v;
+	//Eigen::VectorXd _v;
+
+
+	//Debug
+	std::vector<std::chrono::steady_clock::time_point> timePoints = std::vector<std::chrono::steady_clock::time_point>();
+	std::vector<std::string> timePointNames = std::vector<std::string>();
+	void RecordTime(std::string name);
+	void PrintTimes();
 
 	void PrintMat(SpMat mat, std::string name = "test");
 
 public:
 	bool Updated = false;
-	
+
 
 	PhysicsManager(Integration _IntegrationMethod) {
 		integrationMethod = _IntegrationMethod;
@@ -54,7 +62,7 @@ public:
 
 	void StepSymplecticSparse(float time, float h);
 
-	void StepImplicit(float time, float h);
+	void StepImplicit(float time, float h, Eigen::VectorXd* _x, Eigen::VectorXd* _v, float parameter = -1);
 
 	Vector3f* GetVertices(int id, int* count);
 

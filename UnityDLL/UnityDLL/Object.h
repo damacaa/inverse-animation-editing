@@ -36,6 +36,8 @@ public:
 	Object(Vector3f pos, Vector3f* vertices, int nVerts, int* triangles, int nTriangles, float stiffness, float mass);
 	~Object();
 
+	void SetParameter(float parameter);
+
 	void Update(float time, float h);
 
 	void Initialize(int* ind);
