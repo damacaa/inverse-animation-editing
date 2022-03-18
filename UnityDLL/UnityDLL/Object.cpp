@@ -2,6 +2,7 @@
 #include "Object.h"
 #include <set>
 #include <map>
+#include "DebugHelper.h"
 
 Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, int nTriangles, float stiffness, float mass)
 {
@@ -187,10 +188,20 @@ void Object::SetVelocity(Eigen::VectorXd* velocity)
 
 void Object::GetForce(Eigen::VectorXd* force)
 {
-	for (int i = 0; i < nVertices; ++i)
+	DebugHelper debug = DebugHelper();
+
+	debug.RecordTime("Forces");
+	for (int i = 0; i < nVertices; ++i) {
 		nodeArray[i].GetForce(force);
+	}
+
+	debug.RecordTime("Jacobians");
 	for (int i = 0; i < nSprings; ++i)
+	{
 		springArray[i].GetForce(force);
+	}
+
+	//debug.PrintTimes("Forces");
 }
 
 void Object::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel)

@@ -1,26 +1,27 @@
-﻿  PhysicsManager.cpp
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(19,23): warning C4018: '<': signed/unsigned mismatch
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(21,24): warning C4018: '<': signed/unsigned mismatch
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(324,43): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+﻿  DebugHelper.cpp
+D:\Projects\UnityDLL\UnityDLL\UnityDLL\DebugHelper.cpp(16,23): warning C4018: '<': signed/unsigned mismatch
+D:\Projects\UnityDLL\UnityDLL\UnityDLL\DebugHelper.cpp(18,24): warning C4018: '<': signed/unsigned mismatch
+  PhysicsManager.cpp
+D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(278,43): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(324,33): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(278,33): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(326,43): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(280,43): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(326,33): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(280,33): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-  LINK : D:\Projects\UnityDLL\UnityDLL\x64\Debug\UnityDLL.dll not found or not built by the last incremental link; performing full link
+  Generating Code...
      Creating library D:\Projects\UnityDLL\UnityDLL\x64\Debug\UnityDLL.lib and object D:\Projects\UnityDLL\UnityDLL\x64\Debug\UnityDLL.exp
   UnityDLL.vcxproj -> D:\Projects\UnityDLL\UnityDLL\x64\Debug\UnityDLL.dll

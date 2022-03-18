@@ -1,30 +1,29 @@
-﻿  PhysicsManager.cpp
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(19,23): warning C4018: '<': signed/unsigned mismatch
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(21,24): warning C4018: '<': signed/unsigned mismatch
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(334,43): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+﻿  Object.cpp
+  PhysicsManager.cpp
+D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(287,43): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(334,33): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(287,33): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(336,43): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(289,43): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(336,33): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+D:\Projects\UnityDLL\UnityDLL\UnityDLL\PhysicsManager.cpp(289,33): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
      Creating library D:\Projects\UnityDLL\UnityDLL\x64\Release\UnityDLL.lib and object D:\Projects\UnityDLL\UnityDLL\x64\Release\UnityDLL.exp
   Generating code
-  2 of 3144 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+  54 of 3222 functions ( 1.7%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    21 functions had inline decision re-evaluated but remain unchanged
+    27 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   UnityDLL.vcxproj -> D:\Projects\UnityDLL\UnityDLL\x64\Release\UnityDLL.dll

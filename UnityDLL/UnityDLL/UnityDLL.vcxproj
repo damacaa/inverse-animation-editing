@@ -152,6 +152,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="DebugHelper.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Fixer.h" />
     <ClInclude Include="framework.h" />
@@ -163,6 +164,7 @@
     <ClInclude Include="Types.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DebugHelper.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Fixer.cpp" />
     <ClCompile Include="Node.cpp" />

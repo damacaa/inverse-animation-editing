@@ -29,25 +29,12 @@ private:
 	bool initialized = false;
 	Eigen::VectorXd* x;
 	Eigen::VectorXd* v;
-	//Eigen::VectorXd _v;
-
-
-	//Debug
-	std::vector<std::chrono::steady_clock::time_point> timePoints = std::vector<std::chrono::steady_clock::time_point>();
-	std::vector<std::string> timePointNames = std::vector<std::string>();
-	void RecordTime(std::string name);
-	void PrintTimes();
-
-	void PrintMat(SpMat mat, std::string name = "test");
 
 public:
 	bool Updated = false;
 
 
-	PhysicsManager(Integration _IntegrationMethod) {
-		integrationMethod = _IntegrationMethod;
-		SimObjects = std::vector<Object*>();
-	}
+	PhysicsManager(Integration _IntegrationMethod);
 	~PhysicsManager();
 
 	int AddObject(Vector3f position, Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass);

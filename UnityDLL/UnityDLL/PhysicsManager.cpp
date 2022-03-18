@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "PhysicsManager.h"
 #include "Object.h"
+#include "DebugHelper.h"
 
 #include <iostream>
 #include <fstream>  
@@ -12,67 +13,10 @@ using std::chrono::duration;
 using std::chrono::milliseconds;
 
 
-void PhysicsManager::PrintMat(SpMat mat, std::string name)
+PhysicsManager::PhysicsManager(Integration _IntegrationMethod)
 {
-	std::ofstream outfile(name + ".txt");
-
-	for (size_t x = 0; x < mat.rows(); x++)
-	{
-		for (size_t y = 0; y < mat.cols(); y++)
-		{
-			std::string a = std::to_string(mat.coeff(x, y));
-			if (a[0] != '-')
-				a = " " + a;
-			if (a == " 0.000000")
-				a = "         ";
-
-			outfile << a << " ";
-		}
-		outfile << std::endl;
-	}
-
-	outfile.close();
-
-	std::ofstream outfile2(name + "2.txt");
-
-	for (int i = 0; i < mat.outerSize(); i++) {
-
-		for (typename Eigen::SparseMatrix<double>::InnerIterator it(mat, i); it; ++it) {
-			std::string a = std::to_string(mat.coeff(it.row(), it.col()));
-			if (a[0] != '-')
-				a = " " + a;
-
-			outfile2 << a << " ";
-		}
-		outfile2 << std::endl;
-	}
-
-	outfile2.close();
-}
-
-void PhysicsManager::RecordTime(std::string name)
-{
-	timePoints.push_back(high_resolution_clock::now());
-	timePointNames.push_back(name);
-}
-
-void PhysicsManager::PrintTimes()
-{
-	std::ofstream outfile("times.txt");
-	timePoints.push_back(high_resolution_clock::now());
-	double totalTime = (timePoints[timePoints.size() - 1] - timePoints[0]).count() / 1000000.0;
-	for (size_t i = 0; i < timePoints.size() - 1; i++)
-	{
-		double timeInMiliseconds = (timePoints[i + 1] - timePoints[i]).count() / 1000000.0;
-		outfile << timePointNames[i] << ": " << std::to_string(timeInMiliseconds) << " --> "
-			<< std::to_string((int)(0.5 + (100 * (timeInMiliseconds / totalTime)))) + "%" << std::endl;
-	}
-
-	outfile << "Total: " << std::to_string(totalTime) << std::endl;
-
-	outfile.close();
-	timePointNames.clear();
-	timePoints.clear();
+	integrationMethod = _IntegrationMethod;
+	SimObjects = std::vector<Object*>();
 }
 
 PhysicsManager::~PhysicsManager()
@@ -159,7 +103,7 @@ void PhysicsManager::Update(float time, float h)
 		StepSymplecticSparse(time, h);
 		break;
 	case Integration::Implicit:
-		StepImplicit(time, h, x, v, 100.0f + (500.0f * sin(time / 5.0f)));
+		StepImplicit(time, h, x, v, 150);
 		break;
 	default:
 		break;
@@ -275,21 +219,21 @@ void PhysicsManager::StepSymplecticSparse(float time, float h)
 
 void PhysicsManager::StepImplicit(float time, float h, Eigen::VectorXd* _x, Eigen::VectorXd* _v, float parameter)
 {
-	RecordTime("Set up");
+	DebugHelper debugHelper = DebugHelper();
+	debugHelper.RecordTime("Set up");
 
 	//Eigen::VectorXd x = Eigen::VectorXd(m_numDoFs);//Positions
 	//Eigen::VectorXd v = Eigen::VectorXd(m_numDoFs);//Velocities
 	Eigen::VectorXd f = Eigen::VectorXd::Constant(m_numDoFs, 0.0);//Forces
 
-	SpMat M(m_numDoFs, m_numDoFs);
 	SpMat dFdx(m_numDoFs, m_numDoFs);
 	SpMat dFdv(m_numDoFs, m_numDoFs);
-
-	std::vector<T> masses = std::vector<T>();
 	std::vector<T> derivPos = std::vector<T>();
 	std::vector<T> derivVel = std::vector<T>();
 
+	SpMat M(m_numDoFs, m_numDoFs);
 	SpMat Minv(m_numDoFs, m_numDoFs);
+	std::vector<T> masses = std::vector<T>();
 	std::vector<T> massesInv = std::vector<T>();
 
 	for (int i = 0; i < SimObjects.size(); i++)
@@ -306,27 +250,36 @@ void PhysicsManager::StepImplicit(float time, float h, Eigen::VectorXd* _x, Eige
 		SimObjects[i]->GetFixedIndices(&fixedIndices);
 
 	//FORCES
-	RecordTime("Calculating forces");
+	debugHelper.RecordTime("Calculating forces");
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
 		SimObjects[i]->GetForce(&f);
+		//SimObjects[i]->GetForceJacobian(&derivPos, &derivVel);
+	}
+
+	//FORCES
+	debugHelper.RecordTime("Calculating jacobian");
+	for (int i = 0; i < SimObjects.size(); i++)
+	{
+		//SimObjects[i]->GetForce(&f);
 		SimObjects[i]->GetForceJacobian(&derivPos, &derivVel);
 	}
 
-	RecordTime("Building matrices from triples");
+
+	debugHelper.RecordTime("Building matrices from triples");
 	//For future reference maybe
 	//https://stackoverflow.com/questions/45301305/set-sparsity-pattern-of-eigensparsematrix-without-memory-overhead
-	M.setFromTriplets(masses.begin(), masses.end());
 	dFdx.setFromTriplets(derivPos.begin(), derivPos.end(), [](const double& a, const double& b) { return a + b; });
 	dFdv.setFromTriplets(derivVel.begin(), derivVel.end(), [](const double& a, const double& b) { return a + b; });
+	M.setFromTriplets(masses.begin(), masses.end());
 
 	//MATRIX OPERATIONS
-	RecordTime("Calculating A and b");
+	debugHelper.RecordTime("Calculating A and b");
 	SpMat A = M - h * dFdv - h * h * dFdx;
 	Eigen::VectorXd b = (M - h * dFdv) * (*_v) + h * f;
 
 	//FIXING
-	RecordTime("Fixing");
+	debugHelper.RecordTime("Fixing");
 	std::vector<T> tripletsA;
 	for (int i = 0; i < A.outerSize(); i++)
 		for (typename Eigen::SparseMatrix<double>::InnerIterator it(A, i); it; ++it) {
@@ -345,7 +298,7 @@ void PhysicsManager::StepImplicit(float time, float h, Eigen::VectorXd* _x, Eige
 	}
 
 	//SOLVING
-	RecordTime("Solving");
+	debugHelper.RecordTime("Solving");
 	//A.Solve(b, v);
 	//Eigen::SimplicialCholesky<SpMat> chol(A);
 	//v = chol.solve(b);
@@ -376,7 +329,7 @@ void PhysicsManager::StepImplicit(float time, float h, Eigen::VectorXd* _x, Eige
 
 	* _x += h * (*_v);
 
-	PrintTimes();
+	debugHelper.PrintTimes();
 
 
 	for (int i = 0; i < SimObjects.size(); i++)
