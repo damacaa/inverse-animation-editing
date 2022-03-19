@@ -51,16 +51,16 @@ void DebugHelper::PrintValue(std::string value, std::string fileName)
 {
 	std::ofstream outfile(fileName + ".txt");
 
-	for (size_t i = 0; i < 10; i++)
-	{
-		outfile << value << std::endl;
-	}
+	outfile << value << std::endl;
 
 	outfile.close();
 }
 
 void DebugHelper::RecordTime(std::string name)
 {
+	if (!enabled)
+		return;
+
 	timePoints.push_back(high_resolution_clock::now());
 	timePointNames.push_back(name);
 
@@ -78,6 +78,9 @@ void DebugHelper::RecordTime(std::string name)
 
 void DebugHelper::PrintTimes(std::string fileName)
 {
+	if (!enabled)
+		return;
+
 	std::ofstream outfile(fileName + ".txt");
 	timePoints.push_back(high_resolution_clock::now());
 	double totalTime = (timePoints[timePoints.size() - 1] - timePoints[0]).count() / 1000000.0;

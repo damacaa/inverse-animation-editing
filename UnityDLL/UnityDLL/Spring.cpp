@@ -12,11 +12,11 @@ Spring::Spring(Node* A, Node* B, float _stiffness, float _damping)
 	length = (nodeA->position - nodeB->position).norm();
 	length0 = length;
 
-	if (nodeA->id > nodeB->id) {
-		id = nodeA->id + nodeB->id;
+	if (nodeA->meshId > nodeB->meshId) {
+		id = std::to_string(10000 * nodeA->meshId) + std::to_string(nodeB->meshId);
 	}
 	else {
-		id = nodeB->id + nodeA->id;
+		id = std::to_string(10000 * nodeB->meshId) + std::to_string(nodeA->meshId);
 	}
 }
 

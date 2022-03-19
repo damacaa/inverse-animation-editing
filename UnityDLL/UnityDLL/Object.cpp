@@ -26,7 +26,7 @@ Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, in
 			(double)vertexArray[i].y,
 			(double)vertexArray[i].z);
 
-		nodeArray[i].id = std::to_string(i);
+		nodeArray[i].meshId = i;
 		nodeArray[i].damping = damping;
 	}
 
@@ -52,12 +52,10 @@ Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, in
 
 		float area = 0.5f * (float)side1.cross(side2).norm();
 
-		//float area = 0.1f;
-
 		for (int x = 0; x < 3; x++)
 		{//Add the proper mass to each node
 
-			nodeArray[triangles[i + x]].volume += area / 3;
+			nodeArray[triangles[i + x]].volume += area / 3.0;
 
 			std::map<std::string, Spring>::iterator it = springMap.find(newspringArray[x].id);
 
@@ -188,28 +186,33 @@ void Object::SetVelocity(Eigen::VectorXd* velocity)
 
 void Object::GetForce(Eigen::VectorXd* force)
 {
-	DebugHelper debug = DebugHelper();
-
-	debug.RecordTime("Forces");
-	for (int i = 0; i < nVertices; ++i) {
+	for (int i = 0; i < nVertices; ++i)
 		nodeArray[i].GetForce(force);
-	}
 
-	debug.RecordTime("Jacobians");
 	for (int i = 0; i < nSprings; ++i)
-	{
 		springArray[i].GetForce(force);
-	}
-
-	//debug.PrintTimes("Forces");
 }
 
+#include <chrono>
+
+using std::chrono::high_resolution_clock;
+using std::chrono::duration_cast;
+using std::chrono::duration;
+using std::chrono::milliseconds;
 void Object::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel)
 {
+	//DebugHelper debug = DebugHelper();
+	//std::string a = std::to_string(nVertices) + " vertices";
+	//debug.RecordTime(a);
 	for (int i = 0; i < nVertices; ++i)
 		nodeArray[i].GetForceJacobian(derivPos, derivVel);
+
+	//a = std::to_string(nSprings) + " springs";
+	//debug.RecordTime(a);
 	for (int i = 0; i < nSprings; ++i)
 		springArray[i].GetForceJacobian(derivPos, derivVel);
+
+	//debug.PrintTimes("forces");
 }
 
 void Object::GetMass(Eigen::MatrixXd* mass)

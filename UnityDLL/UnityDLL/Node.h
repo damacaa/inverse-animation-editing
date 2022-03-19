@@ -22,6 +22,7 @@ private:
 
 public:
 	Node() : isFixed(false) {};
+	int meshId = -1;
 
 	Eigen::Index index = 0;
 	Eigen::Vector3d position = Eigen::Vector3d(0.0f, 0.0f, 0.0f);
@@ -40,7 +41,6 @@ public:
 
 	bool isFixed;
 
-	std::string id = "";
 
 	void Initialize(int ind);
 

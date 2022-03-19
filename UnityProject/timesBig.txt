@@ -1,9 +1,0 @@
-Set up: 0.110600 --> 0%
-Calculating forces: 0.135900 --> 0%
-Calculating jacobian: 10.083500 --> 37%
-Building matrices from triples: 6.072200 --> 22%
-Calculating A and b: 2.120600 --> 8%
-Fixing: 3.822700 --> 14%
-Solving: 5.190600 --> 19%
-Total: 27.536100
-Average: 3.933729

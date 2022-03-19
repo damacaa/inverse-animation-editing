@@ -17,6 +17,7 @@ public:
 		timePointNames = std::vector<std::string>();
 	};
 	~DebugHelper() {};
+	bool enabled = true;
 
 	void RecordTime(std::string name);
 	void PrintTimes(std::string fileName = "times");

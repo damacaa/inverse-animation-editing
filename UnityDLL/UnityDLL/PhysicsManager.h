@@ -16,6 +16,11 @@ class PhysicsManager
 {
 private:
 
+	struct SimulationInfo {
+		Eigen::VectorXd* x;
+		Eigen::VectorXd* v;
+		double parameter;
+	};
 
 	bool Paused = false;
 	float TimeStep;
@@ -27,12 +32,10 @@ private:
 	int m_numDoFs;
 
 	bool initialized = false;
-	Eigen::VectorXd* x;
-	Eigen::VectorXd* v;
+	SimulationInfo _simulationInfo;
 
 public:
 	bool Updated = false;
-
 
 	PhysicsManager(Integration _IntegrationMethod);
 	~PhysicsManager();
@@ -49,11 +52,10 @@ public:
 
 	void StepSymplecticSparse(float time, float h);
 
-	void StepImplicit(float time, float h, Eigen::VectorXd* _x, Eigen::VectorXd* _v, float parameter = -1);
+	SimulationInfo StepImplicit(float time, float h, SimulationInfo simulationInfo);
 
 	Vector3f* GetVertices(int id, int* count);
 
-
-
 };
+
 

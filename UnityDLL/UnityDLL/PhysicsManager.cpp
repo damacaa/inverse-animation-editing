@@ -76,13 +76,17 @@ void PhysicsManager::Start()
 		m_numDoFs += SimObjects[i]->GetNumDoFs();
 	}
 
-	x = new Eigen::VectorXd(m_numDoFs);
-	v = new Eigen::VectorXd(m_numDoFs);
+	Eigen::VectorXd* x = new Eigen::VectorXd(m_numDoFs);
+	Eigen::VectorXd* v = new Eigen::VectorXd(m_numDoFs);
 	for (size_t i = 0; i < SimObjects.size(); i++)
 	{
 		SimObjects[i]->GetPosition(x);
 		SimObjects[i]->GetVelocity(v);
 	}
+
+	_simulationInfo = SimulationInfo();
+	_simulationInfo.x = x;
+	_simulationInfo.v = v;
 
 	initialized = false;
 }
@@ -103,7 +107,7 @@ void PhysicsManager::Update(float time, float h)
 		StepSymplecticSparse(time, h);
 		break;
 	case Integration::Implicit:
-		StepImplicit(time, h, x, v, 150);
+		_simulationInfo = StepImplicit(time, h, _simulationInfo);
 		break;
 	default:
 		break;
@@ -217,10 +221,10 @@ void PhysicsManager::StepSymplecticSparse(float time, float h)
 	}
 }
 
-void PhysicsManager::StepImplicit(float time, float h, Eigen::VectorXd* _x, Eigen::VectorXd* _v, float parameter)
+PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float time, float h, SimulationInfo simulationInfo)
 {
-	DebugHelper debugHelper = DebugHelper();
-	debugHelper.RecordTime("Set up");
+	//DebugHelper debugHelper = DebugHelper();
+	//debugHelper.RecordTime("Set up");
 
 	//Eigen::VectorXd x = Eigen::VectorXd(m_numDoFs);//Positions
 	//Eigen::VectorXd v = Eigen::VectorXd(m_numDoFs);//Velocities
@@ -250,7 +254,7 @@ void PhysicsManager::StepImplicit(float time, float h, Eigen::VectorXd* _x, Eige
 		SimObjects[i]->GetFixedIndices(&fixedIndices);
 
 	//FORCES
-	debugHelper.RecordTime("Calculating forces");
+	//debugHelper.RecordTime("Calculating forces");
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
 		SimObjects[i]->GetForce(&f);
@@ -258,7 +262,7 @@ void PhysicsManager::StepImplicit(float time, float h, Eigen::VectorXd* _x, Eige
 	}
 
 	//FORCES
-	debugHelper.RecordTime("Calculating jacobian");
+	//debugHelper.RecordTime("Calculating jacobian");
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
 		//SimObjects[i]->GetForce(&f);
@@ -266,7 +270,7 @@ void PhysicsManager::StepImplicit(float time, float h, Eigen::VectorXd* _x, Eige
 	}
 
 
-	debugHelper.RecordTime("Building matrices from triples");
+	//debugHelper.RecordTime("Building matrices from triples");
 	//For future reference maybe
 	//https://stackoverflow.com/questions/45301305/set-sparsity-pattern-of-eigensparsematrix-without-memory-overhead
 	dFdx.setFromTriplets(derivPos.begin(), derivPos.end(), [](const double& a, const double& b) { return a + b; });
@@ -274,12 +278,12 @@ void PhysicsManager::StepImplicit(float time, float h, Eigen::VectorXd* _x, Eige
 	M.setFromTriplets(masses.begin(), masses.end());
 
 	//MATRIX OPERATIONS
-	debugHelper.RecordTime("Calculating A and b");
+	//debugHelper.RecordTime("Calculating A and b");
 	SpMat A = M - h * dFdv - h * h * dFdx;
-	Eigen::VectorXd b = (M - h * dFdv) * (*_v) + h * f;
+	Eigen::VectorXd b = (M - h * dFdv) * (*simulationInfo.v) + h * f;
 
 	//FIXING
-	debugHelper.RecordTime("Fixing");
+	//debugHelper.RecordTime("Fixing");
 	std::vector<T> tripletsA;
 	for (int i = 0; i < A.outerSize(); i++)
 		for (typename Eigen::SparseMatrix<double>::InnerIterator it(A, i); it; ++it) {
@@ -298,7 +302,7 @@ void PhysicsManager::StepImplicit(float time, float h, Eigen::VectorXd* _x, Eige
 	}
 
 	//SOLVING
-	debugHelper.RecordTime("Solving");
+	//debugHelper.RecordTime("Solving");
 	//A.Solve(b, v);
 	//Eigen::SimplicialCholesky<SpMat> chol(A);
 	//v = chol.solve(b);
@@ -310,10 +314,10 @@ void PhysicsManager::StepImplicit(float time, float h, Eigen::VectorXd* _x, Eige
 	if (initialized) {
 		//Minv.setFromTriplets(massesInv.begin(), massesInv.end());
 		//_v = _v + h * (Minv * f);
-		*_v = cg.solveWithGuess(b, *_v);
+		*simulationInfo.v = cg.solveWithGuess(b, *simulationInfo.v);
 	}
 	else {
-		*_v = cg.solve(b);
+		*simulationInfo.v = cg.solve(b);
 		initialized = true;
 	}
 
@@ -327,16 +331,18 @@ void PhysicsManager::StepImplicit(float time, float h, Eigen::VectorXd* _x, Eige
 		}
 	}*/
 
-	* _x += h * (*_v);
+	(*simulationInfo.x) += h * (*simulationInfo.v);
 
-	debugHelper.PrintTimes();
+	//debugHelper.PrintTimes();
 
 
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
-		SimObjects[i]->SetPosition(_x);
-		SimObjects[i]->SetVelocity(_v);
+		SimObjects[i]->SetPosition(simulationInfo.x);
+		SimObjects[i]->SetVelocity(simulationInfo.v);
 	}
+
+	return simulationInfo;
 }
 
 Vector3f* PhysicsManager::GetVertices(int id, int* count)
