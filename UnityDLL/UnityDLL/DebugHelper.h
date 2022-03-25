@@ -9,6 +9,10 @@ private:
 	std::vector<std::string> timePointNames;
 
 	std::map<std::string, std::chrono::steady_clock::time_point> timePointMap;
+
+	std::chrono::steady_clock::time_point lastTimepoint;
+	std::string lastName;
+	std::map<std::string, double> durations;
 	std::map<std::string, int> occurances;
 
 public:
@@ -20,7 +24,8 @@ public:
 	bool enabled = true;
 
 	void RecordTime(std::string name);
-	void PrintTimes(std::string fileName = "times");
+	void Wait();
+	void PrintTimes(std::string fileName = "times", std::string description = "");
 
 	void PrintValue(std::string value, std::string fileName = "value");
 

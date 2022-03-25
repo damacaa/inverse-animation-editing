@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "PhysicsManager.h"
 #include "Object.h"
-#include "DebugHelper.h"
 
 #include <iostream>
 #include <fstream>  
@@ -12,7 +11,6 @@ using std::chrono::duration_cast;
 using std::chrono::duration;
 using std::chrono::milliseconds;
 
-
 PhysicsManager::PhysicsManager(Integration _IntegrationMethod)
 {
 	integrationMethod = _IntegrationMethod;
@@ -21,6 +19,10 @@ PhysicsManager::PhysicsManager(Integration _IntegrationMethod)
 
 PhysicsManager::~PhysicsManager()
 {
+	std::string name = std::to_string(SimObjects[0]->nVertices) + " vertices and ";
+	name += std::to_string(SimObjects[0]->nSprings) + " springs.";
+	debugHelper.PrintTimes("times", name);
+
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
 		delete SimObjects[i];
@@ -32,6 +34,7 @@ PhysicsManager::~PhysicsManager()
 		delete Fixers[i];
 	}
 	Fixers.clear();
+
 }
 
 int PhysicsManager::AddObject(Vector3f position, Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass)
@@ -63,9 +66,10 @@ void PhysicsManager::AddFixer(Vector3f position, Vector3f scale)
 
 void PhysicsManager::Start()
 {
+	debugHelper = DebugHelper();
+
 	//Parse the simulable objects and initialize their state indices
 	m_numDoFs = 0;
-	//m_objs = new List<ISimulable>(SimObjects.Capacity);
 
 	for (size_t i = 0; i < SimObjects.size(); i++)
 	{
@@ -104,7 +108,7 @@ void PhysicsManager::Update(float time, float h)
 	case Integration::Explicit:
 		break;
 	case Integration::Symplectic:
-		StepSymplecticSparse(time, h);
+		StepSymplectic(time, h);
 		break;
 	case Integration::Implicit:
 		_simulationInfo = StepImplicit(time, h, _simulationInfo);
@@ -123,40 +127,7 @@ void PhysicsManager::StepSymplecticOld(float time, float h) {
 	}
 }
 
-void PhysicsManager::StepSymplecticDense(float time, float h) {
-	Eigen::VectorXd x = Eigen::VectorXd(m_numDoFs);
-	Eigen::VectorXd v = Eigen::VectorXd(m_numDoFs);
-	Eigen::VectorXd f = Eigen::VectorXd::Constant(m_numDoFs, 0.0);
-	//Eigen::MatrixXd Minv = Eigen::MatrixXd::Constant(m_numDoFs, m_numDoFs, 0.0);
-	Eigen::MatrixXd Minv = Eigen::MatrixXd::Zero(m_numDoFs, m_numDoFs);
-
-	for (int i = 0; i < SimObjects.size(); i++)
-	{
-		SimObjects[i]->GetPosition(&x);
-		SimObjects[i]->GetVelocity(&v);
-		SimObjects[i]->GetForce(&f);
-		SimObjects[i]->GetMassInverse(&Minv);
-	}
-
-	for (int i = 0; i < SimObjects.size(); i++)
-	{
-		SimObjects[i]->FixVector(&f);
-		SimObjects[i]->FixMatrix(&Minv);
-	}
-
-	//v += h * (Minv * f);
-	v = (v * 0.99) + h * (Minv * f);
-	x += h * v;
-	//x = Eigen::VectorXd::Zero(m_numDoFs);
-
-	for (int i = 0; i < SimObjects.size(); i++)
-	{
-		SimObjects[i]->SetPosition(&x);
-		SimObjects[i]->SetVelocity(&v);
-	}
-}
-
-void PhysicsManager::StepSymplecticSparse(float time, float h)
+void PhysicsManager::StepSymplectic(float time, float h)
 {
 	Eigen::VectorXd x = Eigen::VectorXd(m_numDoFs);
 	Eigen::VectorXd v = Eigen::VectorXd(m_numDoFs);
@@ -223,11 +194,8 @@ void PhysicsManager::StepSymplecticSparse(float time, float h)
 
 PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float time, float h, SimulationInfo simulationInfo)
 {
-	//DebugHelper debugHelper = DebugHelper();
-	//debugHelper.RecordTime("Set up");
+	debugHelper.RecordTime("1.Set up");
 
-	//Eigen::VectorXd x = Eigen::VectorXd(m_numDoFs);//Positions
-	//Eigen::VectorXd v = Eigen::VectorXd(m_numDoFs);//Velocities
 	Eigen::VectorXd f = Eigen::VectorXd::Constant(m_numDoFs, 0.0);//Forces
 
 	SpMat dFdx(m_numDoFs, m_numDoFs);
@@ -242,9 +210,6 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float time, float h,
 
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
-		//SimObjects[i]->GetPosition(&x);
-		//SimObjects[i]->GetVelocity(&v);
-		//SimObjects[i]->SetParameter(parameter);
 		SimObjects[i]->GetMass(&masses);
 		SimObjects[i]->GetMassInverse(&massesInv);
 	}
@@ -254,23 +219,14 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float time, float h,
 		SimObjects[i]->GetFixedIndices(&fixedIndices);
 
 	//FORCES
-	//debugHelper.RecordTime("Calculating forces");
+	debugHelper.RecordTime("2.Calculating forces");
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
 		SimObjects[i]->GetForce(&f);
-		//SimObjects[i]->GetForceJacobian(&derivPos, &derivVel);
-	}
-
-	//FORCES
-	//debugHelper.RecordTime("Calculating jacobian");
-	for (int i = 0; i < SimObjects.size(); i++)
-	{
-		//SimObjects[i]->GetForce(&f);
 		SimObjects[i]->GetForceJacobian(&derivPos, &derivVel);
 	}
 
-
-	//debugHelper.RecordTime("Building matrices from triples");
+	debugHelper.RecordTime("3.Building matrices from triples");
 	//For future reference maybe
 	//https://stackoverflow.com/questions/45301305/set-sparsity-pattern-of-eigensparsematrix-without-memory-overhead
 	dFdx.setFromTriplets(derivPos.begin(), derivPos.end(), [](const double& a, const double& b) { return a + b; });
@@ -278,12 +234,12 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float time, float h,
 	M.setFromTriplets(masses.begin(), masses.end());
 
 	//MATRIX OPERATIONS
-	//debugHelper.RecordTime("Calculating A and b");
+	debugHelper.RecordTime("4.Calculating A and b");
 	SpMat A = M - h * dFdv - h * h * dFdx;
 	Eigen::VectorXd b = (M - h * dFdv) * (*simulationInfo.v) + h * f;
 
 	//FIXING
-	//debugHelper.RecordTime("Fixing");
+	debugHelper.RecordTime("5.Fixing");
 	std::vector<T> tripletsA;
 	for (int i = 0; i < A.outerSize(); i++)
 		for (typename Eigen::SparseMatrix<double>::InnerIterator it(A, i); it; ++it) {
@@ -302,14 +258,13 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float time, float h,
 	}
 
 	//SOLVING
-	//debugHelper.RecordTime("Solving");
+	debugHelper.RecordTime("6.Solving");
 	//A.Solve(b, v);
 	//Eigen::SimplicialCholesky<SpMat> chol(A);
 	//v = chol.solve(b);
 
 	Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::UnitLower | Eigen::UnitUpper> cg;
 	cg.compute(A);
-	//cg.factorize(A);
 
 	if (initialized) {
 		//Minv.setFromTriplets(massesInv.begin(), massesInv.end());
@@ -321,26 +276,15 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float time, float h,
 		initialized = true;
 	}
 
-
-	/*for (size_t i = 0; i < m_numDoFs; i += 3)
-	{
-		if (fixedIndices[i]) {
-			v[i] = 0;
-			v[i + 1] = 0;
-			v[i + 2] = 0;
-		}
-	}*/
-
 	(*simulationInfo.x) += h * (*simulationInfo.v);
-
-	//debugHelper.PrintTimes();
-
 
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
 		SimObjects[i]->SetPosition(simulationInfo.x);
 		SimObjects[i]->SetVelocity(simulationInfo.v);
 	}
+
+	debugHelper.Wait();
 
 	return simulationInfo;
 }

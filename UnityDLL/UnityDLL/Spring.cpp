@@ -56,6 +56,8 @@ void Spring::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel
 
 	Eigen::Matrix3d dFadxa = (-stiffness * (length - length0) / length * Eigen::Matrix3d::Identity()) - (stiffness * length0 / length * dirMat);
 	Eigen::Matrix3d dFadva = -damping * dirMat;
+	Eigen::Matrix3d _dFadxa = -dFadxa;
+	Eigen::Matrix3d _dFadva = -dFadva;
 
 	for (size_t i = 0; i < 3; i++)
 	{
@@ -63,17 +65,15 @@ void Spring::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel
 		{
 			derivPos->push_back(T(nodeA->index + i, nodeA->index + j, dFadxa(i, j)));
 			derivPos->push_back(T(nodeB->index + i, nodeB->index + j, dFadxa(i, j)));
-			derivPos->push_back(T(nodeA->index + i, nodeB->index + j, -dFadxa(i, j)));
-			derivPos->push_back(T(nodeB->index + i, nodeA->index + j, -dFadxa(i, j)));
+			derivPos->push_back(T(nodeA->index + i, nodeB->index + j, _dFadxa(i, j)));
+			derivPos->push_back(T(nodeB->index + i, nodeA->index + j, _dFadxa(i, j)));
 
 			derivVel->push_back(T(nodeA->index + i, nodeA->index + j, dFadva(i, j)));
 			derivVel->push_back(T(nodeB->index + i, nodeB->index + j, dFadva(i, j)));
-			derivVel->push_back(T(nodeA->index + i, nodeB->index + j, -dFadva(i, j)));
-			derivVel->push_back(T(nodeB->index + i, nodeA->index + j, -dFadva(i, j)));
+			derivVel->push_back(T(nodeA->index + i, nodeB->index + j, _dFadva(i, j)));
+			derivVel->push_back(T(nodeB->index + i, nodeA->index + j, _dFadva(i, j)));
 		}
 	}
-
-
 }
 
 bool Spring::operator==(const Spring& p) const
