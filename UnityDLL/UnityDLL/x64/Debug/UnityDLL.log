@@ -1,4 +1,4 @@
-﻿  Object.cpp
-  LINK : D:\Projects\UnityDLL\UnityDLL\x64\Debug\UnityDLL.dll not found or not built by the last incremental link; performing full link
-     Creating library D:\Projects\UnityDLL\UnityDLL\x64\Debug\UnityDLL.lib and object D:\Projects\UnityDLL\UnityDLL\x64\Debug\UnityDLL.exp
-  UnityDLL.vcxproj -> D:\Projects\UnityDLL\UnityDLL\x64\Debug\UnityDLL.dll
+﻿  dllmain.cpp
+  LINK : D:\Projects\MassSpringSimulator\UnityDLL\x64\Debug\UnityDLL.dll not found or not built by the last incremental link; performing full link
+     Creating library D:\Projects\MassSpringSimulator\UnityDLL\x64\Debug\UnityDLL.lib and object D:\Projects\MassSpringSimulator\UnityDLL\x64\Debug\UnityDLL.exp
+  UnityDLL.vcxproj -> D:\Projects\MassSpringSimulator\UnityDLL\x64\Debug\UnityDLL.dll

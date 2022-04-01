@@ -5,9 +5,6 @@
 class DebugHelper
 {
 private:
-	std::vector<std::chrono::steady_clock::time_point> timePoints;
-	std::vector<std::string> timePointNames;
-
 	std::map<std::string, std::chrono::steady_clock::time_point> timePointMap;
 
 	std::chrono::steady_clock::time_point lastTimepoint;
@@ -16,10 +13,7 @@ private:
 	std::map<std::string, int> occurances;
 
 public:
-	DebugHelper() {
-		timePoints = std::vector<std::chrono::steady_clock::time_point>();
-		timePointNames = std::vector<std::string>();
-	};
+	DebugHelper() {};
 	~DebugHelper() {};
 	bool enabled = true;
 

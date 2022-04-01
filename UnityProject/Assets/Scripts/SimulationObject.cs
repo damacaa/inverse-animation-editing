@@ -43,6 +43,9 @@ public class SimulationObject : MonoBehaviour
     {
         Vector3[] vertices = SimulationManager.instance.GetVertices(id);
 
+        if (vertices.Length == 0)
+            return;
+
         for (int i = 0; i < vertices.Length; i++)
         {
             vertices[i] = transform.InverseTransformPoint(vertices[i]);

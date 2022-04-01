@@ -27,6 +27,7 @@ public class SimulationManager : MonoBehaviour
     Integration integrationMethod = Integration.Implicit;
     [SerializeField]
     float timeStep = 0.01f;
+    float lastTime = 0;
 
     ICPPWrapper cpp;
     private void Awake()
@@ -71,14 +72,7 @@ public class SimulationManager : MonoBehaviour
 
         if (count == 0)
         {
-            unsafe
-            {
-                Vector3f* vectorPointer = (Vector3f*)vertexArray.ToPointer();
-
-                Debug.Log("Id: " + vectorPointer[0].x);
-                Debug.Log("Size: " + vectorPointer[0].y);
-                //Debug.Log(vectorPointer[0].z);
-            }
+            Debug.Log("Vertices not ready");
         }
 
         Vector3[] vertices = new Vector3[count];
@@ -108,13 +102,23 @@ public class SimulationManager : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        cpp.Update();
-        cpp.IncreaseCounter();
+
+        //cpp.Update();
+        //cpp.IncreaseCounter();
 
         //Debug.Log("Counter = " + cpp.GetCounter());
         //Debug.Log("Thread Counter = " + cpp.GetThreadCounter());
     }
 
+    private void Update()
+    {
+        return;
+        if (Time.time > lastTime + timeStep)
+        {
+            cpp.Update();
+            lastTime = Time.time;
+        }
+    }
 }
 
 public enum Integration

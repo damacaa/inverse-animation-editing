@@ -135,6 +135,7 @@ void Object::FixnodeArray(Fixer* f)
 	{
 		if (f->CheckNodeInside(&nodeArray[i])) {
 			nodeArray[i].isFixed = true;
+			nodeArray[i].vel = Eigen::Vector3d(0,0,0);
 		}
 	}
 }

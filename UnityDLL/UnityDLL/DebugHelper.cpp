@@ -61,9 +61,6 @@ void DebugHelper::RecordTime(std::string name)
 	if (!enabled)
 		return;
 
-	//timePoints.push_back(high_resolution_clock::now());
-	//timePointNames.push_back(name);
-
 	std::chrono::steady_clock::time_point now = high_resolution_clock::now();
 
 	duration<double, std::milli> ms_double = now - lastTimepoint;

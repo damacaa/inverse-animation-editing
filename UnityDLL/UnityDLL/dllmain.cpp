@@ -21,8 +21,9 @@ std::thread myThread;
 float simulationTime = 0;
 float delta = 0.01f;
 
-PhysicsManager* physicsManager;
+bool updating = false;
 
+PhysicsManager* physicsManager;
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,12 +45,32 @@ extern "C" {
 		return TRUE;
 	}
 
+
+
+	__declspec(dllexport) void Update() {
+		if (updating)
+			return;
+
+		simulationTime += delta;
+		updating = true;
+
+		//!!!!
+		/*This may take a long time, depending on your simulation.*/
+		std::lock_guard<std::mutex> lock(vertexMutex); /*Locks mutex and releases mutex once the guard is (implicitly) destroyed*/
+		physicsManager->UpdatePhysics(simulationTime, delta);//Simulation
+		physicsManager->UpdateObjects();
+
+		updating = false;
+		nUpdates++;
+	}
+
 	/*Function executed using a separate thread*/
 	void StartFunction() {
+		/*Sleep for 10 ms*/
 		while (running) {
-			threadCounter->IncreaseCounter();
-
-			std::this_thread::sleep_for(std::chrono::milliseconds(10)); /*Sleep for 10 ms*/
+			Update();
+			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			std::this_thread::yield();
 		}
 	}
 
@@ -71,19 +92,19 @@ extern "C" {
 	}
 
 	__declspec(dllexport) int AddObject(Vector3f position, Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass) {//, int* triangles, int* nTriangles) {
-		std::lock_guard<std::mutex> lock(vertexMutex); /*Locks mutex and releases mutex once the guard is (implicitly) destroyed*/
 		return physicsManager->AddObject(position, vertices, nVertices, triangles, nTriangles, stiffness, mass);
 	}
 
 	__declspec(dllexport) void AddFixer(Vector3f position, Vector3f scale) {
-		std::lock_guard<std::mutex> lock(vertexMutex);
 		physicsManager->AddFixer(position, scale);
 	}
 
 	__declspec(dllexport) void Destroy() {
+		std::lock_guard<std::mutex> lock(vertexMutex);
 		if (initialized) {
 
 			running = false; /*Stop main loop of thread function*/
+
 			if (myThread.joinable()) {
 				myThread.join(); /*Wait for thread to finish*/
 			}
@@ -100,7 +121,6 @@ extern "C" {
 			allow Unity to correctly run the simulation again.*/
 
 			initialized = false;
-
 
 			nUpdates = 0;
 
@@ -125,32 +145,22 @@ extern "C" {
 		return threadCounter->GetCounter();
 	}
 
-	__declspec(dllexport) void Update() {
 
-
-		simulationTime += delta;
-
-		std::lock_guard<std::mutex> lock(vertexMutex); /*Locks mutex and releases mutex once the guard is (implicitly) destroyed*/
-		/*This may take a long time, depending on your simulation.*/
-		physicsManager->Update(simulationTime, delta);
-
-		nUpdates++;
-
-	}
 
 	__declspec(dllexport) Vector3f* GetVertices(int id, int* count) {
-
 		/*Depending on how Update is being executed, vertexArray might being updated at the same time. To prevent race conditions, we have to wait
 		for the lock of vertexArray and copy all data to a second array. Unity/C# will process the data in the second array. In the meantime
 		the data in the first array can be updated.*/
 
-		std::lock_guard<std::mutex> lock(vertexMutex);
+		return physicsManager->GetVertices(id, count);
+
+		/*std::lock_guard<std::mutex> lock(vertexMutex);
 		if (physicsManager->Updated) {
 			std::lock_guard<std::mutex> lock(vertexMutex2);
-			return physicsManager->GetVertices(id, count);
-		}
+		}*/
 
-		return physicsManager->GetVertices(id, count);
+		*count = 0;
+		return new Vector3f;
 	}
 #ifdef __cplusplus
 }
