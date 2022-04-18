@@ -16,13 +16,17 @@ public class SimulationManager : MonoBehaviour
         {
             if (!instance)
             {
-                instance = new GameObject().AddComponent<SimulationManager>();
+                instance = FindObjectOfType<SimulationManager>();
+                if (!instance)
+                    instance = new GameObject().AddComponent<SimulationManager>();
             }
 
             return instance;
         }
     }
 
+    [SerializeField]
+    bool simulate = true;
     [SerializeField]
     Integration integrationMethod = Integration.Implicit;
     [SerializeField]
@@ -32,7 +36,7 @@ public class SimulationManager : MonoBehaviour
     ICPPWrapper cpp;
     private void Awake()
     {
-        if (instance)
+        if (instance && instance != this)
         {
             Destroy(gameObject);
         }
@@ -40,6 +44,14 @@ public class SimulationManager : MonoBehaviour
             instance = this;
 
         cpp = new ICPPWrapper(integrationMethod, timeStep);
+    }
+
+    private void Start()
+    {
+        if (simulate)
+            cpp.StartSimulation();
+        else
+            print(cpp.Estimate(10));
     }
 
     public int AddObject(Vector3 position, Vector3[] vertices, int[] triangles, float stiffness, float mass)

@@ -82,13 +82,22 @@ extern "C" {
 			counter = new MyCounter();
 			threadCounter = new MyCounter();
 
-
-			running = true;
-			myThread = std::thread(&StartFunction); /*Create new thread that is executing StartFunction*/
-			myThread.detach(); /*Allow thread to run independently*/
-
 			initialized = true;
 		}
+	}
+
+	__declspec(dllexport) void StartSimulation() {
+		if (running)
+			return;
+
+		running = true;
+		myThread = std::thread(&StartFunction); /*Create new thread that is executing StartFunction*/
+		myThread.detach(); /*Allow thread to run independently*/
+	}
+
+	__declspec(dllexport) float Estimate(float value) {
+		
+		return physicsManager->Estimate(value, 10, delta);
 	}
 
 	__declspec(dllexport) int AddObject(Vector3f position, Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass) {//, int* triangles, int* nTriangles) {

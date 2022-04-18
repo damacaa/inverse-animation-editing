@@ -212,6 +212,9 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationI
 
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
+		SimObjects[i]->SetPosition(&x);
+		SimObjects[i]->SetVelocity(&v);
+
 		SimObjects[i]->GetMass(&masses);
 		//SimObjects[i]->GetMassInverse(&massesi);
 		SimObjects[i]->GetFixedIndices(&fixedIndices);
@@ -305,36 +308,103 @@ void PhysicsManager::UpdateObjects()
 	Updated = true;
 }
 
-void PhysicsManager::Estimate(float parameter, int iter, float h)
+float PhysicsManager::Estimate(float parameter, int iter, float h)
 {
-	SpMat dGdx1, dGdv1;
+	//g = sum_i |xi - xi*|^2 //Caso genérico n frames
+		//g = |xn - xn*|^2 //Caso frame final
 
-	Start();
+		//g = sum_i (xi - xi*)T (xi - xi*)
+		//dg / dxi = 2 (xi - xi*)T
 
-	SimulationInfo newInfo;
+		//dg/dxi = 0, si i != n;  dg/dxn = 2 (xn - xn*)T
+
+	Start();//Initializes simulation
+
+	std::vector<SimulationInfo> steps(iter);
+
+	//Forward
+	steps[0] = StepImplicit(h, info);
+	for (size_t i = 1; i < iter; i++)
+	{
+		SimulationInfo newInfo;
+		newInfo = StepImplicit(h, steps[i - 1]);
+		steps[i] = newInfo;
+		info = newInfo;
+	}
+
+	//Guardar en simulation info lo mínimo v y x y luego recalcular derivadas
+
+	std::vector<Eigen::VectorXd> dGdx(iter);
+	std::vector<Eigen::VectorXd> dGdv(iter);
+
 	for (size_t i = 0; i < iter; i++)
 	{
-		newInfo = StepImplicit(h, info);//Forward
+		//dGdx poner a 0 todos menos ultimo
+		//en ultimo ver mates de arriba
+		if (i == iter - 1) {
+			dGdx[i] = Eigen::VectorXd::Constant(1, 0.0);
+		}
+		else
+			dGdx[i] = Eigen::VectorXd::Constant(1, 0.0);
 
-		SpMat A = newInfo.M - h * newInfo.dFdv + (-h * h) * newInfo.dFdx;
-		SpMat b = h * dGdx1 + dGdv1;
+		dGdv[iter] = Eigen::VectorXd::Constant(1, 0.0);
+	}
+
+	Eigen::VectorXd dGdp = Eigen::VectorXd::Constant(1, 0.0);//Tantos como parametros haya
+	for (size_t i = iter - 2; i >= 0; i--)
+	{
+		//Backwards(steps[i + 1].x, steps[i + 1].v, parameter, dGdx[i + 1], dGdv[i + 1]);//dGdp, dGdx, dGdv
+
+		//Backward
+		SpMat A = info.M - h * steps[i].dFdv + (-h * h) * steps[i].dFdx;
+		Eigen::VectorXd b = h * dGdx[i + 1] + dGdv[i + 1];
 
 		Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::UnitLower | Eigen::UnitUpper> cg;
 		cg.compute(A);
 
 		Eigen::VectorXd u = cg.solve(b);
 
-		Eigen::VectorXd c = newInfo.M * newInfo.v - info.M * info.v - h * info.f;//Fuerzas o jacobianas??
+		Eigen::VectorXd c = steps[i + 1].M * steps[i + 1].v - steps[i].M * steps[i].v - h * steps[i].f;//Fuerzas o jacobianas??
 
-		SpMat dGdp;
+		Eigen::VectorXd dcdp = steps[i + 1].v - steps[i].v;
 
-		SpMat dGdx = dGdx1 + h * u * newInfo.dFdx;
+		//Local
+		Eigen::VectorXd dGdpLocal = -u * dcdp; //Revisar si hace p escalar
 
-		SpMat dGdv = u * newInfo.M;
+		//Global
+		dGdp += dGdpLocal;
 
+		dGdx[i] += dGdx[i + 1] + h * u * steps[i].dFdx;
 
-		info = newInfo;
+		dGdv[i] += u * info.M;
 	}
+
+	return parameter;
+}
+
+void PhysicsManager::Backwards(Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1) {
+	Eigen::VectorXd dGdx, dGdv, dGdp;
+
+	SpMat dFdx(m_numDoFs, m_numDoFs);
+	SpMat dFdv(m_numDoFs, m_numDoFs);
+	std::vector<T> derivPos = std::vector<T>();
+	std::vector<T> derivVel = std::vector<T>();
+
+
+	//FORCES
+	for (int i = 0; i < SimObjects.size(); i++)
+	{
+		SimObjects[i]->SetPosition(&x1);//x1 or x?????
+		SimObjects[i]->SetVelocity(&v1);
+		SimObjects[i]->GetForceJacobian(&derivPos, &derivVel);
+	}
+
+	debugHelper.RecordTime("3.Building matrices from triples");
+	//For future reference maybe
+	//https://stackoverflow.com/questions/45301305/set-sparsity-pattern-of-eigensparsematrix-without-memory-overhead
+	dFdx.setFromTriplets(derivPos.begin(), derivPos.end(), [](const double& a, const double& b) { return a + b; });
+	dFdv.setFromTriplets(derivVel.begin(), derivVel.end(), [](const double& a, const double& b) { return a + b; });
+
 }
 
 Vector3f* PhysicsManager::GetVertices(int id, int* count)

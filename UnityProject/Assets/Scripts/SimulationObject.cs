@@ -23,10 +23,7 @@ public class SimulationObject : MonoBehaviour
     {
         meshFilter = GetComponent<MeshFilter>();
         mesh = meshFilter.mesh;
-    }
 
-    void Start()
-    {
         Vector3[] vertices = mesh.vertices;
 
         for (int i = 0; i < vertices.Length; i++)

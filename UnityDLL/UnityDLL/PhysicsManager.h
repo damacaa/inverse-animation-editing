@@ -23,6 +23,11 @@ private:
 		SpMat M, dFdx, dFdv;
 	};
 
+	struct BackwardStepInfo {
+		Eigen::VectorXd dGdp;//Tantos como parametros haya
+		Eigen::VectorXd dGdx, dGdv;
+	};
+
 	bool Paused = false;
 	float TimeStep;
 	Vector3f Gravity;
@@ -56,7 +61,9 @@ public:
 
 	void UpdateObjects();
 
-	void Estimate(float parameter, int iter, float h = 0.01f); //Not a void
+	float Estimate(float parameter, int iter, float h);
+
+	void Backwards(Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1);
 
 	SimulationInfo StepSymplectic(float h, SimulationInfo simulationInfo);
 
