@@ -74,6 +74,8 @@ public:
 
 	void GetFixedIndices(std::vector<bool>* fixedIndices);
 
+	void UpdateVertices();
+
 	Vector3f* GetVertices();
 };
 

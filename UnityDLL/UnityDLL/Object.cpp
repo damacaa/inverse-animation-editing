@@ -169,8 +169,6 @@ void Object::SetPosition(Eigen::VectorXd* position)
 		nodeArray[i].SetPosition(position);
 	for (int i = 0; i < nSprings; ++i)
 		springArray[i].UpdateState();
-
-	updated = true;
 }
 
 void Object::GetVelocity(Eigen::VectorXd* velocity)
@@ -232,6 +230,20 @@ void Object::GetFixedIndices(std::vector<bool>* fixedIndices)
 	}
 }
 
+void Object::UpdateVertices()
+{
+	for (int i = 0; i < nVertices; i++) {
+		vertexArray[i] = Vector3f(
+			(float)nodeArray[i].position.x(),
+			(float)nodeArray[i].position.y(),
+			(float)nodeArray[i].position.z());
+	}
+
+	memcpy(vertexArray2, vertexArray, sizeof(Vector3f) * nVertices);
+
+	updated = true;
+}
+
 void Object::GetMass(std::vector<T>* mass)
 {
 	for (int i = 0; i < nVertices; ++i)
@@ -273,15 +285,6 @@ void Object::FixMatrix(SpMat* M)
 }
 
 Vector3f* Object::GetVertices() {
-	for (int i = 0; i < nVertices; i++) {
-		vertexArray[i] = Vector3f(
-			(float)nodeArray[i].position.x(),
-			(float)nodeArray[i].position.y(),
-			(float)nodeArray[i].position.z());
-	}
-
-	memcpy(vertexArray2, vertexArray, sizeof(Vector3f) * nVertices); //Copy data only if vertexArray has been updated.
-
 	updated = false;
 
 	return vertexArray2;

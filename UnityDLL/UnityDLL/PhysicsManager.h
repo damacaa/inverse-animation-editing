@@ -69,6 +69,10 @@ public:
 
 	SimulationInfo StepImplicit(float h, SimulationInfo simulationInfo);
 
+	void UpdateVertices();
+
+	Vector3f* GetVertices(int* count);
+
 	Vector3f* GetVertices(int id, int* count);
 };
 

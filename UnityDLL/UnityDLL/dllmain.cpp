@@ -4,7 +4,13 @@
 #include <math.h>   
 #include <vector>
 
+using std::chrono::high_resolution_clock;
+using std::chrono::duration_cast;
+using std::chrono::duration;
+using std::chrono::milliseconds;
+
 #include "PhysicsManager.h"
+#include "DLLMAIN.H"
 
 bool initialized = false;
 bool newFixers = false;
@@ -57,9 +63,10 @@ extern "C" {
 
 		//!!!!
 		/*This may take a long time, depending on your simulation.*/
-		physicsManager->UpdatePhysics(simulationTime, delta);//Simulation
 		std::lock_guard<std::mutex> lock(vertexMutex); /*Locks mutex and releases mutex once the guard is (implicitly) destroyed*/
-		physicsManager->UpdateObjects();
+		physicsManager->UpdatePhysics(simulationTime, delta);//Simulation
+		std::lock_guard<std::mutex> lock2(vertexMutex2);
+		physicsManager->UpdateVertices();
 
 		nUpdates++;
 		updating = false;
@@ -68,9 +75,20 @@ extern "C" {
 	/*Function executed using a separate thread*/
 	void StartFunction() {
 		/*Sleep for 10 ms*/
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+		double elapsedTime = 0;
+
 		while (running) {
+			auto t1 = high_resolution_clock::now();
 			Update();
-			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			auto t2 = high_resolution_clock::now();
+
+			auto ms_int = duration_cast<milliseconds>(t2 - t1);
+			int sleepTime = max(0, delta - ms_int.count());
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
+			//std::this_thread::yield();
 		}
 	}
 
@@ -90,8 +108,6 @@ extern "C" {
 		if (running)
 			return;
 
-		printf("hi");
-
 		running = true;
 		if (multithreading) {
 			myThread = std::thread(StartFunction); /*Create new thread that is executing StartFunction*/
@@ -104,10 +120,12 @@ extern "C" {
 	}
 
 	__declspec(dllexport) int AddObject(Vector3f position, Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass) {//, int* triangles, int* nTriangles) {
+		std::lock_guard<std::mutex> lock(vertexMutex);
 		return physicsManager->AddObject(position, vertices, nVertices, triangles, nTriangles, stiffness, mass);
 	}
 
 	__declspec(dllexport) void AddFixer(Vector3f position, Vector3f scale) {
+		std::lock_guard<std::mutex> lock(vertexMutex);
 		physicsManager->AddFixer(position, scale);
 	}
 
@@ -125,6 +143,9 @@ extern "C" {
 				myThread.join(); /*Wait for thread to finish*/
 			}
 
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+			std::lock_guard<std::mutex> lock2(vertexMutex2);
 			std::lock_guard<std::mutex> lock(vertexMutex);
 			delete counter;
 			delete threadCounter;
@@ -167,14 +188,15 @@ extern "C" {
 		/*Depending on how Update is being executed, vertexArray might being updated at the same time. To prevent race conditions, we have to wait
 		for the lock of vertexArray and copy all data to a second array. Unity/C# will process the data in the second array. In the meantime
 		the data in the first array can be updated.*/
-		std::lock_guard<std::mutex> lock(vertexMutex);
+		std::lock_guard<std::mutex> lock(vertexMutex2);
+
 
 		if (!running) {
 			*count = 0;
 			return new Vector3f;
 		}
 
-		return physicsManager->GetVertices(id, count);
+		return physicsManager->GetVertices(count);
 
 		/*std::lock_guard<std::mutex> lock(vertexMutex);
 		if (physicsManager->Updated) {
