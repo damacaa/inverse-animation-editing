@@ -122,10 +122,8 @@ void PhysicsManager::Start()
 
 void PhysicsManager::UpdatePhysics(float time, float h)
 {
-	Updated = false;
-
 	if (Paused)
-		return; // Not simulating
+		return;
 
 	if (needsRestart)
 		Start();
@@ -147,6 +145,8 @@ void PhysicsManager::UpdatePhysics(float time, float h)
 		break;
 	}
 
+	UpdateObjects();
+
 	info = newSimulationInfo;
 }
 
@@ -165,6 +165,9 @@ PhysicsManager::SimulationInfo PhysicsManager::StepSymplectic(float h, Simulatio
 
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
+		SimObjects[i]->SetPosition(&x);
+		SimObjects[i]->SetVelocity(&v);
+
 		SimObjects[i]->GetMassInverse(&massesInv);
 		SimObjects[i]->GetMass(&masses);
 	}
@@ -225,8 +228,8 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationI
 
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
-		//SimObjects[i]->SetPosition(&x);
-		//SimObjects[i]->SetVelocity(&v);
+		SimObjects[i]->SetPosition(&x);
+		SimObjects[i]->SetVelocity(&v);
 
 		SimObjects[i]->GetMass(&masses);
 		//SimObjects[i]->GetMassInverse(&massesi);
@@ -318,8 +321,6 @@ void PhysicsManager::UpdateObjects()
 		SimObjects[i]->SetPosition(&info.x);
 		SimObjects[i]->SetVelocity(&info.v);
 	}
-
-	Updated = true;
 }
 
 float PhysicsManager::Estimate(float parameter, int iter, float h)
@@ -514,6 +515,46 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backwards(Eigen::VectorXd x1, E
 	return info;
 }
 
+void PhysicsManager::UpdateVertices() {
+	for (size_t i = 0; i < SimObjects.size(); i++)
+	{
+		SimObjects[i]->UpdateVertices();
+	}
+
+	Updated = true;
+}
+
+Vector3f* PhysicsManager::GetVertices(int* count)
+{
+	if (!Updated) {
+		*count = 0;
+		return new Vector3f;
+	}
+
+	int totalCount = 0;
+	for (size_t i = 0; i < SimObjects.size(); i++)
+	{
+		totalCount += SimObjects[i]->nVertices;
+	}
+
+	Vector3f* result = new Vector3f[totalCount];
+
+	totalCount = 0;
+	for (size_t i = 0; i < SimObjects.size(); i++)
+	{
+		int localCount = SimObjects[i]->nVertices;
+
+		Vector3f* v = SimObjects[i]->GetVertices();
+		std::copy(v, v + localCount, result + totalCount);
+
+		totalCount += localCount;
+	}
+
+	Updated = false;
+	*count = totalCount;
+	return result;
+}
+
 Vector3f* PhysicsManager::GetVertices(int id, int* count)
 {
 	if (id >= SimObjects.size() || !SimObjects[id]->updated) {
@@ -521,7 +562,7 @@ Vector3f* PhysicsManager::GetVertices(int id, int* count)
 		return new Vector3f;
 	}
 
+	Updated = false;
 	*count = SimObjects[id]->nVertices;
-
 	return SimObjects[id]->GetVertices();
 }

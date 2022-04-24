@@ -127,7 +127,7 @@ public class SimulationManager : MonoBehaviour
 
         if (count == 0)
         {
-            Debug.Log("Vertices not ready");
+            //Debug.Log("Vertices not ready");
         }
 
         Vector3[] vertices = new Vector3[count];
