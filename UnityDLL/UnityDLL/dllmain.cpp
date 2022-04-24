@@ -9,6 +9,9 @@
 bool initialized = false;
 bool newFixers = false;
 
+float simulationTime = 0;
+float delta = 0.01f;
+
 MyCounter* counter = 0;
 
 int nUpdates = 0;
@@ -16,13 +19,12 @@ std::mutex vertexMutex;
 std::mutex vertexMutex2;
 
 MyCounter* threadCounter = 0;
-bool running = false;
 std::thread myThread;
-float simulationTime = 0;
-float delta = 0.01f;
+
+bool running = false;
+bool updating = false;
 
 PhysicsManager* physicsManager;
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,12 +46,31 @@ extern "C" {
 		return TRUE;
 	}
 
+
+
+	__declspec(dllexport) void Update() {
+		if (updating)
+			return;
+		updating = true;
+		simulationTime += delta;
+
+
+		//!!!!
+		/*This may take a long time, depending on your simulation.*/
+		physicsManager->UpdatePhysics(simulationTime, delta);//Simulation
+		std::lock_guard<std::mutex> lock(vertexMutex); /*Locks mutex and releases mutex once the guard is (implicitly) destroyed*/
+		physicsManager->UpdateObjects();
+
+		nUpdates++;
+		updating = false;
+	}
+
 	/*Function executed using a separate thread*/
 	void StartFunction() {
+		/*Sleep for 10 ms*/
 		while (running) {
-			threadCounter->IncreaseCounter();
-
-			std::this_thread::sleep_for(std::chrono::milliseconds(10)); /*Sleep for 10 ms*/
+			Update();
+			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 	}
 
@@ -61,22 +82,32 @@ extern "C" {
 			counter = new MyCounter();
 			threadCounter = new MyCounter();
 
-
-			running = true;
-			myThread = std::thread(&StartFunction); /*Create new thread that is executing StartFunction*/
-			myThread.detach(); /*Allow thread to run independently*/
-
 			initialized = true;
 		}
 	}
 
+	__declspec(dllexport) void StartSimulation(bool multithreading) {
+		if (running)
+			return;
+
+		printf("hi");
+
+		running = true;
+		if (multithreading) {
+			myThread = std::thread(StartFunction); /*Create new thread that is executing StartFunction*/
+			myThread.detach(); /*Allow thread to run independently*/
+		}
+	}
+
+	__declspec(dllexport) float Estimate(float value, int iterations) {
+		return physicsManager->Estimate(value, iterations, delta);
+	}
+
 	__declspec(dllexport) int AddObject(Vector3f position, Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass) {//, int* triangles, int* nTriangles) {
-		std::lock_guard<std::mutex> lock(vertexMutex); /*Locks mutex and releases mutex once the guard is (implicitly) destroyed*/
 		return physicsManager->AddObject(position, vertices, nVertices, triangles, nTriangles, stiffness, mass);
 	}
 
 	__declspec(dllexport) void AddFixer(Vector3f position, Vector3f scale) {
-		std::lock_guard<std::mutex> lock(vertexMutex);
 		physicsManager->AddFixer(position, scale);
 	}
 
@@ -84,10 +115,17 @@ extern "C" {
 		if (initialized) {
 
 			running = false; /*Stop main loop of thread function*/
+
+			while (updating)
+			{
+				std::this_thread::yield();
+			}
+
 			if (myThread.joinable()) {
 				myThread.join(); /*Wait for thread to finish*/
 			}
 
+			std::lock_guard<std::mutex> lock(vertexMutex);
 			delete counter;
 			delete threadCounter;
 			delete physicsManager;
@@ -100,11 +138,9 @@ extern "C" {
 			allow Unity to correctly run the simulation again.*/
 
 			initialized = false;
-
+			updating = false;
 
 			nUpdates = 0;
-
-			running = false;
 		}
 	}
 
@@ -125,32 +161,27 @@ extern "C" {
 		return threadCounter->GetCounter();
 	}
 
-	__declspec(dllexport) void Update() {
 
-
-		simulationTime += delta;
-
-		std::lock_guard<std::mutex> lock(vertexMutex); /*Locks mutex and releases mutex once the guard is (implicitly) destroyed*/
-		/*This may take a long time, depending on your simulation.*/
-		physicsManager->Update(simulationTime, delta);
-
-		nUpdates++;
-
-	}
 
 	__declspec(dllexport) Vector3f* GetVertices(int id, int* count) {
-
 		/*Depending on how Update is being executed, vertexArray might being updated at the same time. To prevent race conditions, we have to wait
 		for the lock of vertexArray and copy all data to a second array. Unity/C# will process the data in the second array. In the meantime
 		the data in the first array can be updated.*/
-
 		std::lock_guard<std::mutex> lock(vertexMutex);
-		if (physicsManager->Updated) {
-			std::lock_guard<std::mutex> lock(vertexMutex2);
-			return physicsManager->GetVertices(id, count);
+
+		if (!running) {
+			*count = 0;
+			return new Vector3f;
 		}
 
 		return physicsManager->GetVertices(id, count);
+
+		/*std::lock_guard<std::mutex> lock(vertexMutex);
+		if (physicsManager->Updated) {
+			std::lock_guard<std::mutex> lock(vertexMutex2);
+		}*/
+
+
 	}
 #ifdef __cplusplus
 }

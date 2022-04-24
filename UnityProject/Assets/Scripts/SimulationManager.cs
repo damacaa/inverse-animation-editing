@@ -16,29 +16,85 @@ public class SimulationManager : MonoBehaviour
         {
             if (!instance)
             {
-                instance = new GameObject().AddComponent<SimulationManager>();
+                instance = FindObjectOfType<SimulationManager>();
+                if (!instance)
+                    instance = new GameObject().AddComponent<SimulationManager>();
             }
 
             return instance;
         }
     }
 
+    public static List<SimulationObject> simulationObjects = new List<SimulationObject>();
+
+
+    public enum Mode
+    {
+        None,
+        SimulateSingleThread,
+        SimulateMultiThread,
+        Estimate
+    }
+
+    [SerializeField]
+    Mode mode = Mode.SimulateMultiThread;
+
+
     [SerializeField]
     Integration integrationMethod = Integration.Implicit;
     [SerializeField]
     float timeStep = 0.01f;
+    float lastTime = 0;
+    [SerializeField]
+    float parameter = 0.5f;
+    [SerializeField]
+    int iterations = 1;
 
     ICPPWrapper cpp;
     private void Awake()
     {
-        if (instance)
-        {
-            Destroy(gameObject);
-        }
-        else
-            instance = this;
-
         cpp = new ICPPWrapper(integrationMethod, timeStep);
+        instance = this;
+    }
+
+    private void Start()
+    {
+        foreach (SimulationObject so in simulationObjects)
+        {
+            Mesh mesh = so.GetComponent<MeshFilter>().mesh;
+
+            Vector3[] vertices = mesh.vertices;
+
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                vertices[i] = so.transform.TransformPoint(vertices[i]);
+            }
+
+            int id = SimulationManager.Instance.AddObject(so.transform.position, vertices, mesh.triangles, so.stiffness, so.mass);
+            so.name = "Id: " + id;
+        }
+
+        switch (mode)
+        {
+            case Mode.None:
+                break;
+            case Mode.SimulateSingleThread:
+                cpp.StartSimulation(false);
+                break;
+            case Mode.SimulateMultiThread:
+                cpp.StartSimulation(true);
+                break;
+            case Mode.Estimate:
+                print(cpp.Estimate(parameter, iterations));
+                break;
+            default:
+                break;
+        }
+
+        /*if (simulate)
+            cpp.StartSimulation();
+        else
+            print(cpp.Estimate(0.5f));*/
     }
 
     public int AddObject(Vector3 position, Vector3[] vertices, int[] triangles, float stiffness, float mass)
@@ -71,14 +127,7 @@ public class SimulationManager : MonoBehaviour
 
         if (count == 0)
         {
-            unsafe
-            {
-                Vector3f* vectorPointer = (Vector3f*)vertexArray.ToPointer();
-
-                Debug.Log("Id: " + vectorPointer[0].x);
-                Debug.Log("Size: " + vectorPointer[0].y);
-                //Debug.Log(vectorPointer[0].z);
-            }
+            Debug.Log("Vertices not ready");
         }
 
         Vector3[] vertices = new Vector3[count];
@@ -108,13 +157,22 @@ public class SimulationManager : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        cpp.Update();
-        cpp.IncreaseCounter();
+
+        //cpp.Update();
+        //cpp.IncreaseCounter();
 
         //Debug.Log("Counter = " + cpp.GetCounter());
         //Debug.Log("Thread Counter = " + cpp.GetThreadCounter());
     }
 
+    private void Update()
+    {
+        if (mode == Mode.SimulateSingleThread && Time.time > lastTime + timeStep)
+        {
+            cpp.Update();
+            lastTime = Time.time;
+        }
+    }
 }
 
 public enum Integration

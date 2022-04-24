@@ -121,11 +121,11 @@ void Object::Update(float time, float h)
 	updated = true;
 }
 
-void Object::SetParameter(float parameter)
+void Object::SetNodeMass(float newMass)
 {
-	for (size_t i = 0; i < nSprings; i++)
+	for (size_t i = 0; i < nVertices; i++)
 	{
-		springArray[i].stiffness = parameter;
+		nodeArray[i].mass = newMass;
 	}
 }
 
@@ -135,6 +135,7 @@ void Object::FixnodeArray(Fixer* f)
 	{
 		if (f->CheckNodeInside(&nodeArray[i])) {
 			nodeArray[i].isFixed = true;
+			nodeArray[i].vel = Eigen::Vector3d(0,0,0);
 		}
 	}
 }

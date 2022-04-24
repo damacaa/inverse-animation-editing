@@ -19,9 +19,11 @@ PhysicsManager::PhysicsManager(Integration _IntegrationMethod)
 
 PhysicsManager::~PhysicsManager()
 {
-	std::string name = std::to_string(SimObjects[0]->nVertices) + " vertices and ";
-	name += std::to_string(SimObjects[0]->nSprings) + " springs.";
-	debugHelper.PrintTimes("times", name);
+	if (SimObjects.size() > 0) {
+		std::string description = std::to_string(SimObjects[0]->nVertices) + " vertices and ";
+		description += std::to_string(SimObjects[0]->nSprings) + " springs.";
+		debugHelper.PrintTimes("SimulationTimes", description);
+	}
 
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
@@ -35,38 +37,60 @@ PhysicsManager::~PhysicsManager()
 	}
 	Fixers.clear();
 
+	for (size_t i = 0; i < PendingSimObjects.size(); i++)
+	{
+		delete PendingSimObjects[i];
+	}
+	PendingSimObjects.clear();
+
+	for (size_t i = 0; i < PendingFixers.size(); i++)
+	{
+		delete PendingFixers[i];
+	}
+	PendingFixers.clear();
 }
 
 int PhysicsManager::AddObject(Vector3f position, Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass)
 {
 	Object* o = new Object(position, vertices, nVertices, triangles, nTriangles, stiffness, mass);
-	o->id = (int)SimObjects.size();
-	SimObjects.push_back(o);
+	o->id = (int)SimObjects.size() + (int)PendingSimObjects.size();
+	PendingSimObjects.push_back(o);
 
-	for (size_t i = 0; i < Fixers.size(); i++)
-	{
-		o->FixnodeArray(Fixers[i]);
-	}
-
-	Start();
-
+	needsRestart = true;
 	return o->id;
 }
 
 void PhysicsManager::AddFixer(Vector3f position, Vector3f scale)
 {
 	Fixer* f = new Fixer(position, scale);
-	Fixers.push_back(f);
+	PendingFixers.push_back(f);
 
-	for (size_t i = 0; i < SimObjects.size(); i++)
-	{
-		SimObjects[i]->FixnodeArray(f);
-	}
+	needsRestart = true;
 }
 
 void PhysicsManager::Start()
 {
 	debugHelper = DebugHelper();
+
+	for (size_t i = 0; i < PendingSimObjects.size(); i++)
+	{
+		SimObjects.push_back(PendingSimObjects[i]);
+		for (size_t j = 0; j < Fixers.size(); j++)
+		{
+			PendingSimObjects[i]->FixnodeArray(Fixers[j]);
+		}
+	}
+	PendingSimObjects.clear();
+
+	for (size_t i = 0; i < PendingFixers.size(); i++)
+	{
+		Fixers.push_back(PendingFixers[i]);
+		for (size_t j = 0; j < SimObjects.size(); j++)
+		{
+			SimObjects[j]->FixnodeArray(PendingFixers[i]);
+		}
+	}
+	PendingFixers.clear();
 
 	//Parse the simulable objects and initialize their state indices
 	m_numDoFs = 0;
@@ -80,122 +104,111 @@ void PhysicsManager::Start()
 		m_numDoFs += SimObjects[i]->GetNumDoFs();
 	}
 
-	Eigen::VectorXd* x = new Eigen::VectorXd(m_numDoFs);
-	Eigen::VectorXd* v = new Eigen::VectorXd(m_numDoFs);
+	Eigen::VectorXd x = Eigen::VectorXd(m_numDoFs);
+	Eigen::VectorXd v = Eigen::VectorXd(m_numDoFs);
 	for (size_t i = 0; i < SimObjects.size(); i++)
 	{
-		SimObjects[i]->GetPosition(x);
-		SimObjects[i]->GetVelocity(v);
+		SimObjects[i]->GetPosition(&x);
+		SimObjects[i]->GetVelocity(&v);
 	}
 
-	_simulationInfo = SimulationInfo();
-	_simulationInfo.x = x;
-	_simulationInfo.v = v;
+	info = SimulationInfo();
+	info.x = x;
+	info.v = v;
 
+	needsRestart = false;
 	initialized = false;
 }
 
-void PhysicsManager::Update(float time, float h)
+void PhysicsManager::UpdatePhysics(float time, float h)
 {
 	Updated = false;
 
 	if (Paused)
 		return; // Not simulating
 
+	if (needsRestart)
+		Start();
+
+	SimulationInfo newSimulationInfo;
 	// Select integration method
 	switch (integrationMethod)
 	{
 	case Integration::Explicit:
 		break;
 	case Integration::Symplectic:
-		StepSymplectic(time, h);
+		newSimulationInfo = StepSymplectic(h, info);
 		break;
 	case Integration::Implicit:
-		_simulationInfo = StepImplicit(time, h, _simulationInfo);
+		//Forward
+		newSimulationInfo = StepImplicit(h, info);
 		break;
 	default:
 		break;
 	}
 
-	Updated = true;
+	info = newSimulationInfo;
 }
 
-void PhysicsManager::StepSymplecticOld(float time, float h) {
-	for (int i = 0; i < SimObjects.size(); i++)
-	{
-		SimObjects[i]->Update(time, h);
-	}
-}
-
-void PhysicsManager::StepSymplectic(float time, float h)
+PhysicsManager::SimulationInfo PhysicsManager::StepSymplectic(float h, SimulationInfo simulationInfo)
 {
-	Eigen::VectorXd x = Eigen::VectorXd(m_numDoFs);
-	Eigen::VectorXd v = Eigen::VectorXd(m_numDoFs);
+	debugHelper.RecordTime("1.Set up");
+	Eigen::VectorXd x = simulationInfo.x;
+	Eigen::VectorXd v = simulationInfo.v;
 	Eigen::VectorXd f = Eigen::VectorXd::Constant(m_numDoFs, 0.0);
 
 	SpMat M(m_numDoFs, m_numDoFs);
 	SpMat Minv(m_numDoFs, m_numDoFs);
 
-	SpMat dFdx(m_numDoFs, m_numDoFs);
-	SpMat dFdv(m_numDoFs, m_numDoFs);
-
 	std::vector<T> masses = std::vector<T>();
 	std::vector<T> massesInv = std::vector<T>();
-	std::vector<T> derivPos = std::vector<T>();
-	std::vector<T> derivVel = std::vector<T>();
 
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
-		SimObjects[i]->GetPosition(&x);
-		SimObjects[i]->GetVelocity(&v);
-		SimObjects[i]->GetForce(&f);
-
-		SimObjects[i]->GetForceJacobian(&derivPos, &derivVel);
 		SimObjects[i]->GetMassInverse(&massesInv);
 		SimObjects[i]->GetMass(&masses);
 	}
 
+	debugHelper.RecordTime("2.Forces");
+	for (int i = 0; i < SimObjects.size(); i++)
+		SimObjects[i]->GetForce(&f);
+
+	debugHelper.RecordTime("3.Fixing");
 	std::vector<bool> fixedIndices(m_numDoFs); // m_numDoFs/3?
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
 		SimObjects[i]->GetFixedIndices(&fixedIndices);
 	}
 
-	for (size_t i = 0; i < massesInv.size(); i += 3)
+	for (size_t i = 0; i < m_numDoFs; i++)
 	{
-		int id = massesInv[i].col() / 3;
-		if (fixedIndices[id]) {
-			massesInv[i] = T(massesInv[i].col(), massesInv[i].row(), massesInv[i].value());
+		if (fixedIndices[i]) {
+			massesInv[i] = T(i, i, 0);
 		}
 	}
 
 	//Matriz a triplets, fixing y luego vuelve
 
+	debugHelper.RecordTime("4.Calculations");
 	Minv.setFromTriplets(massesInv.begin(), massesInv.end());
 	v += h * (Minv * f);
-
-	for (size_t i = 0; i < fixedIndices.size(); i += 3)
-	{
-		if (fixedIndices[i]) {
-			v[i] = 0;
-			v[i + 1] = 0;
-			v[i + 2] = 0;
-		}
-	}
-
 	x += h * v;
 
-	for (int i = 0; i < SimObjects.size(); i++)
-	{
-		SimObjects[i]->SetPosition(&x);
-		SimObjects[i]->SetVelocity(&v);
-	}
+	debugHelper.Wait();
+
+	SimulationInfo newSimulationInfo;
+	newSimulationInfo.x = x;
+	newSimulationInfo.v = v;
+	newSimulationInfo.parameter = simulationInfo.parameter;
+
+	return newSimulationInfo;
 }
 
-PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float time, float h, SimulationInfo simulationInfo)
+PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationInfo simulationInfo)
 {
 	debugHelper.RecordTime("1.Set up");
-
+	Eigen::VectorXd x = simulationInfo.x;
+	Eigen::VectorXd v = simulationInfo.v;
 	Eigen::VectorXd f = Eigen::VectorXd::Constant(m_numDoFs, 0.0);//Forces
 
 	SpMat dFdx(m_numDoFs, m_numDoFs);
@@ -204,19 +217,21 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float time, float h,
 	std::vector<T> derivVel = std::vector<T>();
 
 	SpMat M(m_numDoFs, m_numDoFs);
-	SpMat Minv(m_numDoFs, m_numDoFs);
+	SpMat Mi(m_numDoFs, m_numDoFs);
 	std::vector<T> masses = std::vector<T>();
-	std::vector<T> massesInv = std::vector<T>();
+	std::vector<T> massesi = std::vector<T>();
+
+	std::vector<bool> fixedIndices(m_numDoFs);
 
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
-		SimObjects[i]->GetMass(&masses);
-		SimObjects[i]->GetMassInverse(&massesInv);
-	}
+		//SimObjects[i]->SetPosition(&x);
+		//SimObjects[i]->SetVelocity(&v);
 
-	std::vector<bool> fixedIndices(m_numDoFs);
-	for (int i = 0; i < SimObjects.size(); i++)
+		SimObjects[i]->GetMass(&masses);
+		//SimObjects[i]->GetMassInverse(&massesi);
 		SimObjects[i]->GetFixedIndices(&fixedIndices);
+	}
 
 	//FORCES
 	debugHelper.RecordTime("2.Calculating forces");
@@ -232,11 +247,15 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float time, float h,
 	dFdx.setFromTriplets(derivPos.begin(), derivPos.end(), [](const double& a, const double& b) { return a + b; });
 	dFdv.setFromTriplets(derivVel.begin(), derivVel.end(), [](const double& a, const double& b) { return a + b; });
 	M.setFromTriplets(masses.begin(), masses.end());
+	//Mi.setFromTriplets(massesi.begin(), massesi.end());
 
 	//MATRIX OPERATIONS
 	debugHelper.RecordTime("4.Calculating A and b");
-	SpMat A = M - h * dFdv - h * h * dFdx;
-	Eigen::VectorXd b = (M - h * dFdv) * (*simulationInfo.v) + h * f;
+
+	SpMat firstPart = M + (-h) * dFdv;
+
+	SpMat A = firstPart + (-h * h) * dFdx;
+	Eigen::VectorXd b = firstPart * v + h * f;
 
 	//FIXING
 	debugHelper.RecordTime("5.Fixing");
@@ -263,36 +282,244 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float time, float h,
 	//Eigen::SimplicialCholesky<SpMat> chol(A);
 	//v = chol.solve(b);
 
+
 	Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::UnitLower | Eigen::UnitUpper> cg;
 	cg.compute(A);
 
 	if (initialized) {
-		//Minv.setFromTriplets(massesInv.begin(), massesInv.end());
-		//_v = _v + h * (Minv * f);
-		*simulationInfo.v = cg.solveWithGuess(b, *simulationInfo.v);
+		//v = v + h * (f * Mi);
+		v = cg.solveWithGuess(b, v);
 	}
 	else {
-		*simulationInfo.v = cg.solve(b);
+		v = cg.solve(b);
 		initialized = true;
 	}
 
-	(*simulationInfo.x) += h * (*simulationInfo.v);
-
-	for (int i = 0; i < SimObjects.size(); i++)
-	{
-		SimObjects[i]->SetPosition(simulationInfo.x);
-		SimObjects[i]->SetVelocity(simulationInfo.v);
-	}
+	x += h * v;
 
 	debugHelper.Wait();
 
-	return simulationInfo;
+	SimulationInfo newData;
+	newData.x = x;
+	newData.v = v;
+	newData.M = M;
+	newData.dFdx = dFdx;
+	newData.dFdv = dFdv;
+
+	newData.parameter = simulationInfo.parameter;
+
+	return newData;
+}
+
+void PhysicsManager::UpdateObjects()
+{
+	for (int i = 0; i < SimObjects.size(); i++)
+	{
+		SimObjects[i]->SetPosition(&info.x);
+		SimObjects[i]->SetVelocity(&info.v);
+	}
+
+	Updated = true;
+}
+
+float PhysicsManager::Estimate(float parameter, int iter, float h)
+{
+	//Simulation to define target
+	Start();
+	SimulationInfo target = info;
+
+	for (size_t i = 0; i < SimObjects.size(); i++)
+	{
+		SimObjects[i]->SetNodeMass(0.5f);
+	}
+
+	for (size_t i = 0; i < iter; i++)
+	{
+		target = StepImplicit(h, target);
+		for (int j = 0; j < SimObjects.size(); j++)
+		{
+			SimObjects[j]->SetPosition(&target.x);
+			SimObjects[j]->SetVelocity(&target.v);
+		}
+	}
+
+
+	//Forward
+	SimulationInfo newInfo = info;
+
+	//Simulation with given parameter
+	for (size_t i = 0; i < SimObjects.size(); i++)
+	{
+		SimObjects[i]->SetNodeMass(parameter);
+	}
+
+	for (int i = 0; i < SimObjects.size(); i++)
+	{
+		SimObjects[i]->SetPosition(&newInfo.x);
+		SimObjects[i]->SetVelocity(&newInfo.v);
+	}
+
+	std::vector<SimulationInfo> steps(iter);
+
+	for (size_t i = 0; i < iter; i++)
+	{
+		//Guardar en simulation info lo mínimo v y x y luego recalcular derivadas
+		newInfo = StepImplicit(h, newInfo);
+		steps[i] = newInfo;
+		for (int j = 0; j < SimObjects.size(); j++)
+		{
+			SimObjects[j]->SetPosition(&newInfo.x);
+			SimObjects[j]->SetVelocity(&newInfo.v);
+		}
+	}
+
+	//Evaluate g
+
+	//g = sum_i |xi - xi*|^2 //Caso genérico n frames
+		//g = |xn - xn*|^2 //Caso frame final
+
+		//g = sum_i (xi - xi*)T (xi - xi*)
+		//dg / dxi = 2 (xi - xi*)T
+
+		//dg/dxi = 0, si i != n;  dg/dxn = 2 (xn - xn*)T
+
+	float g = 0;
+	for (size_t i = 0; i < info.x.size(); i++)
+	{
+		g += abs(target.x(i) - steps[iter - 1].x(i));
+	}
+
+	//return g * g;
+
+	Eigen::VectorXd dGdp = Eigen::VectorXd::Constant(1, 0.0);//Tantos como parametros haya
+	std::vector<Eigen::VectorXd> dGdx(iter);
+	std::vector<Eigen::VectorXd> dGdv(iter);
+
+	for (size_t i = 0; i < iter; i++)
+	{
+		//dGdx poner a 0 todos menos ultimo
+		//en ultimo ver mates de arriba
+		if (i == iter - 1) {
+			dGdx[i] = 2.0 * (target.x - newInfo.x);//?????????
+		}
+		else
+			dGdx[i] = Eigen::VectorXd::Constant(m_numDoFs, 0.0);
+
+		dGdv[i] = Eigen::VectorXd::Constant(m_numDoFs, 0.0);
+	}
+
+	for (size_t i = iter - 2; i > 0; i--)
+	{
+		BackwardStepInfo newInfo = Backwards(steps[i].x, steps[i].v, parameter, dGdx[i + 1], dGdv[i + 1], h, steps[i]);//dGdp, dGdx, dGdv
+
+		//Global
+		dGdp += newInfo.dGdp;
+
+		dGdx[i] += newInfo.dGdx;
+
+		dGdv[i] += newInfo.dGdv;
+	}
+
+	return g * g;
+}
+
+PhysicsManager::BackwardStepInfo PhysicsManager::Backwards(Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h, SimulationInfo previous) {
+	Eigen::VectorXd dGdp, dGdx, dGdv;//Results
+
+	//SpMat M(m_numDoFs, m_numDoFs);
+	SpMat M = previous.M;
+
+	Eigen::VectorXd f1 = Eigen::VectorXd::Constant(m_numDoFs, 0.0);//Forces
+
+	Eigen::VectorXd x = previous.x;
+	Eigen::VectorXd v = previous.v;
+	SpMat dFdx = previous.dFdx;
+	SpMat dFdv = previous.dFdv;
+
+	std::vector<T> derivPos = std::vector<T>();
+	std::vector<T> derivVel = std::vector<T>();
+	std::vector<T> masses = std::vector<T>();
+
+	//FORCES
+	/*for (int i = 0; i < SimObjects.size(); i++)
+	{
+		SimObjects[i]->SetPosition(&x1);
+		SimObjects[i]->SetVelocity(&v1);
+		SimObjects[i]->GetMass(&masses);
+		SimObjects[i]->GetForce(&f1);
+		SimObjects[i]->GetForceJacobian(&derivPos, &derivVel);
+	}
+
+	dFdx.setFromTriplets(derivPos.begin(), derivPos.end(), [](const double& a, const double& b) { return a + b; });
+	dFdv.setFromTriplets(derivVel.begin(), derivVel.end(), [](const double& a, const double& b) { return a + b; });
+	M.setFromTriplets(masses.begin(), masses.end());
+
+	/*SpMat firstPart = M + (-h) * dFdv;
+
+	SpMat Aa = firstPart + (-h * h) * dFdx;
+	Eigen::VectorXd bb = firstPart * v1 + h * f1;
+
+	Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::UnitLower | Eigen::UnitUpper> cgg;
+	cgg.compute(Aa);
+
+	v = cgg.solveWithGuess(bb, v1);*/
+
+
+
+	//Backward
+	BackwardStepInfo info = BackwardStepInfo();
+
+	SpMat A = M - (h * dFdv) + ((-h * h) * dFdx);
+	Eigen::VectorXd b = (h * dGdx1) + dGdv1;
+
+	Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::UnitLower | Eigen::UnitUpper> cg;
+	cg.compute(A);
+
+	Eigen::VectorXd u = cg.solve(b);
+
+
+	//dGdp: Vector de tantas posiciones como parámetros haya, en este caso 1
+
+	//Eigen::VectorXd c = M * v1 - M * v - h * f1;
+	//Eigen::VectorXd dcdp = v1 - v;
+	//-u * dcdp.transpose() --> Matriz
+
+	double dcdp = 0;
+	for (size_t i = 0; i < m_numDoFs; i++)
+	{
+		dcdp += v1(i) - v(i);
+	}
+
+	//info.dGdp = -u * dcdp;//????????????
+	info.dGdp = Eigen::VectorXd::Constant(1, dcdp);//Tantos como parametros haya
+
+	//dGdx
+
+	/*Eigen::VectorXd uT = u.transpose();
+
+	int lhcol = u.cols();
+	int lhrow = u.rows();
+	int lhcolT = uT.cols();
+	int rhrow = dFdx.rows();*/
+
+	//auto a = dFdx * u;
+	//auto aa = uT * dFdx;
+
+	//info.dGdx = dGdx1 + (h * u * dFdx);
+	info.dGdx = dGdx1 + h * (dFdx * u);
+
+	//dGdv
+	info.dGdv = M * u;
+
+	return info;
 }
 
 Vector3f* PhysicsManager::GetVertices(int id, int* count)
 {
-	if (id >= SimObjects.size())
-		return new Vector3f();
+	if (id >= SimObjects.size() || !SimObjects[id]->updated) {
+		*count = 0;
+		return new Vector3f;
+	}
 
 	*count = SimObjects[id]->nVertices;
 
