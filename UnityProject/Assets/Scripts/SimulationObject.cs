@@ -11,28 +11,18 @@ public class SimulationObject : MonoBehaviour
     IntPtr vertexArray;
     int nVertices = 0;
 
-    MeshFilter meshFilter;
     Mesh mesh;
 
     [SerializeField]
-    float mass = 1.0f;
+    public float mass = 1.0f;
     [SerializeField]
-    float stiffness = 100f;
+    public float stiffness = 100f;
 
     private void Awake()
     {
-        meshFilter = GetComponent<MeshFilter>();
-        mesh = meshFilter.mesh;
+        SimulationManager.simulationObjects.Add(this);
 
-        Vector3[] vertices = mesh.vertices;
-
-        for (int i = 0; i < vertices.Length; i++)
-        {
-            vertices[i] = transform.TransformPoint(vertices[i]);
-        }
-
-        id = SimulationManager.instance.AddObject(transform.position, vertices, mesh.triangles, stiffness, mass);
-        gameObject.name = "Id: " + id;
+        mesh = GetComponent<MeshFilter>().mesh;
     }
 
     // Update is called once per frame

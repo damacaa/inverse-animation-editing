@@ -37,7 +37,7 @@ private:
 	std::vector<Object*> PendingSimObjects;
 	std::vector<Fixer*> Fixers;
 	std::vector<Fixer*> PendingFixers;
-	bool needsRestart;
+	bool needsRestart = true;
 	int m_numDoFs;
 
 	bool initialized = false;
@@ -63,7 +63,7 @@ public:
 
 	float Estimate(float parameter, int iter, float h);
 
-	void Backwards(Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1);
+	PhysicsManager::BackwardStepInfo Backwards(Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h, SimulationInfo previous);
 
 	SimulationInfo StepSymplectic(float h, SimulationInfo simulationInfo);
 

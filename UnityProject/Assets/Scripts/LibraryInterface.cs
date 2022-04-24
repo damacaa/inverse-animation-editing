@@ -64,14 +64,15 @@ public class ICPPWrapper
         return CPPWrapper.AddObject(new Vector3f(position), vertices, vertices.Length, triangles, triangles.Length, stiffness, mass);
     }
 
-    internal float Estimate(float v)
+    internal float Estimate(float v, int iterations)
     {
-        return CPPWrapper.Estimate(v);
+        return CPPWrapper.Estimate(v, iterations);
     }
 
-    internal void StartSimulation()
+    internal void StartSimulation(bool multithreading)
     {
-        CPPWrapper.StartSimulation();
+        Debug.Log("Start");
+        CPPWrapper.StartSimulation(multithreading);
     }
 
     public void AddFixer(Vector3 position, Vector3 scale)
@@ -120,10 +121,10 @@ public class ICPPWrapper
         public static extern void Initialize(int integrationMethod, float timeStep);
         
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void StartSimulation();
+        public static extern void StartSimulation(bool multithreading);
 
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern float Estimate(float value);
+        public static extern float Estimate(float value, int iterations);
 
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void Destroy();

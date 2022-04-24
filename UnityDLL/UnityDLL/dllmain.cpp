@@ -9,6 +9,9 @@
 bool initialized = false;
 bool newFixers = false;
 
+float simulationTime = 0;
+float delta = 0.01f;
+
 MyCounter* counter = 0;
 
 int nUpdates = 0;
@@ -16,11 +19,9 @@ std::mutex vertexMutex;
 std::mutex vertexMutex2;
 
 MyCounter* threadCounter = 0;
-bool running = false;
 std::thread myThread;
-float simulationTime = 0;
-float delta = 0.01f;
 
+bool running = false;
 bool updating = false;
 
 PhysicsManager* physicsManager;
@@ -50,18 +51,18 @@ extern "C" {
 	__declspec(dllexport) void Update() {
 		if (updating)
 			return;
-
-		simulationTime += delta;
 		updating = true;
+		simulationTime += delta;
+
 
 		//!!!!
 		/*This may take a long time, depending on your simulation.*/
-		std::lock_guard<std::mutex> lock(vertexMutex); /*Locks mutex and releases mutex once the guard is (implicitly) destroyed*/
 		physicsManager->UpdatePhysics(simulationTime, delta);//Simulation
+		std::lock_guard<std::mutex> lock(vertexMutex); /*Locks mutex and releases mutex once the guard is (implicitly) destroyed*/
 		physicsManager->UpdateObjects();
 
-		updating = false;
 		nUpdates++;
+		updating = false;
 	}
 
 	/*Function executed using a separate thread*/
@@ -70,7 +71,6 @@ extern "C" {
 		while (running) {
 			Update();
 			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
-			std::this_thread::yield();
 		}
 	}
 
@@ -86,18 +86,21 @@ extern "C" {
 		}
 	}
 
-	__declspec(dllexport) void StartSimulation() {
+	__declspec(dllexport) void StartSimulation(bool multithreading) {
 		if (running)
 			return;
 
+		printf("hi");
+
 		running = true;
-		myThread = std::thread(&StartFunction); /*Create new thread that is executing StartFunction*/
-		myThread.detach(); /*Allow thread to run independently*/
+		if (multithreading) {
+			myThread = std::thread(StartFunction); /*Create new thread that is executing StartFunction*/
+			myThread.detach(); /*Allow thread to run independently*/
+		}
 	}
 
-	__declspec(dllexport) float Estimate(float value) {
-		
-		return physicsManager->Estimate(value, 10, delta);
+	__declspec(dllexport) float Estimate(float value, int iterations) {
+		return physicsManager->Estimate(value, iterations, delta);
 	}
 
 	__declspec(dllexport) int AddObject(Vector3f position, Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass) {//, int* triangles, int* nTriangles) {
@@ -109,15 +112,20 @@ extern "C" {
 	}
 
 	__declspec(dllexport) void Destroy() {
-		std::lock_guard<std::mutex> lock(vertexMutex);
 		if (initialized) {
 
 			running = false; /*Stop main loop of thread function*/
+
+			while (updating)
+			{
+				std::this_thread::yield();
+			}
 
 			if (myThread.joinable()) {
 				myThread.join(); /*Wait for thread to finish*/
 			}
 
+			std::lock_guard<std::mutex> lock(vertexMutex);
 			delete counter;
 			delete threadCounter;
 			delete physicsManager;
@@ -130,10 +138,9 @@ extern "C" {
 			allow Unity to correctly run the simulation again.*/
 
 			initialized = false;
+			updating = false;
 
 			nUpdates = 0;
-
-			running = false;
 		}
 	}
 
@@ -160,6 +167,12 @@ extern "C" {
 		/*Depending on how Update is being executed, vertexArray might being updated at the same time. To prevent race conditions, we have to wait
 		for the lock of vertexArray and copy all data to a second array. Unity/C# will process the data in the second array. In the meantime
 		the data in the first array can be updated.*/
+		std::lock_guard<std::mutex> lock(vertexMutex);
+
+		if (!running) {
+			*count = 0;
+			return new Vector3f;
+		}
 
 		return physicsManager->GetVertices(id, count);
 
@@ -168,8 +181,7 @@ extern "C" {
 			std::lock_guard<std::mutex> lock(vertexMutex2);
 		}*/
 
-		*count = 0;
-		return new Vector3f;
+
 	}
 #ifdef __cplusplus
 }

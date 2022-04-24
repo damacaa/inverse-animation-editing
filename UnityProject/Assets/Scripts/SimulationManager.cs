@@ -25,33 +25,76 @@ public class SimulationManager : MonoBehaviour
         }
     }
 
+    public static List<SimulationObject> simulationObjects = new List<SimulationObject>();
+
+
+    public enum Mode
+    {
+        None,
+        SimulateSingleThread,
+        SimulateMultiThread,
+        Estimate
+    }
+
     [SerializeField]
-    bool simulate = true;
+    Mode mode = Mode.SimulateMultiThread;
+
+
     [SerializeField]
     Integration integrationMethod = Integration.Implicit;
     [SerializeField]
     float timeStep = 0.01f;
     float lastTime = 0;
+    [SerializeField]
+    float parameter = 0.5f;
+    [SerializeField]
+    int iterations = 1;
 
     ICPPWrapper cpp;
     private void Awake()
     {
-        if (instance && instance != this)
-        {
-            Destroy(gameObject);
-        }
-        else
-            instance = this;
-
         cpp = new ICPPWrapper(integrationMethod, timeStep);
+        instance = this;
     }
 
     private void Start()
     {
-        if (simulate)
+        foreach (SimulationObject so in simulationObjects)
+        {
+            Mesh mesh = so.GetComponent<MeshFilter>().mesh;
+
+            Vector3[] vertices = mesh.vertices;
+
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                vertices[i] = so.transform.TransformPoint(vertices[i]);
+            }
+
+            int id = SimulationManager.Instance.AddObject(so.transform.position, vertices, mesh.triangles, so.stiffness, so.mass);
+            so.name = "Id: " + id;
+        }
+
+        switch (mode)
+        {
+            case Mode.None:
+                break;
+            case Mode.SimulateSingleThread:
+                cpp.StartSimulation(false);
+                break;
+            case Mode.SimulateMultiThread:
+                cpp.StartSimulation(true);
+                break;
+            case Mode.Estimate:
+                print(cpp.Estimate(parameter, iterations));
+                break;
+            default:
+                break;
+        }
+
+        /*if (simulate)
             cpp.StartSimulation();
         else
-            print(cpp.Estimate(10));
+            print(cpp.Estimate(0.5f));*/
     }
 
     public int AddObject(Vector3 position, Vector3[] vertices, int[] triangles, float stiffness, float mass)
@@ -124,8 +167,7 @@ public class SimulationManager : MonoBehaviour
 
     private void Update()
     {
-        return;
-        if (Time.time > lastTime + timeStep)
+        if (mode == Mode.SimulateSingleThread && Time.time > lastTime + timeStep)
         {
             cpp.Update();
             lastTime = Time.time;
