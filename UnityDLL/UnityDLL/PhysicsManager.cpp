@@ -421,21 +421,33 @@ float PhysicsManager::Estimate(float parameter, int iter, float h)
 		dGdv[i] += newInfo.dGdv;
 	}
 
+	std::string sep = "\n----------------------------------------\n";
+
+	Eigen::IOFormat CommaInitFmt(Eigen::FullPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
+
+	std::stringstream ss;
+	ss.str("Back propagation results");
+	ss << dGdp.format(CommaInitFmt) << sep;
+	ss << dGdx[0].format(CommaInitFmt) << sep;
+	ss << dGdv[0].format(CommaInitFmt) << sep;
+	std::string result = ss.str();
+
+	debugHelper.PrintValue(result, "backstep");
+
 	return g * g;
 }
 
-PhysicsManager::BackwardStepInfo PhysicsManager::Backwards(Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h, SimulationInfo previous) {
-	Eigen::VectorXd dGdp, dGdx, dGdv;//Results
-
+PhysicsManager::BackwardStepInfo PhysicsManager::Backwards(Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h, SimulationInfo current)
+{
 	//SpMat M(m_numDoFs, m_numDoFs);
-	SpMat M = previous.M;
+	SpMat M = current.M;
 
 	Eigen::VectorXd f1 = Eigen::VectorXd::Constant(m_numDoFs, 0.0);//Forces
 
-	Eigen::VectorXd x = previous.x;
-	Eigen::VectorXd v = previous.v;
-	SpMat dFdx = previous.dFdx;
-	SpMat dFdv = previous.dFdv;
+	Eigen::VectorXd x = current.x;
+	Eigen::VectorXd v = current.v;
+	SpMat dFdx = current.dFdx;
+	SpMat dFdv = current.dFdv;
 
 	std::vector<T> derivPos = std::vector<T>();
 	std::vector<T> derivVel = std::vector<T>();
@@ -478,36 +490,13 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backwards(Eigen::VectorXd x1, E
 
 	Eigen::VectorXd u = cg.solve(b);
 
-
 	//dGdp: Vector de tantas posiciones como parámetros haya, en este caso 1
-
 	//Eigen::VectorXd c = M * v1 - M * v - h * f1;
-	//Eigen::VectorXd dcdp = v1 - v;
-	//-u * dcdp.transpose() --> Matriz
-
-	double dcdp = 0;
-	for (size_t i = 0; i < m_numDoFs; i++)
-	{
-		dcdp += v1(i) - v(i);
-	}
-
-	//info.dGdp = -u * dcdp;//????????????
-	info.dGdp = Eigen::VectorXd::Constant(1, dcdp);//Tantos como parametros haya
+	Eigen::VectorXd dcdp = v1 - v;
+	info.dGdp = Eigen::VectorXd::Constant(1, (-u.transpose() * dcdp)(0));//????????????
 
 	//dGdx
-
-	/*Eigen::VectorXd uT = u.transpose();
-
-	int lhcol = u.cols();
-	int lhrow = u.rows();
-	int lhcolT = uT.cols();
-	int rhrow = dFdx.rows();*/
-
-	//auto a = dFdx * u;
-	//auto aa = uT * dFdx;
-
-	//info.dGdx = dGdx1 + (h * u * dFdx);
-	info.dGdx = dGdx1 + h * (dFdx * u);
+	info.dGdx = dGdx1 + h * (u.transpose() * dFdx).transpose();//??????????????
 
 	//dGdv
 	info.dGdv = M * u;
