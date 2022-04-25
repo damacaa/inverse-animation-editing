@@ -377,12 +377,11 @@ float PhysicsManager::Estimate(float parameter, int iter, float h)
 	//Evaluate g
 
 	//g = sum_i |xi - xi*|^2 //Caso genérico n frames
-		//g = |xn - xn*|^2 //Caso frame final
+	//g = |xn - xn*|^2 //Caso frame final
 
-		//g = sum_i (xi - xi*)T (xi - xi*)
-		//dg / dxi = 2 (xi - xi*)T
+	//g = sum_i (xi - xi*)T (xi - xi*)
+	//dg / dxi = 2 (xi - xi*)T
 
-		//dg/dxi = 0, si i != n;  dg/dxn = 2 (xn - xn*)T
 
 	float g = 0;
 	for (size_t i = 0; i < info.x.size(); i++)
@@ -398,8 +397,7 @@ float PhysicsManager::Estimate(float parameter, int iter, float h)
 
 	for (size_t i = 0; i < iter; i++)
 	{
-		//dGdx poner a 0 todos menos ultimo
-		//en ultimo ver mates de arriba
+		//dg/dxi = 0, si i != n;  dg/dxn = 2 (xn - xn*)T
 		if (i == iter - 1) {
 			dGdx[i] = 2.0 * (target.x - newInfo.x);//?????????
 		}
@@ -409,27 +407,27 @@ float PhysicsManager::Estimate(float parameter, int iter, float h)
 		dGdv[i] = Eigen::VectorXd::Constant(m_numDoFs, 0.0);
 	}
 
-	for (size_t i = iter - 2; i > 0; i--)
+	for (int i = iter - 2; i >= 0; i--)
 	{
-		BackwardStepInfo newInfo = Backwards(steps[i].x, steps[i].v, parameter, dGdx[i + 1], dGdv[i + 1], h, steps[i]);//dGdp, dGdx, dGdv
+		BackwardStepInfo backStepResult = Backwards(steps[i + 1].x, steps[i + 1].v, parameter, dGdx[i + 1], dGdv[i + 1], h, steps[i]);//dGdp, dGdx, dGdv
 
 		//Global
-		dGdp += newInfo.dGdp;
+		dGdp += backStepResult.dGdp;
 
-		dGdx[i] += newInfo.dGdx;
+		dGdx[i] = backStepResult.dGdx;
 
-		dGdv[i] += newInfo.dGdv;
+		dGdv[i] = backStepResult.dGdv;
 	}
 
 	std::string sep = "\n----------------------------------------\n";
 
-	Eigen::IOFormat CommaInitFmt(Eigen::FullPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
+	Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
 
 	std::stringstream ss;
 	ss.str("Back propagation results");
-	ss << dGdp.format(CommaInitFmt) << sep;
-	ss << dGdx[0].format(CommaInitFmt) << sep;
-	ss << dGdv[0].format(CommaInitFmt) << sep;
+	ss << "dGdp: " << dGdp.format(CommaInitFmt) << sep;
+	ss << "dGdx: " << dGdx[0].format(CommaInitFmt) << sep;
+	ss << "dGdv: " << dGdv[0].format(CommaInitFmt) << sep;
 	std::string result = ss.str();
 
 	debugHelper.PrintValue(result, "backstep");
