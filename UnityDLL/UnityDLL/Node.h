@@ -29,13 +29,13 @@ public:
 	Eigen::Vector3d vel = Eigen::Vector3d(0.0f, 0.0f, 0.0f);
 	Eigen::Vector3d acc = Eigen::Vector3d(0.0f, 0.0f, 0.0f);
 	Eigen::Vector3d force = Eigen::Vector3d(0.0f, 0.0f, 0.0f);
-	float mass = 1;
 
 	float penalty = 0;
 	float thickness = 0;
 	float damping = 1;
 	float gravity = -9.81f;
 
+	float mass = 1;
 	float volume = 1;
 	float density = 1;
 

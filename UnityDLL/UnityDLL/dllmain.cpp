@@ -75,7 +75,7 @@ extern "C" {
 	/*Function executed using a separate thread*/
 	void StartFunction() {
 		/*Sleep for 10 ms*/
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 		double elapsedTime = 0;
 
