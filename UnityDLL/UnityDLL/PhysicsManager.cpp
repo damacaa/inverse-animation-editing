@@ -50,9 +50,9 @@ PhysicsManager::~PhysicsManager()
 	PendingFixers.clear();
 }
 
-int PhysicsManager::AddObject(Vector3f position, Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass)
+int PhysicsManager::AddObject(Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass)
 {
-	Object* o = new Object(position, vertices, nVertices, triangles, nTriangles, stiffness, mass);
+	Object* o = new Object(vertices, nVertices, triangles, nTriangles, stiffness, mass);
 	o->id = (int)SimObjects.size() + (int)PendingSimObjects.size();
 	PendingSimObjects.push_back(o);
 
@@ -331,7 +331,7 @@ float PhysicsManager::Estimate(float parameter, int iter, float h)
 
 	for (size_t i = 0; i < SimObjects.size(); i++)
 	{
-		SimObjects[i]->SetNodeMass(0.5f);
+		SimObjects[i]->SetDensity(0.5f);
 	}
 
 	for (size_t i = 0; i < iter; i++)
@@ -346,18 +346,18 @@ float PhysicsManager::Estimate(float parameter, int iter, float h)
 
 
 	//Forward
-	SimulationInfo newInfo = info;
+	SimulationInfo forwardResult = info;
 
 	//Simulation with given parameter
 	for (size_t i = 0; i < SimObjects.size(); i++)
 	{
-		SimObjects[i]->SetNodeMass(parameter);
+		SimObjects[i]->SetDensity(parameter);
 	}
 
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
-		SimObjects[i]->SetPosition(&newInfo.x);
-		SimObjects[i]->SetVelocity(&newInfo.v);
+		SimObjects[i]->SetPosition(&forwardResult.x);
+		SimObjects[i]->SetVelocity(&forwardResult.v);
 	}
 
 	std::vector<SimulationInfo> steps(iter);
@@ -365,12 +365,12 @@ float PhysicsManager::Estimate(float parameter, int iter, float h)
 	for (size_t i = 0; i < iter; i++)
 	{
 		//Guardar en simulation info lo mínimo v y x y luego recalcular derivadas
-		newInfo = StepImplicit(h, newInfo);
-		steps[i] = newInfo;
+		forwardResult = StepImplicit(h, forwardResult);
+		steps[i] = forwardResult;
 		for (int j = 0; j < SimObjects.size(); j++)
 		{
-			SimObjects[j]->SetPosition(&newInfo.x);
-			SimObjects[j]->SetVelocity(&newInfo.v);
+			SimObjects[j]->SetPosition(&forwardResult.x);
+			SimObjects[j]->SetVelocity(&forwardResult.v);
 		}
 	}
 
@@ -382,12 +382,8 @@ float PhysicsManager::Estimate(float parameter, int iter, float h)
 	//g = sum_i (xi - xi*)T (xi - xi*)
 	//dg / dxi = 2 (xi - xi*)T
 
-
-	float g = 0;
-	for (size_t i = 0; i < info.x.size(); i++)
-	{
-		g += abs(target.x(i) - steps[iter - 1].x(i));
-	}
+	//forwardResult = steps[iter - 1]
+	float g = (target.x - forwardResult.x).squaredNorm();
 
 	//return g * g;
 
@@ -399,7 +395,7 @@ float PhysicsManager::Estimate(float parameter, int iter, float h)
 	{
 		//dg/dxi = 0, si i != n;  dg/dxn = 2 (xn - xn*)T
 		if (i == iter - 1) {
-			dGdx[i] = 2.0 * (target.x - newInfo.x);//?????????
+			dGdx[i] = 2.0 * (target.x - forwardResult.x);
 		}
 		else
 			dGdx[i] = Eigen::VectorXd::Constant(m_numDoFs, 0.0);
@@ -414,9 +410,9 @@ float PhysicsManager::Estimate(float parameter, int iter, float h)
 		//Global
 		dGdp += backStepResult.dGdp;
 
-		dGdx[i] = backStepResult.dGdx;
+		dGdx[i] += backStepResult.dGdx;
 
-		dGdv[i] = backStepResult.dGdv;
+		dGdv[i] += backStepResult.dGdv;
 	}
 
 	std::string sep = "\n----------------------------------------\n";
@@ -427,37 +423,37 @@ float PhysicsManager::Estimate(float parameter, int iter, float h)
 	ss.str("Back propagation results");
 	ss << "dGdp: " << dGdp.format(CommaInitFmt) << sep;
 	ss << "dGdx: " << dGdx[0].format(CommaInitFmt) << sep;
-	ss << "dGdv: " << dGdv[0].format(CommaInitFmt) << sep;
+	ss << "dGdv: " << dGdv[0].format(CommaInitFmt) << sep; 
 	std::string result = ss.str();
 
 	debugHelper.PrintValue(result, "backstep");
 
-	return g * g;
+	return g;
 }
 
 PhysicsManager::BackwardStepInfo PhysicsManager::Backwards(Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h, SimulationInfo current)
 {
 	//SpMat M(m_numDoFs, m_numDoFs);
-	SpMat M = current.M;
 
 	Eigen::VectorXd f1 = Eigen::VectorXd::Constant(m_numDoFs, 0.0);//Forces
 
-	Eigen::VectorXd x = current.x;
-	Eigen::VectorXd v = current.v;
-	SpMat dFdx = current.dFdx;
-	SpMat dFdv = current.dFdv;
+	//Eigen::VectorXd x = current.x;
+	Eigen::VectorXd v;
+	SpMat dFdx(m_numDoFs, m_numDoFs);;
+	SpMat dFdv(m_numDoFs, m_numDoFs);;
+	SpMat M(m_numDoFs, m_numDoFs);;
 
 	std::vector<T> derivPos = std::vector<T>();
 	std::vector<T> derivVel = std::vector<T>();
 	std::vector<T> masses = std::vector<T>();
 
 	//FORCES
-	/*for (int i = 0; i < SimObjects.size(); i++)
+	for (int i = 0; i < SimObjects.size(); i++)
 	{
 		SimObjects[i]->SetPosition(&x1);
 		SimObjects[i]->SetVelocity(&v1);
 		SimObjects[i]->GetMass(&masses);
-		SimObjects[i]->GetForce(&f1);
+		//SimObjects[i]->GetForce(&f1);
 		SimObjects[i]->GetForceJacobian(&derivPos, &derivVel);
 	}
 
@@ -475,6 +471,8 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backwards(Eigen::VectorXd x1, E
 
 	v = cgg.solveWithGuess(bb, v1);*/
 
+	v = current.v;
+
 
 
 	//Backward
@@ -489,9 +487,12 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backwards(Eigen::VectorXd x1, E
 	Eigen::VectorXd u = cg.solve(b);
 
 	//dGdp: Vector de tantas posiciones como parámetros haya, en este caso 1
+
 	//Eigen::VectorXd c = M * v1 - M * v - h * f1;
-	Eigen::VectorXd dcdp = v1 - v;
-	info.dGdp = Eigen::VectorXd::Constant(1, (-u.transpose() * dcdp)(0));//????????????
+
+	Eigen::VectorXd dcdp = v1 - v;//????????????????????????????????
+
+	info.dGdp = Eigen::VectorXd::Constant(1, (-u.transpose() * dcdp)(0));
 
 	//dGdx
 	info.dGdx = dGdx1 + h * (u.transpose() * dFdx).transpose();//??????????????

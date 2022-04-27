@@ -5,20 +5,6 @@
 class Node
 {
 private:
-	inline void UpdateSymplecticNode(float h) {
-		ComputeForces();
-		acc = force / (volume * density);
-
-		vel += acc * h;
-		position += vel * h;
-
-		force = Eigen::Vector3d(0.0f, 0.0f, 0.0f);
-	};
-
-	inline void ComputeForces() {
-		force += (volume * density) * Eigen::Vector3d(0.0f, gravity, 0.0f);
-		force += -damping * vel;
-	};
 
 public:
 	Node() : isFixed(false) {};
@@ -30,17 +16,16 @@ public:
 	Eigen::Vector3d acc = Eigen::Vector3d(0.0f, 0.0f, 0.0f);
 	Eigen::Vector3d force = Eigen::Vector3d(0.0f, 0.0f, 0.0f);
 
-	float penalty = 0;
-	float thickness = 0;
-	float damping = 1;
-	float gravity = -9.81f;
-
-	float mass = 1;
-	float volume = 1;
-	float density = 1;
+	double penalty = 0;
+	double thickness = 0;
+	double damping = 1;
+	double gravity = -9.81f;
+	
+	double mass = 1;
+	double volume = 1;
+	double density = 1;
 
 	bool isFixed;
-
 
 	void Initialize(int ind);
 
@@ -52,11 +37,7 @@ public:
 
 	void SetVelocity(Eigen::VectorXd* _vel);
 
-	void GetMass(Eigen::MatrixXd* Mass);
-
 	void GetMass(std::vector<T>* massTripletVector);
-
-	void GetMassInverse(Eigen::MatrixXd* massInv);
 
 	void GetMassInv(std::vector<T>* massTripletVector);
 
@@ -64,12 +45,7 @@ public:
 
 	void GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel);
 
-	void FixVector(Eigen::VectorXd* v);
+	void SetDensity(double _density);
 
-	void FixMatrix(Eigen::MatrixXd* M);
-
-	void FixMatrix(SpMat* M);
-
-	void UpdateOld(float time, float h);
 };
 

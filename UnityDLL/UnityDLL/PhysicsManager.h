@@ -51,7 +51,7 @@ public:
 	PhysicsManager(Integration _IntegrationMethod);
 	~PhysicsManager();
 
-	int AddObject(Vector3f position, Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass);
+	int AddObject(Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass);
 
 	void AddFixer(Vector3f position, Vector3f scale);
 

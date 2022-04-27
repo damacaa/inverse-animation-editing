@@ -4,10 +4,10 @@
 #include <map>
 #include "DebugHelper.h"
 
-Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, int nTriangles, float stiffness, float mass)
+Object::Object(Vector3f* vertices, int nVerts, int* _triangles, int nTriangles, float stiffness, float density)
 {
 	this->stiffness = stiffness;
-	this->mass = mass;
+	this->density = density;
 	nVertices = nVerts;
 	//positon = Eigen::Vector3d((double)pos.x, (double)pos.y, (double)pos.z);
 
@@ -50,7 +50,7 @@ Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, in
 		Eigen::Vector3d side1 = nodeArray[triangles[i + 1]].position - nodeArray[triangles[i]].position;
 		Eigen::Vector3d side2 = nodeArray[triangles[i + 2]].position - nodeArray[triangles[i]].position;
 
-		float area = 0.5f * (float)side1.cross(side2).norm();
+		double area = 0.5 * side1.cross(side2).norm();
 
 		for (int x = 0; x < 3; x++)
 		{//Add the proper mass to each node
@@ -64,15 +64,9 @@ Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, in
 				Node* a = newspringArray[x].oppositeNode;
 				Node* b = springMap[newspringArray[x].id].oppositeNode;
 
-				Spring extraSpring = Spring(a, b, stiffness / 2, damping);
-				it = springMap.find(extraSpring.id);
-				if (it != springMap.end())
-				{
-					springMap[newspringArray[x].id].volume += area;
-				}
-				else {
-					springMap[extraSpring.id] = extraSpring;
-				}
+				Spring extraSpring = Spring(a, b, stiffness / 2.0, damping);//stiffness / 10.0/////////////////////////////////////////
+				extraSpring.volume += 2.0 * area;
+				springMap[extraSpring.id] = extraSpring;
 			}
 			else
 			{
@@ -82,6 +76,10 @@ Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, in
 
 			springMap[newspringArray[x].id].volume += area;
 		}
+	}
+
+	for (int i = 0; i < nVertices; i++) {
+		nodeArray[i].SetDensity(density);
 	}
 
 	nSprings = (int)springMap.size();
@@ -94,6 +92,10 @@ Object::Object(Vector3f pos, Vector3f* vertices, int nVerts, int* _triangles, in
 		i++;
 	}
 
+	for (size_t i = 0; i < nSprings; i++)
+	{
+		springArray[i].stiffness *= springArray[i].volume / (springArray[i].length0 * springArray[i].length0);
+	}
 
 	delete[] newspringArray;
 	delete[] triangles;
@@ -110,32 +112,13 @@ Object::~Object()
 	nodeArray = 0;
 }
 
-void Object::Update(float time, float h)
-{
-	for (int i = 0; i < nSprings; i++)
-		springArray[i].ComputeForces();
-
-	for (int i = 0; i < nVertices; i++)
-		nodeArray[i].UpdateOld(time, h);
-
-	updated = true;
-}
-
-void Object::SetNodeMass(float newMass)
-{
-	for (size_t i = 0; i < nVertices; i++)
-	{
-		nodeArray[i].mass = newMass;
-	}
-}
-
 void Object::FixnodeArray(Fixer* f)
 {
 	for (size_t i = 0; i < nVertices; i++)
 	{
 		if (f->CheckNodeInside(&nodeArray[i])) {
 			nodeArray[i].isFixed = true;
-			nodeArray[i].vel = Eigen::Vector3d(0,0,0);
+			nodeArray[i].vel = Eigen::Vector3d(0, 0, 0);
 		}
 	}
 }
@@ -214,12 +197,6 @@ void Object::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel
 	//debug.PrintTimes("forces");
 }
 
-void Object::GetMass(Eigen::MatrixXd* mass)
-{
-	for (int i = 0; i < nVertices; ++i)
-		nodeArray[i].GetMass(mass);
-}
-
 void Object::GetFixedIndices(std::vector<bool>* fixedIndices)
 {
 	for (size_t i = 0; i < nVertices; i++)
@@ -250,42 +227,22 @@ void Object::GetMass(std::vector<T>* mass)
 		nodeArray[i].GetMass(mass);
 }
 
-void Object::GetMassInverse(Eigen::MatrixXd* massInv)
-{
-	for (int i = 0; i < nVertices; ++i)
-		nodeArray[i].GetMassInverse(massInv);
-}
-
 void Object::GetMassInverse(std::vector<T>* massInv)
 {
 	for (int i = 0; i < nVertices; ++i)
 		nodeArray[i].GetMassInv(massInv);
 }
 
-void Object::FixVector(Eigen::VectorXd* v)
-{
-	for (int i = 0; i < nVertices; i++)
-	{
-		nodeArray[i].FixVector(v);
-	}
-}
-
-void Object::FixMatrix(Eigen::MatrixXd* M)
-{
-	for (int i = 0; i < nVertices; i++)
-	{
-		nodeArray[i].FixMatrix(M);
-	}
-}
-
-void Object::FixMatrix(SpMat* M)
-{
-	for (int i = 0; i < nVertices; i++)
-		nodeArray[i].FixMatrix(M);
-}
-
 Vector3f* Object::GetVertices() {
 	updated = false;
 
 	return vertexArray2;
+}
+
+void Object::SetDensity(double _density)
+{
+	for (size_t i = 0; i < nVertices; i++)
+	{
+		nodeArray[i].SetDensity(_density);
+	}
 }

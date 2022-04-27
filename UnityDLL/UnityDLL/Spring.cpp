@@ -38,6 +38,7 @@ void Spring::UpdateState()
 void Spring::GetForce(Eigen::VectorXd* force)
 {
 	Eigen::Vector3d f = -stiffness * (length - length0) * dir;
+	//Eigen::Vector3d f = -(volume / (length0 * length0)) * stiffness * (length - length0) * dir;
 	f += -damping * dir.dot(nodeA->vel - nodeB->vel) * dir;
 
 	(*force)[nodeA->index] += f.x();

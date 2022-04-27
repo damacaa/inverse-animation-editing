@@ -70,7 +70,7 @@ public class SimulationManager : MonoBehaviour
                 vertices[i] = so.transform.TransformPoint(vertices[i]);
             }
 
-            int id = SimulationManager.Instance.AddObject(so.transform.position, vertices, mesh.triangles, so.stiffness, so.mass);
+            int id = SimulationManager.Instance.AddObject(vertices, mesh.triangles, so.stiffness, so.mass);
             so.name = "Id: " + id;
         }
 
@@ -97,23 +97,9 @@ public class SimulationManager : MonoBehaviour
             print(cpp.Estimate(0.5f));*/
     }
 
-    public int AddObject(Vector3 position, Vector3[] vertices, int[] triangles, float stiffness, float mass)
+    public int AddObject(Vector3[] vertices, int[] triangles, float stiffness, float mass)
     {
-        Vector3f[] __vertices = new Vector3f[vertices.Length];
-        for (int i = 0; i < vertices.Length; i++)
-        {
-            __vertices[i].x = vertices[i].x;
-            __vertices[i].y = vertices[i].y;
-            __vertices[i].z = vertices[i].z;
-        }
-
-        Int[] _triangles = new Int[triangles.Length];
-        for (int i = 0; i < triangles.Length; i++)
-        {
-            _triangles[i].i = triangles[i];
-        }
-
-        return cpp.AddObject(position, __vertices, _triangles, stiffness, mass);
+                return cpp.AddObject(vertices, triangles, stiffness, mass);
     }
 
     public void AddFixer(Vector3 position, Vector3 scale)
@@ -123,26 +109,8 @@ public class SimulationManager : MonoBehaviour
 
     public Vector3[] GetVertices(int id)
     {
-        IntPtr vertexArray = cpp.GetVertices(id, out int count);
-
-        if (count == 0)
-        {
-            //Debug.Log("Vertices not ready");
-        }
-
-        Vector3[] vertices = new Vector3[count];
-
-        unsafe
-        {
-            Vector3f* vectorPointer = (Vector3f*)vertexArray.ToPointer();
-
-            for (int i = 0; i < count; i++)
-            {
-                vertices[i].x = vectorPointer[i].x;
-                vertices[i].y = vectorPointer[i].y;
-                vertices[i].z = vectorPointer[i].z;
-            }
-        }
+        Vector3[] vertices = cpp.GetVertices(id);
+        
 
         //Debug.Log(vertices[1]);
 

@@ -26,6 +26,8 @@ public struct Vector3f
         return new Vector3(x, y, z);
     }
 
+    //public static Vector3[]  
+
     public float x, y, z;
 }
 
@@ -59,9 +61,23 @@ public class ICPPWrapper
         CPPWrapper.Destroy();
     }
 
-    public int AddObject(in Vector3 position, Vector3f[] vertices, Int[] triangles, float stiffness, float mass)
+    public int AddObject(Vector3[] vertices, int[] triangles, float stiffness, float mass)
     {
-        return CPPWrapper.AddObject(new Vector3f(position), vertices, vertices.Length, triangles, triangles.Length, stiffness, mass);
+        Vector3f[] _vertices = new Vector3f[vertices.Length];
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            _vertices[i].x = vertices[i].x;
+            _vertices[i].y = vertices[i].y;
+            _vertices[i].z = vertices[i].z;
+        }
+
+        Int[] _triangles = new Int[triangles.Length];
+        for (int i = 0; i < triangles.Length; i++)
+        {
+            _triangles[i].i = triangles[i];
+        }
+
+        return CPPWrapper.AddObject(_vertices, vertices.Length, _triangles, triangles.Length, stiffness, mass);
     }
 
     internal float Estimate(float v, int iterations)
@@ -86,9 +102,31 @@ public class ICPPWrapper
         CPPWrapper.Update(); /*Converts from Unity.Vector3 to our packed Vector3f struct*/
     }
 
-    public IntPtr GetVertices(int id, out int count)
+    public Vector3[] GetVertices(int id)
     {
-        return CPPWrapper.GetVertices(id, out count);
+
+        IntPtr vertexArray = CPPWrapper.GetVertices(id, out int count);
+
+        if (count == 0)
+        {
+            //Debug.Log("Vertices not ready");
+        }
+
+        Vector3[] vertices = new Vector3[count];
+
+        unsafe
+        {
+            Vector3f* vectorPointer = (Vector3f*)vertexArray.ToPointer();
+
+            for (int i = 0; i < count; i++)
+            {
+                vertices[i].x = vectorPointer[i].x;
+                vertices[i].y = vectorPointer[i].y;
+                vertices[i].z = vectorPointer[i].z;
+            }
+        }
+
+        return vertices;
     }
 
 
@@ -119,7 +157,7 @@ public class ICPPWrapper
     {
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void Initialize(int integrationMethod, float timeStep);
-        
+
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void StartSimulation(bool multithreading);
 
@@ -145,7 +183,7 @@ public class ICPPWrapper
         public static extern IntPtr GetVertices(int id, out int count);
 
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int AddObject(Vector3f position, Vector3f[] vertices, int nVertices, Int[] triangles, int nTriangles, float stiffness, float mass);
+        public static extern int AddObject(Vector3f[] vertices, int nVertices, Int[] triangles, int nTriangles, float stiffness, float mass);
 
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void AddFixer(Vector3f position, Vector3f scale);

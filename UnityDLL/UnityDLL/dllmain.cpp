@@ -119,9 +119,9 @@ extern "C" {
 		return physicsManager->Estimate(value, iterations, delta);
 	}
 
-	__declspec(dllexport) int AddObject(Vector3f position, Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass) {//, int* triangles, int* nTriangles) {
+	__declspec(dllexport) int AddObject(Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass) {//, int* triangles, int* nTriangles) {
 		std::lock_guard<std::mutex> lock(vertexMutex);
-		return physicsManager->AddObject(position, vertices, nVertices, triangles, nTriangles, stiffness, mass);
+		return physicsManager->AddObject(vertices, nVertices, triangles, nTriangles, stiffness, mass);
 	}
 
 	__declspec(dllexport) void AddFixer(Vector3f position, Vector3f scale) {
