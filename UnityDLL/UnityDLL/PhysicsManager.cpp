@@ -20,7 +20,7 @@ PhysicsManager::PhysicsManager(Integration _IntegrationMethod)
 PhysicsManager::~PhysicsManager()
 {
 	if (SimObjects.size() > 0) {
-		std::string description = std::to_string(SimObjects[0]->nVertices) + " vertices and ";
+		std::string description = std::to_string(SimObjects[0]->nVerts) + " vertices and ";
 		description += std::to_string(SimObjects[0]->nSprings) + " springs.";
 		debugHelper.PrintTimes("SimulationTimes", description);
 	}
@@ -522,7 +522,7 @@ Vector3f* PhysicsManager::GetVertices(int* count)
 	int totalCount = 0;
 	for (size_t i = 0; i < SimObjects.size(); i++)
 	{
-		totalCount += SimObjects[i]->nVertices;
+		totalCount += SimObjects[i]->nVerts;
 	}
 
 	Vector3f* result = new Vector3f[totalCount];
@@ -530,7 +530,7 @@ Vector3f* PhysicsManager::GetVertices(int* count)
 	totalCount = 0;
 	for (size_t i = 0; i < SimObjects.size(); i++)
 	{
-		int localCount = SimObjects[i]->nVertices;
+		int localCount = SimObjects[i]->nVerts;
 
 		Vector3f* v = SimObjects[i]->GetVertices();
 		std::copy(v, v + localCount, result + totalCount);
@@ -551,6 +551,6 @@ Vector3f* PhysicsManager::GetVertices(int id, int* count)
 	}
 
 	Updated = false;
-	*count = SimObjects[id]->nVertices;
+	*count = SimObjects[id]->nVerts;
 	return SimObjects[id]->GetVertices();
 }

@@ -2,12 +2,10 @@
 #include "Spring.h"
 #include "Node.h"
 
-Spring::Spring(Node* A, Node* B, float _stiffness, float _damping)
+Spring::Spring(Node* A, Node* B)
 {
 	nodeA = A;
 	nodeB = B;
-	stiffness = _stiffness;
-	damping = _damping;
 
 	length = (nodeA->position - nodeB->position).norm();
 	length0 = length;
@@ -79,6 +77,16 @@ bool Spring::operator==(const Spring& p) const
 {
 	return (nodeA == p.nodeA && nodeB == p.nodeB) ||
 		(nodeA == p.nodeB && nodeB == p.nodeA);
+}
+
+void Spring::SetStiffness(float stiffness)
+{
+	this->stiffness = stiffness * volume / (length0 * length0);
+}
+
+void Spring::SetDamping(float damping)
+{
+	this->damping = damping;
 }
 
 void Spring::ComputeForces()

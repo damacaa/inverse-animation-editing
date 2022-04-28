@@ -24,15 +24,20 @@ public:
 
 	Vector3f* vertexArray = 0;
 	Vector3f* vertexArray2 = 0;
-	int nVertices = 0;
+	int nVerts = 0;
 
 	Node* nodeArray = 0;
 	Spring* springArray = 0;
 	int nSprings = 0;
 
 	Object(Vector3f* vertices, int nVerts, int* triangles, int nTriangles, float stiffness, float mass);
-	//Object(Vector3f* vertices, int nVerts, int* springs, int nnSprings, float stiffness, float mass);
+
+	Object(Vector3f* vertPos, float* vertVolume, int nVerts, 
+		int* springs, float* springStiffness, float* springVolume, int nSprings,
+		float density, float damping);
+	
 	~Object();
+
 
 
 	void Initialize(int* ind);

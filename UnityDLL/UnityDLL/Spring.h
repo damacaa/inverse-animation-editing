@@ -31,7 +31,7 @@ public:
 
 	Spring() {};
 
-	Spring(Node* A, Node* B, float _stiffness, float _damping);
+	Spring(Node* A, Node* B);
 
 	void ComputeForces();
 
@@ -44,6 +44,10 @@ public:
 	void GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel);
 
 	bool operator==(const Spring& p) const;
+
+	void SetStiffness(float stiffness);
+
+	void SetDamping(float damping);
 };
 
 

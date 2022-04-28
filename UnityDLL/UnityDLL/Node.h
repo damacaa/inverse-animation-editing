@@ -47,5 +47,7 @@ public:
 
 	void SetDensity(double _density);
 
+	void SetDamping(float damping);
+
 };
 

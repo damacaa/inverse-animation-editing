@@ -8,18 +8,18 @@ Object::Object(Vector3f* vertices, int nVerts, int* _triangles, int nTriangles, 
 {
 	this->stiffness = stiffness;
 	this->density = density;
-	nVertices = nVerts;
+	this->nVerts = nVerts;
 	//positon = Eigen::Vector3d((double)pos.x, (double)pos.y, (double)pos.z);
 
-	vertexArray = new Vector3f[nVertices];
-	vertexArray2 = new Vector3f[nVertices];
+	vertexArray = new Vector3f[nVerts];
+	vertexArray2 = new Vector3f[nVerts];
 
-	memcpy(vertexArray, vertices, sizeof(Vector3f) * nVertices);
-	memcpy(vertexArray2, vertexArray, sizeof(Vector3f) * nVertices);
+	memcpy(vertexArray, vertices, sizeof(Vector3f) * nVerts);
+	memcpy(vertexArray2, vertexArray, sizeof(Vector3f) * nVerts);
 
 	//Create nodes
-	nodeArray = new Node[nVertices];
-	for (int i = 0; i < nVertices; i++) {
+	nodeArray = new Node[nVerts];
+	for (int i = 0; i < nVerts; i++) {
 		vertexArray[i] = (Vector3f)vertices[i];
 		nodeArray[i].position = Eigen::Vector3d(
 			(double)vertexArray[i].x,
@@ -39,13 +39,17 @@ Object::Object(Vector3f* vertices, int nVerts, int* _triangles, int nTriangles, 
 	Spring* newspringArray = new Spring[3];
 	for (int i = 0; i < nTriangles; i += 3)
 	{
-		newspringArray[0] = Spring(&nodeArray[triangles[i]], &nodeArray[triangles[i + 1]], stiffness, damping);
-		newspringArray[1] = Spring(&nodeArray[triangles[i]], &nodeArray[triangles[i + 2]], stiffness, damping);
-		newspringArray[2] = Spring(&nodeArray[triangles[i + 1]], &nodeArray[triangles[i + 2]], stiffness, damping);
+		newspringArray[0] = Spring(&nodeArray[triangles[i]], &nodeArray[triangles[i + 1]]);
+		newspringArray[1] = Spring(&nodeArray[triangles[i]], &nodeArray[triangles[i + 2]]);
+		newspringArray[2] = Spring(&nodeArray[triangles[i + 1]], &nodeArray[triangles[i + 2]]);
 
 		newspringArray[0].oppositeNode = &nodeArray[triangles[i + 2]];
 		newspringArray[1].oppositeNode = &nodeArray[triangles[i + 1]];
 		newspringArray[2].oppositeNode = &nodeArray[triangles[i]];
+
+		newspringArray[0].stiffness = stiffness;
+		newspringArray[1].stiffness = stiffness;
+		newspringArray[2].stiffness = stiffness;
 
 		Eigen::Vector3d side1 = nodeArray[triangles[i + 1]].position - nodeArray[triangles[i]].position;
 		Eigen::Vector3d side2 = nodeArray[triangles[i + 2]].position - nodeArray[triangles[i]].position;
@@ -64,7 +68,8 @@ Object::Object(Vector3f* vertices, int nVerts, int* _triangles, int nTriangles, 
 				Node* a = newspringArray[x].oppositeNode;
 				Node* b = springMap[newspringArray[x].id].oppositeNode;
 
-				Spring extraSpring = Spring(a, b, stiffness / 2.0, damping);//stiffness / 10.0/////////////////////////////////////////
+				Spring extraSpring = Spring(a, b);//stiffness / 10.0/////////////////////////////////////////
+				extraSpring.stiffness = stiffness / 2.0;
 				extraSpring.volume += 2.0 * area;
 				springMap[extraSpring.id] = extraSpring;
 			}
@@ -78,9 +83,6 @@ Object::Object(Vector3f* vertices, int nVerts, int* _triangles, int nTriangles, 
 		}
 	}
 
-	for (int i = 0; i < nVertices; i++) {
-		nodeArray[i].SetDensity(density);
-	}
 
 	nSprings = (int)springMap.size();
 	springArray = new Spring[nSprings];
@@ -92,13 +94,63 @@ Object::Object(Vector3f* vertices, int nVerts, int* _triangles, int nTriangles, 
 		i++;
 	}
 
+	//Setting simulation parameters
+	for (int i = 0; i < nVerts; i++) {
+		nodeArray[i].SetDensity(density);
+		nodeArray[i].SetDamping(damping);
+	}
+
 	for (size_t i = 0; i < nSprings; i++)
 	{
-		springArray[i].stiffness *= springArray[i].volume / (springArray[i].length0 * springArray[i].length0);
+		springArray[i].SetStiffness(springArray[i].stiffness);
+		springArray[i].SetDamping(damping);
 	}
 
 	delete[] newspringArray;
 	delete[] triangles;
+}
+
+Object::Object(Vector3f* vertPos, float* vertVolume, int nVerts, int* springs, float* springStiffness, float* springVolume, int nSprings,
+	float density, float damping)
+{
+	this->density = density;
+	this->stiffness = stiffness;
+	this->damping = damping;
+
+	this->nVerts = nVerts;
+	this->nSprings = nSprings;
+
+	vertexArray = new Vector3f[nVerts];
+	vertexArray2 = new Vector3f[nVerts];
+
+	memcpy(vertexArray, vertPos, sizeof(Vector3f) * nVerts);
+	memcpy(vertexArray2, vertexArray, sizeof(Vector3f) * nVerts);
+
+	//Create nodes
+	nodeArray = new Node[nVerts];
+	for (int i = 0; i < nVerts; i++) {
+
+		nodeArray[i].meshId = i;
+
+		nodeArray[i].position = Eigen::Vector3d(
+			(double)vertPos[i].x,
+			(double)vertPos[i].y,
+			(double)vertPos[i].z);
+
+		nodeArray[i].volume = vertVolume[i];
+		nodeArray[i].damping = damping;
+		nodeArray[i].SetDensity(density);
+		nodeArray[i].SetDamping(damping);
+	}
+
+	springArray = new Spring[nSprings];
+	for (int i = 0; i < nSprings; i++)
+	{
+		springArray[i] = Spring(&nodeArray[springs[2 * i]], &nodeArray[springs[(2 * i) + 1]]);
+		springArray[i].volume = springVolume[i];
+		springArray[i].SetStiffness(springStiffness[i]);
+		springArray[i].SetDamping(damping);
+	}
 }
 
 Object::~Object()
@@ -114,7 +166,7 @@ Object::~Object()
 
 void Object::FixnodeArray(Fixer* f)
 {
-	for (size_t i = 0; i < nVertices; i++)
+	for (size_t i = 0; i < nVerts; i++)
 	{
 		if (f->CheckNodeInside(&nodeArray[i])) {
 			nodeArray[i].isFixed = true;
@@ -128,7 +180,7 @@ void Object::Initialize(int* ind)
 	index = *ind;
 
 	// Start scene nodes/edges
-	for (int i = 0; i < nVertices; ++i)
+	for (int i = 0; i < nVerts; ++i)
 		nodeArray[i].Initialize(index + 3 * i); // Prepare
 
 	for (int i = 0; i < nSprings; ++i)
@@ -137,18 +189,18 @@ void Object::Initialize(int* ind)
 
 int Object::GetNumDoFs()
 {
-	return 3 * nVertices;
+	return 3 * nVerts;
 }
 
 void Object::GetPosition(Eigen::VectorXd* position)
 {
-	for (int i = 0; i < nVertices; ++i)
+	for (int i = 0; i < nVerts; ++i)
 		nodeArray[i].GetPosition(position);
 }
 
 void Object::SetPosition(Eigen::VectorXd* position)
 {
-	for (int i = 0; i < nVertices; ++i)
+	for (int i = 0; i < nVerts; ++i)
 		nodeArray[i].SetPosition(position);
 	for (int i = 0; i < nSprings; ++i)
 		springArray[i].UpdateState();
@@ -156,19 +208,19 @@ void Object::SetPosition(Eigen::VectorXd* position)
 
 void Object::GetVelocity(Eigen::VectorXd* velocity)
 {
-	for (int i = 0; i < nVertices; ++i)
+	for (int i = 0; i < nVerts; ++i)
 		nodeArray[i].GetVelocity(velocity);
 }
 
 void Object::SetVelocity(Eigen::VectorXd* velocity)
 {
-	for (int i = 0; i < nVertices; ++i)
+	for (int i = 0; i < nVerts; ++i)
 		nodeArray[i].SetVelocity(velocity);
 }
 
 void Object::GetForce(Eigen::VectorXd* force)
 {
-	for (int i = 0; i < nVertices; ++i)
+	for (int i = 0; i < nVerts; ++i)
 		nodeArray[i].GetForce(force);
 
 	for (int i = 0; i < nSprings; ++i)
@@ -186,7 +238,7 @@ void Object::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel
 	//DebugHelper debug = DebugHelper();
 	//std::string a = std::to_string(nVertices) + " vertices";
 	//debug.RecordTime(a);
-	for (int i = 0; i < nVertices; ++i)
+	for (int i = 0; i < nVerts; ++i)
 		nodeArray[i].GetForceJacobian(derivPos, derivVel);
 
 	//a = std::to_string(nSprings) + " springs";
@@ -199,7 +251,7 @@ void Object::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel
 
 void Object::GetFixedIndices(std::vector<bool>* fixedIndices)
 {
-	for (size_t i = 0; i < nVertices; i++)
+	for (size_t i = 0; i < nVerts; i++)
 	{
 		(*fixedIndices)[nodeArray[i].index] = nodeArray[i].isFixed;
 		(*fixedIndices)[nodeArray[i].index + 1] = nodeArray[i].isFixed;
@@ -209,27 +261,27 @@ void Object::GetFixedIndices(std::vector<bool>* fixedIndices)
 
 void Object::UpdateVertices()
 {
-	for (int i = 0; i < nVertices; i++) {
+	for (int i = 0; i < nVerts; i++) {
 		vertexArray[i] = Vector3f(
 			(float)nodeArray[i].position.x(),
 			(float)nodeArray[i].position.y(),
 			(float)nodeArray[i].position.z());
 	}
 
-	memcpy(vertexArray2, vertexArray, sizeof(Vector3f) * nVertices);
+	memcpy(vertexArray2, vertexArray, sizeof(Vector3f) * nVerts);
 
 	updated = true;
 }
 
 void Object::GetMass(std::vector<T>* mass)
 {
-	for (int i = 0; i < nVertices; ++i)
+	for (int i = 0; i < nVerts; ++i)
 		nodeArray[i].GetMass(mass);
 }
 
 void Object::GetMassInverse(std::vector<T>* massInv)
 {
-	for (int i = 0; i < nVertices; ++i)
+	for (int i = 0; i < nVerts; ++i)
 		nodeArray[i].GetMassInv(massInv);
 }
 
@@ -241,7 +293,7 @@ Vector3f* Object::GetVertices() {
 
 void Object::SetDensity(double _density)
 {
-	for (size_t i = 0; i < nVertices; i++)
+	for (size_t i = 0; i < nVerts; i++)
 	{
 		nodeArray[i].SetDensity(_density);
 	}

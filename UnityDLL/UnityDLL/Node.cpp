@@ -69,3 +69,8 @@ void Node::SetDensity(double _density)
 	mass = volume * density;
 }
 
+void Node::SetDamping(float damping)
+{
+	this->damping = damping;
+}
+
