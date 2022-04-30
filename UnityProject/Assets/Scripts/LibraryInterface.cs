@@ -47,6 +47,22 @@ public struct Int
     public int i;
 }
 
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct Float
+{
+    public Float(float _f)
+    {
+        f = _f;
+    }
+
+    public float UnityInt()
+    {
+        return f;
+    }
+
+    public float f;
+}
+
 public class ICPPWrapper
 {
     public ICPPWrapper(Integration integrationMethod, float timeStep)
@@ -78,6 +94,44 @@ public class ICPPWrapper
         }
 
         return CPPWrapper.AddObject(_vertices, vertices.Length, _triangles, triangles.Length, stiffness, mass);
+    }
+
+    internal int AddObject(Vector3[] vertPos, float[] vertVolume,  int[] springs, float[] springStiffness, float[] springVolume,  float density, float damping)
+    {
+        Vector3f[] _vertPos = new Vector3f[vertPos.Length];
+        for (int i = 0; i < vertPos.Length; i++)
+        {
+            _vertPos[i].x = vertPos[i].x;
+            _vertPos[i].y = vertPos[i].y;
+            _vertPos[i].z = vertPos[i].z;
+        }
+
+        Float[] _vertVolume = new Float[vertPos.Length];
+        for (int i = 0; i < vertPos.Length; i++)
+        {
+            _vertVolume[i].f = vertVolume[i];
+        }
+
+        Int[] _springs = new Int[springs.Length];
+        for (int i = 0; i < springs.Length; i++)
+        {
+            _springs[i].i = springs[i];
+        }
+
+        int nSprings = springs.Length / 2;
+        Float[] _springStiffness = new Float[nSprings];
+        for (int i = 0; i < nSprings; i++)
+        {
+            _springStiffness[i].f = springStiffness[i];
+        }
+
+        Float[] _springVolume = new Float[nSprings];
+        for (int i = 0; i < nSprings; i++)
+        {
+            _springVolume[i].f = springVolume[i];
+        }
+
+        return CPPWrapper.AddObject(_vertPos, _vertVolume, vertPos.Length, _springs, _springStiffness, _springVolume, nSprings, density, damping);
     }
 
     internal float Estimate(float v, int iterations)
@@ -128,7 +182,6 @@ public class ICPPWrapper
 
         return vertices;
     }
-
 
     #region examples
     public void IncreaseCounter()
@@ -184,9 +237,13 @@ public class ICPPWrapper
 
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
         public static extern int AddObject(Vector3f[] vertices, int nVertices, Int[] triangles, int nTriangles, float stiffness, float mass);
+        
+        [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int AddObject(Vector3f[] vertPos, Float[] vertVolume, int nVerts, Int[] springs, Float[] springStiffness, Float[] springVolume, int nSprings, float density, float damping);
 
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void AddFixer(Vector3f position, Vector3f scale);
+
     }
     #endregion
 }

@@ -60,6 +60,17 @@ int PhysicsManager::AddObject(Vector3f* vertices, int nVertices, int* triangles,
 	return o->id;
 }
 
+int PhysicsManager::AddObject(Vector3f* vertPos, float* vertVolume, int nVerts, int* springs, float* springStiffness, float* springVolume, int nSprings,
+	float density, float damping)
+{
+	Object* o = new Object(vertPos, vertVolume, nVerts, springs, springStiffness, springVolume, nSprings, density, damping);
+	o->id = (int)SimObjects.size() + (int)PendingSimObjects.size();
+	PendingSimObjects.push_back(o);
+
+	needsRestart = true;
+	return o->id;
+}
+
 void PhysicsManager::AddFixer(Vector3f position, Vector3f scale)
 {
 	Fixer* f = new Fixer(position, scale);
@@ -423,7 +434,7 @@ float PhysicsManager::Estimate(float parameter, int iter, float h)
 	ss.str("Back propagation results");
 	ss << "dGdp: " << dGdp.format(CommaInitFmt) << sep;
 	ss << "dGdx: " << dGdx[0].format(CommaInitFmt) << sep;
-	ss << "dGdv: " << dGdv[0].format(CommaInitFmt) << sep; 
+	ss << "dGdv: " << dGdv[0].format(CommaInitFmt) << sep;
 	std::string result = ss.str();
 
 	debugHelper.PrintValue(result, "backstep");

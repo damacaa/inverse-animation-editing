@@ -53,6 +53,9 @@ public:
 
 	int AddObject(Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass);
 
+	int AddObject(Vector3f* vertPos, float* vertVolume, int nVerts, int* springs, float* springStiffness, float* springVolume, int nSprings,
+		float density, float damping);
+
 	void AddFixer(Vector3f position, Vector3f scale);
 
 	void Start();

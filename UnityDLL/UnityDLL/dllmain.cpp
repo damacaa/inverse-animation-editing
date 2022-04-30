@@ -119,9 +119,17 @@ extern "C" {
 		return physicsManager->Estimate(value, iterations, delta);
 	}
 
-	__declspec(dllexport) int AddObject(Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass) {//, int* triangles, int* nTriangles) {
+	/*__declspec(dllexport) int AddObject(Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass)
+	{
 		std::lock_guard<std::mutex> lock(vertexMutex);
 		return physicsManager->AddObject(vertices, nVertices, triangles, nTriangles, stiffness, mass);
+	}*/
+
+	__declspec(dllexport) int AddObject(Vector3f* vertPos, float* vertVolume, int nVerts, int* springs, float* springStiffness, float* springVolume, int nSprings,
+		float density, float damping)
+	{
+		std::lock_guard<std::mutex> lock(vertexMutex);
+		return physicsManager->AddObject(vertPos, vertVolume, nVerts, springs, springStiffness, springVolume, nSprings, density, damping);
 	}
 
 	__declspec(dllexport) void AddFixer(Vector3f position, Vector3f scale) {
@@ -196,7 +204,7 @@ extern "C" {
 			return new Vector3f;
 		}
 
-		return physicsManager->GetVertices(count);
+		return physicsManager->GetVertices(id, count);
 
 		/*std::lock_guard<std::mutex> lock(vertexMutex);
 		if (physicsManager->Updated) {

@@ -59,7 +59,7 @@ public class SimulationManager : MonoBehaviour
 
     private void Start()
     {
-        foreach (SimulationObject so in simulationObjects)
+        /*foreach (SimulationObject so in simulationObjects)
         {
             Mesh mesh = so.GetComponent<MeshFilter>().mesh;
 
@@ -71,8 +71,28 @@ public class SimulationManager : MonoBehaviour
             }
 
             int id = SimulationManager.Instance.AddObject(vertices, mesh.triangles, so.stiffness, so.mass);
+            so.id = id;
+            so.name = "Id: " + id;
+        }*/
+
+        foreach (SimulationObject so in simulationObjects)
+        {
+            Vector3[] vertPos = so.data.vertPos;
+            float[] vertVolume = so.data.vertVolume;
+            int[] springs = so.data.springs;
+            float[] springStiffness = so.data.springStiffness;
+            float[] springVolume = so.data.springVolume;
+            float density = so.data.density;
+            float damping = so.data.damping;
+
+            int id = SimulationManager.Instance.AddObject(vertPos, vertVolume, springs, springStiffness, springVolume, density, damping);
+            so.id = id;
             so.name = "Id: " + id;
         }
+
+
+
+
 
         switch (mode)
         {
@@ -97,9 +117,15 @@ public class SimulationManager : MonoBehaviour
             print(cpp.Estimate(0.5f));*/
     }
 
-    public int AddObject(Vector3[] vertices, int[] triangles, float stiffness, float mass)
+    /*public int AddObject(Vector3[] vertices, int[] triangles, float stiffness, float mass)
     {
                 return cpp.AddObject(vertices, triangles, stiffness, mass);
+    }*/
+
+    public int AddObject(Vector3[] vertPos, float[] vertVolume, int[] springs, float[] springStiffness, float[] springVolume,
+    float density, float damping)
+    {
+        return cpp.AddObject(vertPos, vertVolume, springs, springStiffness, springVolume, density, damping);
     }
 
     public void AddFixer(Vector3 position, Vector3 scale)
@@ -110,7 +136,7 @@ public class SimulationManager : MonoBehaviour
     public Vector3[] GetVertices(int id)
     {
         Vector3[] vertices = cpp.GetVertices(id);
-        
+
 
         //Debug.Log(vertices[1]);
 
@@ -126,6 +152,9 @@ public class SimulationManager : MonoBehaviour
     void FixedUpdate()
     {
 
+        if (mode == Mode.SimulateSingleThread)
+            cpp.Update();
+
         //cpp.Update();
         //cpp.IncreaseCounter();
 
@@ -133,14 +162,14 @@ public class SimulationManager : MonoBehaviour
         //Debug.Log("Thread Counter = " + cpp.GetThreadCounter());
     }
 
-    private void Update()
+    /*private void Update()
     {
         if (mode == Mode.SimulateSingleThread && Time.time > lastTime + timeStep)
         {
             cpp.Update();
             lastTime = Time.time;
         }
-    }
+    }*/
 }
 
 public enum Integration
