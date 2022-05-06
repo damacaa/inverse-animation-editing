@@ -11,6 +11,11 @@ using std::chrono::duration_cast;
 using std::chrono::duration;
 using std::chrono::milliseconds;
 
+PhysicsManager::PhysicsManager(std::string info)
+{
+
+}
+
 PhysicsManager::PhysicsManager(Integration _IntegrationMethod)
 {
 	integrationMethod = _IntegrationMethod;
@@ -213,7 +218,7 @@ PhysicsManager::SimulationInfo PhysicsManager::StepSymplectic(float h, Simulatio
 	SimulationInfo newSimulationInfo;
 	newSimulationInfo.x = x;
 	newSimulationInfo.v = v;
-	newSimulationInfo.parameter = simulationInfo.parameter;
+	//newSimulationInfo.parameter = simulationInfo.parameter;
 
 	return newSimulationInfo;
 }
@@ -316,11 +321,11 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationI
 	SimulationInfo newData;
 	newData.x = x;
 	newData.v = v;
-	newData.M = M;
-	newData.dFdx = dFdx;
-	newData.dFdv = dFdv;
+	//newData.M = M;
+	//newData.dFdx = dFdx;
+	//newData.dFdv = dFdv;
 
-	newData.parameter = simulationInfo.parameter;
+	//newData.parameter = simulationInfo.parameter;
 
 	return newData;
 }
@@ -334,7 +339,7 @@ void PhysicsManager::UpdateObjects()
 	}
 }
 
-float PhysicsManager::Estimate(float parameter, int iter, float h)
+float PhysicsManager::Estimate(float parameter, int iter, float h, Eigen::VectorXd* _dGdp)
 {
 	//Simulation to define target
 	Start();
@@ -416,7 +421,7 @@ float PhysicsManager::Estimate(float parameter, int iter, float h)
 
 	for (int i = iter - 2; i >= 0; i--)
 	{
-		BackwardStepInfo backStepResult = Backwards(steps[i + 1].x, steps[i + 1].v, parameter, dGdx[i + 1], dGdv[i + 1], h, steps[i]);//dGdp, dGdx, dGdv
+		BackwardStepInfo backStepResult = Backwards(steps[i].x, steps[i].v, steps[i + 1].x, steps[i + 1].v, parameter, dGdx[i + 1], dGdv[i + 1], h);//dGdp, dGdx, dGdv
 
 		//Global
 		dGdp += backStepResult.dGdp;
@@ -439,17 +444,17 @@ float PhysicsManager::Estimate(float parameter, int iter, float h)
 
 	debugHelper.PrintValue(result, "backstep");
 
+	*_dGdp = dGdp;
 	return g;
 }
 
-PhysicsManager::BackwardStepInfo PhysicsManager::Backwards(Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h, SimulationInfo current)
+PhysicsManager::BackwardStepInfo PhysicsManager::Backwards(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h)
 {
 	//SpMat M(m_numDoFs, m_numDoFs);
 
 	Eigen::VectorXd f1 = Eigen::VectorXd::Constant(m_numDoFs, 0.0);//Forces
 
 	//Eigen::VectorXd x = current.x;
-	Eigen::VectorXd v;
 	SpMat dFdx(m_numDoFs, m_numDoFs);;
 	SpMat dFdv(m_numDoFs, m_numDoFs);;
 	SpMat M(m_numDoFs, m_numDoFs);;
@@ -471,19 +476,6 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backwards(Eigen::VectorXd x1, E
 	dFdx.setFromTriplets(derivPos.begin(), derivPos.end(), [](const double& a, const double& b) { return a + b; });
 	dFdv.setFromTriplets(derivVel.begin(), derivVel.end(), [](const double& a, const double& b) { return a + b; });
 	M.setFromTriplets(masses.begin(), masses.end());
-
-	/*SpMat firstPart = M + (-h) * dFdv;
-
-	SpMat Aa = firstPart + (-h * h) * dFdx;
-	Eigen::VectorXd bb = firstPart * v1 + h * f1;
-
-	Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::UnitLower | Eigen::UnitUpper> cgg;
-	cgg.compute(Aa);
-
-	v = cgg.solveWithGuess(bb, v1);*/
-
-	v = current.v;
-
 
 
 	//Backward
@@ -564,4 +556,17 @@ Vector3f* PhysicsManager::GetVertices(int id, int* count)
 	Updated = false;
 	*count = SimObjects[id]->nVerts;
 	return SimObjects[id]->GetVertices();
+}
+
+void PhysicsManager::SetParam(float param)
+{
+	for (size_t i = 0; i < SimObjects.size(); i++)
+	{
+		SimObjects[i]->SetDensity(param);
+	}
+}
+
+PhysicsManager::SimulationInfo PhysicsManager::Forward(Eigen::VectorXd x, Eigen::VectorXd v, float h)
+{
+	return StepImplicit(h,SimulationInfo(x,v));
 }

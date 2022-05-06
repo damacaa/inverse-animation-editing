@@ -1,9 +1,34 @@
-﻿  dllmain.cpp
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\dllmain.cpp(88,18): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+﻿  PhysicsManager.cpp
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(200,28): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(280,43): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(280,33): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(282,43): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(282,33): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(397,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
      Creating library D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.lib and object D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.exp
   Generating code
-  13 of 3918 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
-    1 functions were new in current compilation
-    38 functions had inline decision re-evaluated but remain unchanged
+  11 of 3920 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
+    9 functions were new in current compilation
+    41 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   UnityDLL.vcxproj -> D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.dll

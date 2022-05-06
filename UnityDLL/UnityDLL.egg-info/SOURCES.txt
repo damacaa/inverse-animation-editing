@@ -1,0 +1,8 @@
+pyproject.toml
+setup.py
+UnityDLL.egg-info/PKG-INFO
+UnityDLL.egg-info/SOURCES.txt
+UnityDLL.egg-info/dependency_links.txt
+UnityDLL.egg-info/not-zip-safe
+UnityDLL.egg-info/requires.txt
+UnityDLL.egg-info/top_level.txt

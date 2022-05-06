@@ -18,9 +18,12 @@ class PhysicsManager
 private:
 
 	struct SimulationInfo {
-		double parameter;
-		Eigen::VectorXd x, v, f;
-		SpMat M, dFdx, dFdv;
+		SimulationInfo(){}
+		SimulationInfo(Eigen::VectorXd x, Eigen::VectorXd v) {
+			this->x = x;
+			this->v = v;
+		}
+		Eigen::VectorXd x, v;
 	};
 
 	struct BackwardStepInfo {
@@ -48,7 +51,8 @@ private:
 public:
 	bool Updated = false;
 
-	PhysicsManager(Integration _IntegrationMethod);
+	PhysicsManager(std::string info);
+	PhysicsManager(Integration _IntegrationMethod = Integration::Implicit);
 	~PhysicsManager();
 
 	int AddObject(Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass);
@@ -64,9 +68,7 @@ public:
 
 	void UpdateObjects();
 
-	float Estimate(float parameter, int iter, float h);
-
-	PhysicsManager::BackwardStepInfo Backwards(Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h, SimulationInfo previous);
+	float Estimate(float parameter, int iter, float h, Eigen::VectorXd* _dGdp);
 
 	SimulationInfo StepSymplectic(float h, SimulationInfo simulationInfo);
 
@@ -77,6 +79,12 @@ public:
 	Vector3f* GetVertices(int* count);
 
 	Vector3f* GetVertices(int id, int* count);
+
+	void SetParam(float param);
+
+	SimulationInfo Forward(Eigen::VectorXd x, Eigen::VectorXd v, float h);
+
+	PhysicsManager::BackwardStepInfo Backwards(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h);
 };
 
 

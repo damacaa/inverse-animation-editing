@@ -104,6 +104,17 @@ extern "C" {
 		}
 	}
 
+	__declspec(dllexport) void InitializeFromJSON(char* info) {
+		if (!initialized) {
+			physicsManager = new PhysicsManager(info);
+
+			counter = new MyCounter();
+			threadCounter = new MyCounter();
+
+			initialized = true;
+		}
+	}
+
 	__declspec(dllexport) void StartSimulation(bool multithreading) {
 		if (running)
 			return;
@@ -116,7 +127,7 @@ extern "C" {
 	}
 
 	__declspec(dllexport) float Estimate(float value, int iterations) {
-		return physicsManager->Estimate(value, iterations, delta);
+		return physicsManager->Estimate(value, iterations, delta, new Eigen::VectorXd());
 	}
 
 	/*__declspec(dllexport) int AddObject(Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass)

@@ -1545,3 +1545,12 @@ Total: 21.9ms
 6.Solving:                                  5.86ms --> 27%
 Total: 21.7ms
 
+121 vertices and 600 springs.
+1.Set up:                                   0.0137ms --> 0.866%
+2.Calculating forces:                       0.317ms --> 20%
+3.Building matrices from triples:           0.398ms --> 25.2%
+4.Calculating A and b:                      0.163ms --> 10.3%
+5.Fixing:                                   0.343ms --> 21.7%
+6.Solving:                                  0.346ms --> 21.9%
+Total: 1.58ms
+
