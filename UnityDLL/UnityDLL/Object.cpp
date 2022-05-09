@@ -96,7 +96,7 @@ Object::Object(Vector3f* vertices, int nVerts, int* _triangles, int nTriangles, 
 
 	//Setting simulation parameters
 	for (int i = 0; i < nVerts; i++) {
-		nodeArray[i].SetDensity(density);
+		nodeArray[i].SetMass(density);
 		nodeArray[i].SetDamping(damping);
 	}
 
@@ -110,10 +110,9 @@ Object::Object(Vector3f* vertices, int nVerts, int* _triangles, int nTriangles, 
 	delete[] triangles;
 }
 
-Object::Object(Vector3f* vertPos, float* vertVolume, int nVerts, int* springs, float* springStiffness, float* springVolume, int nSprings,
-	float density, float damping)
+Object::Object(Vector3f* vertPos, bool* vertIsFixed, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping)
 {
-	this->density = density;
+	//this->density = density;
 	this->stiffness = stiffness;
 	this->damping = damping;
 
@@ -137,17 +136,19 @@ Object::Object(Vector3f* vertPos, float* vertVolume, int nVerts, int* springs, f
 			(double)vertPos[i].y,
 			(double)vertPos[i].z);
 
-		nodeArray[i].volume = vertVolume[i];
-		nodeArray[i].damping = damping;
-		nodeArray[i].SetDensity(density);
+		//nodeArray[i].volume = vertVolume[i];
+		nodeArray[i].SetMass(vertMass);
 		nodeArray[i].SetDamping(damping);
+		nodeArray[i].isFixed = vertIsFixed[i];
 	}
 
 	springArray = new Spring[nSprings];
 	for (int i = 0; i < nSprings; i++)
 	{
-		springArray[i] = Spring(&nodeArray[springs[2 * i]], &nodeArray[springs[(2 * i) + 1]]);
-		springArray[i].volume = springVolume[i];
+		int a = springs[2 * i];
+		int b = springs[(2 * i) + 1];
+		springArray[i] = Spring(&nodeArray[a], &nodeArray[b]);
+		//springArray[i].volume = springVolume[i];
 		springArray[i].SetStiffness(springStiffness[i]);
 		springArray[i].SetDamping(damping);
 	}
@@ -291,10 +292,10 @@ Vector3f* Object::GetVertices() {
 	return vertexArray2;
 }
 
-void Object::SetDensity(double _density)
+void Object::SetMass(double mass)
 {
 	for (size_t i = 0; i < nVerts; i++)
 	{
-		nodeArray[i].SetDensity(_density);
+		nodeArray[i].SetMass(mass);
 	}
 }

@@ -2,6 +2,9 @@
 #include "PhysicsManager.h"
 #include "Object.h"
 
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
 #include <iostream>
 #include <fstream>  
 #include <chrono>
@@ -13,6 +16,45 @@ using std::chrono::milliseconds;
 
 PhysicsManager::PhysicsManager(std::string info)
 {
+	debugHelper.PrintValue(info, "scene");
+
+	json js = json::parse(info);
+
+	integrationMethod = (Integration)js["integrationMethod"];
+
+	for (size_t i = 0; i < js["objects"].size(); i++)
+	{
+		json obj = js["objects"][i];
+
+		int nVerts = obj["vertPos"].size();
+		int nSprings = obj["springs"].size() / 2;
+
+		Vector3f* vertPos = new Vector3f[nVerts];
+		bool* vertIsFixed = new bool[nVerts];
+		float vertMass = obj["vertMass"];
+
+		int* springs = new int[(int)nSprings * 2];
+		float* springStiffness = new float[nSprings];
+		float damping = obj["damping"];
+
+
+		for (size_t j = 0; j < nVerts; j++)
+		{
+			json pos = obj["vertPos"][j];
+			vertPos[j] = Vector3f(pos["x"], pos["y"], pos["z"]);
+			vertIsFixed[j] = obj["vertIsFixed"][j];
+		}
+
+		for (size_t j = 0; j < nSprings; j++)
+		{
+			springs[2 * j] = obj["springs"][2 * j];
+			springs[(2 * j) + 1] = obj["springs"][(2 * j) + 1];
+			springStiffness[j] = obj["springStiffness"][j];
+		}
+
+		AddObject(vertPos, vertIsFixed, vertMass, nVerts, springs, springStiffness, nSprings, damping);
+		//Vector3f* vertPos, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping
+	}
 
 }
 
@@ -65,10 +107,9 @@ int PhysicsManager::AddObject(Vector3f* vertices, int nVertices, int* triangles,
 	return o->id;
 }
 
-int PhysicsManager::AddObject(Vector3f* vertPos, float* vertVolume, int nVerts, int* springs, float* springStiffness, float* springVolume, int nSprings,
-	float density, float damping)
+int PhysicsManager::AddObject(Vector3f* vertPos, bool* vertIsFixed, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping)
 {
-	Object* o = new Object(vertPos, vertVolume, nVerts, springs, springStiffness, springVolume, nSprings, density, damping);
+	Object* o = new Object(vertPos, vertIsFixed, vertMass, nVerts, springs, springStiffness, nSprings, damping);
 	o->id = (int)SimObjects.size() + (int)PendingSimObjects.size();
 	PendingSimObjects.push_back(o);
 
@@ -347,7 +388,7 @@ float PhysicsManager::Estimate(float parameter, int iter, float h, Eigen::Vector
 
 	for (size_t i = 0; i < SimObjects.size(); i++)
 	{
-		SimObjects[i]->SetDensity(0.5f);
+		SimObjects[i]->SetMass(0.5f);
 	}
 
 	for (size_t i = 0; i < iter; i++)
@@ -367,7 +408,7 @@ float PhysicsManager::Estimate(float parameter, int iter, float h, Eigen::Vector
 	//Simulation with given parameter
 	for (size_t i = 0; i < SimObjects.size(); i++)
 	{
-		SimObjects[i]->SetDensity(parameter);
+		SimObjects[i]->SetMass(parameter);
 	}
 
 	for (int i = 0; i < SimObjects.size(); i++)
@@ -562,11 +603,23 @@ void PhysicsManager::SetParam(float param)
 {
 	for (size_t i = 0; i < SimObjects.size(); i++)
 	{
-		SimObjects[i]->SetDensity(param);
+		SimObjects[i]->SetMass(param);
 	}
+}
+
+PhysicsManager::SimulationInfo PhysicsManager::GetInitialState()
+{
+	Eigen::VectorXd x = Eigen::VectorXd(m_numDoFs);
+	Eigen::VectorXd v = Eigen::VectorXd(m_numDoFs);
+	for (size_t i = 0; i < SimObjects.size(); i++)
+	{
+		SimObjects[i]->GetPosition(&x);
+		SimObjects[i]->GetVelocity(&v);
+	}
+	return SimulationInfo(x, v);
 }
 
 PhysicsManager::SimulationInfo PhysicsManager::Forward(Eigen::VectorXd x, Eigen::VectorXd v, float h)
 {
-	return StepImplicit(h,SimulationInfo(x,v));
+	return StepImplicit(h, SimulationInfo(x, v));
 }

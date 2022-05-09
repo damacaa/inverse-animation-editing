@@ -3,6 +3,7 @@
 #include "Types.h"
 #include "DebugHelper.h"
 
+
 class Object;
 class Fixer;
 
@@ -18,7 +19,7 @@ class PhysicsManager
 private:
 
 	struct SimulationInfo {
-		SimulationInfo(){}
+		SimulationInfo() {}
 		SimulationInfo(Eigen::VectorXd x, Eigen::VectorXd v) {
 			this->x = x;
 			this->v = v;
@@ -57,8 +58,7 @@ public:
 
 	int AddObject(Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass);
 
-	int AddObject(Vector3f* vertPos, float* vertVolume, int nVerts, int* springs, float* springStiffness, float* springVolume, int nSprings,
-		float density, float damping);
+	int AddObject(Vector3f* vertPos, bool* vertIsFixed, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping);
 
 	void AddFixer(Vector3f position, Vector3f scale);
 
@@ -81,6 +81,8 @@ public:
 	Vector3f* GetVertices(int id, int* count);
 
 	void SetParam(float param);
+
+	SimulationInfo GetInitialState();
 
 	SimulationInfo Forward(Eigen::VectorXd x, Eigen::VectorXd v, float h);
 

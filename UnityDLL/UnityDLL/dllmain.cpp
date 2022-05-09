@@ -4,6 +4,9 @@
 #include <math.h>   
 #include <vector>
 
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
 using std::chrono::high_resolution_clock;
 using std::chrono::duration_cast;
 using std::chrono::duration;
@@ -106,6 +109,11 @@ extern "C" {
 
 	__declspec(dllexport) void InitializeFromJSON(char* info) {
 		if (!initialized) {
+
+			json js = json::parse(info);
+
+			delta = js["delta"];
+
 			physicsManager = new PhysicsManager(info);
 
 			counter = new MyCounter();
@@ -136,11 +144,10 @@ extern "C" {
 		return physicsManager->AddObject(vertices, nVertices, triangles, nTriangles, stiffness, mass);
 	}*/
 
-	__declspec(dllexport) int AddObject(Vector3f* vertPos, float* vertVolume, int nVerts, int* springs, float* springStiffness, float* springVolume, int nSprings,
-		float density, float damping)
+	__declspec(dllexport) int AddObject(Vector3f* vertPos, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping)
 	{
 		std::lock_guard<std::mutex> lock(vertexMutex);
-		return physicsManager->AddObject(vertPos, vertVolume, nVerts, springs, springStiffness, springVolume, nSprings, density, damping);
+		return physicsManager->AddObject(vertPos, new bool[nVerts], vertMass, nVerts, springs, springStiffness, nSprings, damping);
 	}
 
 	__declspec(dllexport) void AddFixer(Vector3f position, Vector3f scale) {

@@ -17,8 +17,18 @@ public:
 
 PhysicsManager physicsManager;
 
-void Initialize(std::string info) {
-	physicsManager = PhysicsManager();
+ForwardResult Initialize(std::string info)
+{
+	physicsManager = PhysicsManager(info);
+	physicsManager.Start();
+
+	auto sinfo = physicsManager.GetInitialState();
+
+	ForwardResult result;
+	result.x = sinfo.x;
+	result.v = sinfo.v;
+
+	return result;
 }
 
 ForwardResult Forward(Eigen::VectorXd x, Eigen::VectorXd v, float parameter, float h)
@@ -28,8 +38,8 @@ ForwardResult Forward(Eigen::VectorXd x, Eigen::VectorXd v, float parameter, flo
 	auto info = physicsManager.Forward(x, v, h);
 
 	ForwardResult result;
-	result.x = x;
-	result.v = v;
+	result.x = info.x;
+	result.v = info.v;
 
 	return result;
 }
@@ -55,40 +65,23 @@ int add(int i, int j) {
 	return a;
 }
 
-BackwardsResult Estimate(float parameter, int iter, float h) {
-	PhysicsManager physicsManager = PhysicsManager(Integration::Implicit);
 
-	Vector3f* vertices = new Vector3f[3];
-	vertices[0] = Vector3f(0, 0, 0);
-	vertices[1] = Vector3f(0, -1, 0);
-	vertices[2] = Vector3f(1, -1, 0);
-
-	int* triangles = new int[3];
-	triangles[0] = 0;
-	triangles[1] = 1;
-	triangles[2] = 2;
-
-	physicsManager.AddObject(vertices, 3, triangles, 3, 1, 1);
-
-	BackwardsResult r = BackwardsResult();
-	r.g = physicsManager.Estimate(parameter, iter, h, &r.dGdp);
-
-	return r;
-}
 
 PYBIND11_MODULE(UnityDLL, m) {
 	m.doc() = "pybind11 example plugin"; // optional module docstring
 
 	m.def("add", &add, "A function that adds two numbers");
 
-	m.def("estimate", &Estimate, "A function that calculates some error");
-
+	m.def("initialize", &Initialize, "Initializes simulator");
+	m.def("forward", &Forward, "Step forward");
+	m.def("bacwards", &Bacwards, "Step backwards");
 
 	pybind11::class_<ForwardResult>(m, "ForwardResult")
 		.def_readwrite("x", &ForwardResult::x)
 		.def_readwrite("v", &ForwardResult::v);
 
 	pybind11::class_<BackwardsResult>(m, "BackwardsResult")
-		.def_readwrite("g", &BackwardsResult::g)
-		.def_readwrite("dGdp", &BackwardsResult::dGdp);
+		.def_readwrite("dGdp", &BackwardsResult::dGdp)
+		.def_readwrite("dGdx", &BackwardsResult::dGdx)
+		.def_readwrite("dGdv", &BackwardsResult::dGdv);
 }

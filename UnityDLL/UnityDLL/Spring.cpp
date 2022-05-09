@@ -81,7 +81,8 @@ bool Spring::operator==(const Spring& p) const
 
 void Spring::SetStiffness(float stiffness)
 {
-	this->stiffness = stiffness * volume / (length0 * length0);
+	//this->stiffness = stiffness * volume / (length0 * length0);
+	this->stiffness = stiffness;
 }
 
 void Spring::SetDamping(float damping)

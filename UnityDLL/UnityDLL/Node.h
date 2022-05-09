@@ -45,7 +45,7 @@ public:
 
 	void GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel);
 
-	void SetDensity(double _density);
+	void SetMass(double _density);
 
 	void SetDamping(float damping);
 

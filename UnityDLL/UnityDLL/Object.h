@@ -32,9 +32,7 @@ public:
 
 	Object(Vector3f* vertices, int nVerts, int* triangles, int nTriangles, float stiffness, float mass);
 
-	Object(Vector3f* vertPos, float* vertVolume, int nVerts, 
-		int* springs, float* springStiffness, float* springVolume, int nSprings,
-		float density, float damping);
+	Object(Vector3f* vertPos, bool* vertIsFixed, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping);
 	
 	~Object();
 
@@ -68,6 +66,6 @@ public:
 
 	Vector3f* GetVertices();
 
-	void SetDensity(double _density);
+	void SetMass(double _density);
 };
 

@@ -63,10 +63,11 @@ void Node::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel)
 	derivVel->push_back(T(index + 2, index + 2, -damping * vel.z()));
 }
 
-void Node::SetDensity(double _density)
+void Node::SetMass(double value)
 {
-	density = _density;
-	mass = volume * density;
+	//density = value;
+	//mass = volume * density;
+	mass = value;
 }
 
 void Node::SetDamping(float damping)

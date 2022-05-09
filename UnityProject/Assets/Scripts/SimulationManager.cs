@@ -53,12 +53,13 @@ public class SimulationManager : MonoBehaviour
     ICPPWrapper cpp;
     private void Awake()
     {
-        cpp = new ICPPWrapper(integrationMethod, timeStep);
         instance = this;
+        cpp = new ICPPWrapper(integrationMethod, timeStep);
     }
 
     private void Start()
     {
+
         /*foreach (SimulationObject so in simulationObjects)
         {
             Mesh mesh = so.GetComponent<MeshFilter>().mesh;
@@ -75,7 +76,7 @@ public class SimulationManager : MonoBehaviour
             so.name = "Id: " + id;
         }*/
 
-        foreach (SimulationObject so in simulationObjects)
+        /*foreach (SimulationObject so in simulationObjects)
         {
             Vector3[] vertPos = so.data.vertPos;
             float[] vertVolume = so.data.vertVolume;
@@ -88,11 +89,36 @@ public class SimulationManager : MonoBehaviour
             int id = SimulationManager.Instance.AddObject(vertPos, vertVolume, springs, springStiffness, springVolume, density, damping);
             so.id = id;
             so.name = "Id: " + id;
+        }*/
+
+        /*foreach (SimulationObject so in simulationObjects)
+        {
+            Vector3[] vertPos = so.data.vertPos;
+            float vertMass = so.data.vertMass;
+            int[] springs = so.data.springs;
+            float[] springStiffness = so.data.springStiffness;
+            float damping = so.data.damping;
+
+            int id = SimulationManager.Instance.AddObject(vertPos, vertMass, springs, springStiffness, damping);
+            so.id = id;
+            so.name = "Id: " + id;
         }
 
+        */
 
+        SimulationInfo info = new SimulationInfo();
+        info.delta = timeStep;
+        info.integrationMethod = (int)integrationMethod;
 
+        info.objects = new SimulationObjectData[simulationObjects.Count];
 
+        for (int i = 0; i < simulationObjects.Count; i++)
+        {
+            info.objects[i] = simulationObjects[i].data;
+            simulationObjects[i].id = i;
+        }
+
+        cpp = new ICPPWrapper(info);
 
         switch (mode)
         {
@@ -110,17 +136,17 @@ public class SimulationManager : MonoBehaviour
             default:
                 break;
         }
-
-        /*if (simulate)
-            cpp.StartSimulation();
-        else
-            print(cpp.Estimate(0.5f));*/
     }
 
     /*public int AddObject(Vector3[] vertices, int[] triangles, float stiffness, float mass)
     {
                 return cpp.AddObject(vertices, triangles, stiffness, mass);
     }*/
+
+    public int AddObject(Vector3[] vertPos, float vertMass, int[] springs, float[] springStiffness, float damping)
+    {
+        return cpp.AddObject(vertPos, vertMass, springs, springStiffness, damping);
+    }
 
     public int AddObject(Vector3[] vertPos, float[] vertVolume, int[] springs, float[] springStiffness, float[] springVolume,
     float density, float damping)
@@ -170,11 +196,19 @@ public class SimulationManager : MonoBehaviour
             lastTime = Time.time;
         }
     }*/
+    public enum Integration
+    {
+        Explicit = 0,
+        Symplectic = 1,
+        Implicit = 2,
+    };
+
+    [System.Serializable]
+    public class SimulationInfo
+    {
+        public float delta;
+        public int integrationMethod;
+        public SimulationObjectData[] objects;
+    }
 }
 
-public enum Integration
-{
-    Explicit = 0,
-    Symplectic = 1,
-    Implicit = 2,
-};
