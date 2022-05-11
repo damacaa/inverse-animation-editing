@@ -71,12 +71,10 @@ public class ICPPWrapper
         CPPWrapper.Initialize((int)integrationMethod, timeStep);
     }
 
-    public ICPPWrapper(SimulationManager.SimulationInfo info)
+    public ICPPWrapper(string info)
     {
         CPPWrapper.Destroy();
-        string json = JsonUtility.ToJson(info);
-        Debug.Log(json);
-        CPPWrapper.InitializeFromJSON(json);
+        CPPWrapper.InitializeFromJSON(info);
     }
 
     public void Destroy()

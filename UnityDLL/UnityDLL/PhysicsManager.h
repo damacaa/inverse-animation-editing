@@ -86,7 +86,7 @@ public:
 
 	SimulationInfo Forward(Eigen::VectorXd x, Eigen::VectorXd v, float h);
 
-	PhysicsManager::BackwardStepInfo Backwards(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h);
+	PhysicsManager::BackwardStepInfo Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h);
 };
 
 

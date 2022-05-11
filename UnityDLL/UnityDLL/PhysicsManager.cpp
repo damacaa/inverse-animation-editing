@@ -16,6 +16,8 @@ using std::chrono::milliseconds;
 
 PhysicsManager::PhysicsManager(std::string info)
 {
+	debugHelper = DebugHelper();
+
 	debugHelper.PrintValue(info, "scene");
 
 	json js = json::parse(info);
@@ -37,11 +39,17 @@ PhysicsManager::PhysicsManager(std::string info)
 		float* springStiffness = new float[nSprings];
 		float damping = obj["damping"];
 
-
+		std::string s = "";
 		for (size_t j = 0; j < nVerts; j++)
 		{
 			json pos = obj["vertPos"][j];
-			vertPos[j] = Vector3f(pos["x"], pos["y"], pos["z"]);
+
+			float x = pos["x"];
+			float y = pos["y"];
+			float z = pos["z"];
+
+			vertPos[j] = Vector3f(x, y, z);
+
 			vertIsFixed[j] = obj["vertIsFixed"][j];
 		}
 
@@ -52,7 +60,7 @@ PhysicsManager::PhysicsManager(std::string info)
 			springStiffness[j] = obj["springStiffness"][j];
 		}
 
-		AddObject(vertPos, vertIsFixed, vertMass, nVerts, springs, springStiffness, nSprings, damping);
+		int id = AddObject(vertPos, vertIsFixed, vertMass, nVerts, springs, springStiffness, nSprings, damping);
 		//Vector3f* vertPos, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping
 	}
 
@@ -111,7 +119,21 @@ int PhysicsManager::AddObject(Vector3f* vertPos, bool* vertIsFixed, float vertMa
 {
 	Object* o = new Object(vertPos, vertIsFixed, vertMass, nVerts, springs, springStiffness, nSprings, damping);
 	o->id = (int)SimObjects.size() + (int)PendingSimObjects.size();
-	PendingSimObjects.push_back(o);
+	SimObjects.push_back(o);
+
+	std::string s = "";
+
+	for (size_t i = 0; i < nVerts; i++)
+	{
+		s += std::to_string(vertPos[i].x) + ", " + std::to_string(vertPos[i].y) + ", " + std::to_string(vertPos[i].z) + "\n";
+		s += vertIsFixed[i] + "\n";
+		s += std::to_string(vertMass) + "\n";
+		s += std::to_string(nVerts) + "\n\n";
+
+		s += std::to_string(o->nodeArray[i].position.x()) + ", " + std::to_string(o->nodeArray[i].position.y()) + ", " + std::to_string(o->nodeArray[i].position.z()) + "\n";
+	}
+
+	debugHelper.PrintValue(s, "objectInit");
 
 	needsRestart = true;
 	return o->id;
@@ -127,7 +149,7 @@ void PhysicsManager::AddFixer(Vector3f position, Vector3f scale)
 
 void PhysicsManager::Start()
 {
-	debugHelper = DebugHelper();
+
 
 	for (size_t i = 0; i < PendingSimObjects.size(); i++)
 	{
@@ -154,9 +176,18 @@ void PhysicsManager::Start()
 
 	for (size_t i = 0; i < SimObjects.size(); i++)
 	{
+		Object* o = SimObjects[i];
+		std::string s = "";
+		for (size_t j = 0; j < o->nVerts; j++)
+		{
+			s += std::to_string(o->GetVertices()[0].x);
+			//s += std::to_string(o->nodeArray[j].position.x()) + ", " + std::to_string(o->nodeArray[j].position.y()) + ", " + std::to_string(o->nodeArray[j].position.z()) + "\n";
+		}
+
+		debugHelper.PrintValue(s, "objStart" + std::to_string(i));
+
 		// Initialize simulable object
 		SimObjects[i]->Initialize(&m_numDoFs);
-
 		// Retrieve pos and vel size
 		m_numDoFs += SimObjects[i]->GetNumDoFs();
 	}
@@ -462,7 +493,7 @@ float PhysicsManager::Estimate(float parameter, int iter, float h, Eigen::Vector
 
 	for (int i = iter - 2; i >= 0; i--)
 	{
-		BackwardStepInfo backStepResult = Backwards(steps[i].x, steps[i].v, steps[i + 1].x, steps[i + 1].v, parameter, dGdx[i + 1], dGdv[i + 1], h);//dGdp, dGdx, dGdv
+		BackwardStepInfo backStepResult = Backward(steps[i].x, steps[i].v, steps[i + 1].x, steps[i + 1].v, parameter, dGdx[i + 1], dGdv[i + 1], h);//dGdp, dGdx, dGdv
 
 		//Global
 		dGdp += backStepResult.dGdp;
@@ -489,7 +520,7 @@ float PhysicsManager::Estimate(float parameter, int iter, float h, Eigen::Vector
 	return g;
 }
 
-PhysicsManager::BackwardStepInfo PhysicsManager::Backwards(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h)
+PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h)
 {
 	//SpMat M(m_numDoFs, m_numDoFs);
 

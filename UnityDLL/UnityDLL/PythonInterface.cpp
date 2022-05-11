@@ -9,18 +9,21 @@ public:
 	Eigen::VectorXd x, v;
 };
 
-struct BackwardsResult {
+struct BackwardResult {
 public:
 	Eigen::VectorXd dGdp;//Tantos como parametros haya
 	Eigen::VectorXd dGdx, dGdv;
 };
 
-PhysicsManager physicsManager;
+std::string _info;
 
 ForwardResult Initialize(std::string info)
 {
-	physicsManager = PhysicsManager(info);
+	_info = info;
+	PhysicsManager physicsManager = PhysicsManager(_info);
 	physicsManager.Start();
+
+	//physicsManager = physicsManager2;
 
 	auto sinfo = physicsManager.GetInitialState();
 
@@ -33,6 +36,8 @@ ForwardResult Initialize(std::string info)
 
 ForwardResult Forward(Eigen::VectorXd x, Eigen::VectorXd v, float parameter, float h)
 {
+	PhysicsManager physicsManager = PhysicsManager(_info);
+	physicsManager.Start();
 	physicsManager.SetParam(parameter);
 
 	auto info = physicsManager.Forward(x, v, h);
@@ -44,13 +49,15 @@ ForwardResult Forward(Eigen::VectorXd x, Eigen::VectorXd v, float parameter, flo
 	return result;
 }
 
-BackwardsResult Bacwards(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h)
+BackwardResult Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h)
 {
+	PhysicsManager physicsManager = PhysicsManager(_info);
+	physicsManager.Start();
 	physicsManager.SetParam(parameter);
 
-	auto info = physicsManager.Backwards(x, v, x1, v1, parameter, dGdx1, dGdv1, h);
+	auto info = physicsManager.Backward(x, v, x1, v1, parameter, dGdx1, dGdv1, h);
 
-	BackwardsResult result;
+	BackwardResult result;
 	result.dGdp = info.dGdp;
 	result.dGdx = info.dGdx;
 	result.dGdv = info.dGdv;
@@ -74,14 +81,14 @@ PYBIND11_MODULE(UnityDLL, m) {
 
 	m.def("initialize", &Initialize, "Initializes simulator");
 	m.def("forward", &Forward, "Step forward");
-	m.def("bacwards", &Bacwards, "Step backwards");
+	m.def("bacward", &Backward, "Step backwards");
 
 	pybind11::class_<ForwardResult>(m, "ForwardResult")
 		.def_readwrite("x", &ForwardResult::x)
 		.def_readwrite("v", &ForwardResult::v);
 
-	pybind11::class_<BackwardsResult>(m, "BackwardsResult")
-		.def_readwrite("dGdp", &BackwardsResult::dGdp)
-		.def_readwrite("dGdx", &BackwardsResult::dGdx)
-		.def_readwrite("dGdv", &BackwardsResult::dGdv);
+	pybind11::class_<BackwardResult>(m, "BackwardsResult")
+		.def_readwrite("dGdp", &BackwardResult::dGdp)
+		.def_readwrite("dGdx", &BackwardResult::dGdx)
+		.def_readwrite("dGdv", &BackwardResult::dGdv);
 }

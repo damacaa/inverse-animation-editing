@@ -178,11 +178,15 @@ void Object::FixnodeArray(Fixer* f)
 
 void Object::Initialize(int* ind)
 {
+	DebugHelper d = DebugHelper();
 	index = *ind;
 
 	// Start scene nodes/edges
-	for (int i = 0; i < nVerts; ++i)
+	for (int i = 0; i < nVerts; ++i) {
+		d.PrintValue("", std::to_string(i));
 		nodeArray[i].Initialize(index + 3 * i); // Prepare
+	}
+
 
 	for (int i = 0; i < nSprings; ++i)
 		springArray[i].Initialize(stiffness, damping); // Prepare

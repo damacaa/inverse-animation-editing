@@ -49,7 +49,7 @@ void DebugHelper::PrintMat(SpMat mat, std::string name)
 
 void DebugHelper::PrintValue(std::string value, std::string fileName)
 {
-	std::ofstream outfile(fileName + ".txt");
+	std::ofstream outfile("C:/Users/Dani/Desktop/debug/"+ fileName + ".txt");
 
 	outfile << value << std::endl;
 

@@ -33,6 +33,13 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/UnityDLL"
 add_subdirectory(pybind11)
 pybind11_add_module(UnityDLL ${SOURCES} ${HEADERS} "${CMAKE_CURRENT_SOURCE_DIR}/UnityDLL/PythonInterface.cpp")
 
+include(FetchContent)
+
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.10.5/json.tar.xz)
+FetchContent_MakeAvailable(json)
+
+target_link_libraries(UnityDLL PUBLIC nlohmann_json::nlohmann_json)
+
 # EXAMPLE_VERSION_INFO is defined by setup.py and passed into the C++ code as a
 # define (VERSION_INFO) here.
 target_compile_definitions(UnityDLL

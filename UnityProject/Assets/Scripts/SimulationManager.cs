@@ -4,8 +4,7 @@ using UnityEngine;
 using System;
 using System.Runtime.InteropServices;
 using Random = UnityEngine.Random;
-
-
+using System.IO;
 
 public class SimulationManager : MonoBehaviour
 {
@@ -49,6 +48,9 @@ public class SimulationManager : MonoBehaviour
     float parameter = 0.5f;
     [SerializeField]
     int iterations = 1;
+
+    [SerializeField]
+    TextAsset scene;
 
     ICPPWrapper cpp;
     private void Awake()
@@ -118,7 +120,13 @@ public class SimulationManager : MonoBehaviour
             simulationObjects[i].id = i;
         }
 
-        cpp = new ICPPWrapper(info);
+        string json = JsonUtility.ToJson(info);
+
+        cpp = new ICPPWrapper(scene.text);
+
+        string path = (Application.dataPath).ToString() + "/scene.txt";
+
+        File.WriteAllText(path, json);
 
         switch (mode)
         {

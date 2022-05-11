@@ -1,11 +1,44 @@
-﻿  Object.cpp
+﻿  DebugHelper.cpp
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\DebugHelper.cpp(16,23): warning C4018: '<': signed/unsigned mismatch
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\DebugHelper.cpp(18,24): warning C4018: '<': signed/unsigned mismatch
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\DebugHelper.cpp(122,47): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  Object.cpp
 D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Object.cpp(72,39): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Object.cpp(73,37): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
 D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Object.cpp(82,50): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+  PhysicsManager.cpp
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(31,37): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(32,43): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(258,28): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(338,43): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(338,33): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(340,43): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(340,33): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(455,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
      Creating library D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.lib and object D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.exp
   Generating code
-  5 of 4884 functions ( 0.1%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    28 functions had inline decision re-evaluated but remain unchanged
+  221 of 4885 functions ( 4.5%) were compiled, the rest were copied from previous compilation.
+    1 functions were new in current compilation
+    142 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   UnityDLL.vcxproj -> D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.dll
