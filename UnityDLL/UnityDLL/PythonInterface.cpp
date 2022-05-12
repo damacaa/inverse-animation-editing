@@ -17,6 +17,7 @@ public:
 
 std::string _info;
 
+
 ForwardResult Initialize(std::string info)
 {
 	_info = info;
@@ -65,6 +66,19 @@ BackwardResult Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1
 	return result;
 }
 
+BackwardResult Estimate(float param, int iter, float h) {
+	PhysicsManager physicsManager = PhysicsManager(_info);
+	physicsManager.Start();
+	Eigen::VectorXd dGdp = Eigen::VectorXd::Constant(1, 0.0);
+	float g = physicsManager.Estimate(param, iter, h, &dGdp);
+
+	BackwardResult result;
+	result.dGdp = dGdp;
+	result.dGdx = Eigen::VectorXd::Constant(1, g);
+
+	return result;
+}
+
 
 int a = 0;
 int add(int i, int j) {
@@ -81,7 +95,10 @@ PYBIND11_MODULE(UnityDLL, m) {
 
 	m.def("initialize", &Initialize, "Initializes simulator");
 	m.def("forward", &Forward, "Step forward");
-	m.def("bacward", &Backward, "Step backwards");
+	m.def("backward", &Backward, "Step backwards");
+
+	m.def("estimate", &Estimate, "Estimate for debug purposes");
+
 
 	pybind11::class_<ForwardResult>(m, "ForwardResult")
 		.def_readwrite("x", &ForwardResult::x)

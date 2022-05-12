@@ -130,7 +130,7 @@ int PhysicsManager::AddObject(Vector3f* vertPos, bool* vertIsFixed, float vertMa
 		s += std::to_string(vertMass) + "\n";
 		s += std::to_string(nVerts) + "\n\n";
 
-		s += std::to_string(o->nodeArray[i].position.x()) + ", " + std::to_string(o->nodeArray[i].position.y()) + ", " + std::to_string(o->nodeArray[i].position.z()) + "\n";
+		s += std::to_string(o->_nodes[i].position.x()) + ", " + std::to_string(o->_nodes[i].position.y()) + ", " + std::to_string(o->_nodes[i].position.z()) + "\n";
 	}
 
 	debugHelper.PrintValue(s, "objectInit");
@@ -149,14 +149,12 @@ void PhysicsManager::AddFixer(Vector3f position, Vector3f scale)
 
 void PhysicsManager::Start()
 {
-
-
 	for (size_t i = 0; i < PendingSimObjects.size(); i++)
 	{
 		SimObjects.push_back(PendingSimObjects[i]);
 		for (size_t j = 0; j < Fixers.size(); j++)
 		{
-			PendingSimObjects[i]->FixnodeArray(Fixers[j]);
+			PendingSimObjects[i]->Fixnodes(Fixers[j]);
 		}
 	}
 	PendingSimObjects.clear();
@@ -166,7 +164,7 @@ void PhysicsManager::Start()
 		Fixers.push_back(PendingFixers[i]);
 		for (size_t j = 0; j < SimObjects.size(); j++)
 		{
-			SimObjects[j]->FixnodeArray(PendingFixers[i]);
+			SimObjects[j]->Fixnodes(PendingFixers[i]);
 		}
 	}
 	PendingFixers.clear();
@@ -180,8 +178,8 @@ void PhysicsManager::Start()
 		std::string s = "";
 		for (size_t j = 0; j < o->nVerts; j++)
 		{
-			s += std::to_string(o->GetVertices()[0].x);
-			//s += std::to_string(o->nodeArray[j].position.x()) + ", " + std::to_string(o->nodeArray[j].position.y()) + ", " + std::to_string(o->nodeArray[j].position.z()) + "\n";
+			//s += std::to_string(o->GetVertices()[0].x);
+			s += std::to_string(o->_nodes[j].position.x()) + ", " + std::to_string(o->_nodes[j].position.y()) + ", " + std::to_string(o->_nodes[j].position.z()) + "\n";
 		}
 
 		debugHelper.PrintValue(s, "objStart" + std::to_string(i));
@@ -308,9 +306,10 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationI
 	std::vector<T> derivVel = std::vector<T>();
 
 	SpMat M(m_numDoFs, m_numDoFs);
-	SpMat Mi(m_numDoFs, m_numDoFs);
 	std::vector<T> masses = std::vector<T>();
-	std::vector<T> massesi = std::vector<T>();
+
+	//SpMat Mi(m_numDoFs, m_numDoFs);
+	//std::vector<T> massesi = std::vector<T>();
 
 	std::vector<bool> fixedIndices(m_numDoFs);
 
@@ -524,7 +523,7 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 {
 	//SpMat M(m_numDoFs, m_numDoFs);
 
-	Eigen::VectorXd f1 = Eigen::VectorXd::Constant(m_numDoFs, 0.0);//Forces
+	//Eigen::VectorXd f1 = Eigen::VectorXd::Constant(m_numDoFs, 0.0);//Forces
 
 	//Eigen::VectorXd x = current.x;
 	SpMat dFdx(m_numDoFs, m_numDoFs);;
@@ -538,8 +537,8 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 	//FORCES
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
-		SimObjects[i]->SetPosition(&x1);
-		SimObjects[i]->SetVelocity(&v1);
+		SimObjects[i]->SetPosition(&x);
+		SimObjects[i]->SetVelocity(&v);
 		SimObjects[i]->GetMass(&masses);
 		//SimObjects[i]->GetForce(&f1);
 		SimObjects[i]->GetForceJacobian(&derivPos, &derivVel);
@@ -565,12 +564,12 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 
 	//Eigen::VectorXd c = M * v1 - M * v - h * f1;
 
-	Eigen::VectorXd dcdp = v1 - v;//????????????????????????????????
+	Eigen::VectorXd dcdp = v1 - v;
 
 	info.dGdp = Eigen::VectorXd::Constant(1, (-u.transpose() * dcdp)(0));
 
 	//dGdx
-	info.dGdx = dGdx1 + h * (u.transpose() * dFdx).transpose();//??????????????
+	info.dGdx = dGdx1 + h * (u.transpose() * dFdx).transpose();
 
 	//dGdv
 	info.dGdv = M * u;

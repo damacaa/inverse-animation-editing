@@ -11,7 +11,7 @@ private:
 	//Eigen::Vector3d GetNormal(Eigen::Vector3d a, Eigen::Vector3d b, Eigen::Vector3d c);
 
 public:
-	PhysicsManager* manager;
+	//PhysicsManager* manager;
 
 	int id = -1;//Id to return vertices
 	int index = -1;//Id in matrix
@@ -26,8 +26,9 @@ public:
 	Vector3f* vertexArray2 = 0;
 	int nVerts = 0;
 
-	Node* nodeArray = 0;
-	Spring* springArray = 0;
+	std::vector<Node> _nodes;
+	std::vector<Spring> _springs;
+
 	int nSprings = 0;
 
 	Object(Vector3f* vertices, int nVerts, int* triangles, int nTriangles, float stiffness, float mass);
@@ -58,7 +59,7 @@ public:
 
 	void GetMassInverse(std::vector<T>* massTripletVector);
 
-	void FixnodeArray(Fixer* f);
+	void Fixnodes(Fixer* f);
 
 	void GetFixedIndices(std::vector<bool>* fixedIndices);
 

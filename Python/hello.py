@@ -1,42 +1,59 @@
 import UnityDLL
 import numpy as np
+import scipy
 from scipy.optimize import fmin_bfgs
-
-data = open("D:/Projects/MassSpringSimulator/Python/scene.txt", "r").read()
-
-# PARAMETERS
-iter = 100
-h = 0.1
-m_numDoFs = 0
-
-desiredMass = 1.5
-
-# INITIALIZATION
-initialState = UnityDLL.initialize(data)
-m_numDoFs = initialState.x.size
-
-current = initialState
-for i in range(iter):
-    current = UnityDLL.forward(current.x, current.v, desiredMass, h)
-desired = current
+import time
 
 
-def g(x):
-    current = initialState
-    for i in range(iter):
-        current = UnityDLL.forward(current.x, current.v, x, h)
+def g(p):
+    global lastP
+    lastP = p
 
-    g = np.linalg.norm(desired.x - current.x)
-    return 1000 * g * g
-
-
-def dGdp(x):
-
+    global steps
     steps = []
     current = initialState
-    for i in range(iter):
-        current = UnityDLL.forward(current.x, current.v, x, h)
+    steps.append(initialState)
+
+    for i in range(iter - 1):
+        current = UnityDLL.forward(current.x, current.v, p, h)
         steps.append(current)
+
+    g = np.linalg.norm(targets[iter - 1].x - steps[iter - 1].x) ** 2
+
+    return g / iter
+
+
+def G(p):
+    global lastP
+    lastP = p
+
+    global steps
+    steps = []
+    current = initialState
+    steps.append(initialState)
+
+    for i in range(iter - 1):
+        current = UnityDLL.forward(current.x, current.v, p, h)
+        steps.append(current)
+
+    G = 0
+    for i in range(iter):
+        G += np.linalg.norm(targets[i].x - steps[i].x) ** 2
+    # G = G / iter
+
+    return G
+
+
+def dGdp(p):
+    if p != lastP:
+        global steps
+        steps = []
+        current = initialState
+        steps.append(initialState)
+
+        for i in range(iter - 1):
+            current = UnityDLL.forward(current.x, current.v, p, h)
+            steps.append(current)
 
     _dGdp = np.full(1, 0.0)
     _dGdx = []
@@ -44,7 +61,7 @@ def dGdp(x):
 
     for i in range(iter):
         if i == iter - 1:
-            _dGdx.append(2.0 * (desired.x - steps[iter - 1].x))
+            _dGdx.append(2.0 * (target.x - steps[iter - 1].x))
         else:
             _dGdx.append(np.full(m_numDoFs, 0.0))
 
@@ -52,12 +69,12 @@ def dGdp(x):
 
     i = iter - 2
     while i >= 0:
-        backward = UnityDLL.bacward(
+        backward = UnityDLL.backward(
             steps[i].x,
             steps[i].v,
             steps[i + 1].x,
             steps[i + 1].v,
-            x,
+            p,
             _dGdx[i + 1],
             _dGdv[i + 1],
             h,
@@ -69,16 +86,83 @@ def dGdp(x):
 
         i -= 1
 
+    # print(x, _dGdp.tolist())
+
     return _dGdp
 
 
-print(dGdp(0))
+data = open("D:/Projects/MassSpringSimulator/Python/scene.txt", "r").read()
 
-x0 = np.array([1.0])
-res = fmin_bfgs(g, x0, fprime=dGdp)
+lastP = 0
+steps = []
 
-print(res)
+# PARAMETERS
+iter = 100
+h = 0.01
+desiredMass = np.full(1, 0.8)
 
+print(
+    f"{'-'*60}\nIterations: {iter} Timestep: {h} Target parameter: {desiredMass}\n{'-'*60} "
+)
+
+# INITIALIZATION
+initialState = UnityDLL.initialize(data)
+m_numDoFs = initialState.x.size
+
+# CALCULATING TARGET
+current = initialState
+
+targets = []
+targets.append(initialState)
+
+for i in range(iter - 1):
+    current = UnityDLL.forward(current.x, current.v, desiredMass, h)
+    targets.append(current)
+target = current
+
+
+# OPTIMIZING
+
+
+# TEST
+# value = 0.9
+# print(dGdp(value)[0])
+# print(UnityDLL.estimate(value, iter, h).dGdp[0])
+
+""" pa = 0.01
+while pa < desiredMass[0]:
+    print(str(round(pa, 2)), str(round(G(pa), 2)), dGdp(pa))
+    pa += 0.1 """
+
+
+def Minimize(m):
+    p0 = np.array([1.2])
+
+    start = time.time()
+    res = scipy.optimize.minimize(G, p0, jac=dGdp, method=m)
+    end = time.time()
+
+    # print(res.x)
+    print("ERROR: ", np.linalg.norm(desiredMass - res.x))
+    print("Time elapsed: ", str(round((end - start) * 1000.0, 1)), "ms")
+
+    return res.x
+
+
+Minimize("L-BFGS-B")
+
+""" methods = ["CG", "BFGS", "Newton-CG", "L-BFGS-B", "TNC", "SLSQP", "trust-constr"]
+methods2 = ["Nelder-Mead", "Powell", "COBYLA"]
+for m in methods:
+    print(m)
+    Minimize(m)
+    print("-" * 60) """
+
+# print("-" * 60)
+
+# res2 = fmin_bfgs(G, p0, fprime=dGdp)
+# print(res2)
+# print("ERROR: ", abs(desiredMass - res2))
 
 # https://gist.github.com/yuyay/3067185
 # python -m pip install "d:/Projects/MassSpringSimulator/UnityDLL"
