@@ -1,11 +1,15 @@
+from ast import arg
 import UnityDLL
 import numpy as np
 import scipy
 from scipy.optimize import fmin_bfgs
 import time
 
+lastP = 0
+steps = []
 
-def g(p):
+
+def g(p, iter, h, m_numDoFs, initialState, targets):
     global lastP
     lastP = p
 
@@ -23,7 +27,7 @@ def g(p):
     return g / iter
 
 
-def G(p):
+def G(p, iter, h, m_numDoFs, initialState, targets):
     global lastP
     lastP = p
 
@@ -44,7 +48,7 @@ def G(p):
     return G
 
 
-def dGdp(p):
+def dGdp(p, iter, h, m_numDoFs, initialState, targets):
     if p != lastP:
         global steps
         steps = []
@@ -61,7 +65,7 @@ def dGdp(p):
 
     for i in range(iter):
         if i == iter - 1:
-            _dGdx.append(2.0 * (target.x - steps[iter - 1].x))
+            _dGdx.append(2.0 * (targets[iter - 1].x - steps[iter - 1].x))
         else:
             _dGdx.append(np.full(m_numDoFs, 0.0))
 
@@ -91,55 +95,42 @@ def dGdp(p):
     return _dGdp
 
 
-data = open("D:/Projects/MassSpringSimulator/Python/scene.txt", "r").read()
+def Minimize(method="L-BFGS-B", costFunction=G, jacobian=dGdp):
+    data = open("D:/Projects/MassSpringSimulator/Python/scene.txt", "r").read()
 
-lastP = 0
-steps = []
+    # PARAMETERS
+    iter = 10
+    h = 0.01
 
-# PARAMETERS
-iter = 100
-h = 0.01
-desiredMass = np.full(1, 0.8)
+    desiredMass = np.full(1, 0.8)
 
-print(
-    f"{'-'*60}\nIterations: {iter} Timestep: {h} Target parameter: {desiredMass}\n{'-'*60} "
-)
+    print(
+        f"{'-'*60}\nIterations: {iter} Timestep: {h} Target parameter: {desiredMass}\n{'-'*60} "
+    )
 
-# INITIALIZATION
-initialState = UnityDLL.initialize(data)
-m_numDoFs = initialState.x.size
+    # INITIALIZATION
+    initialState = UnityDLL.initialize(data)
+    m_numDoFs = initialState.x.size
 
-# CALCULATING TARGET
-current = initialState
+    # CALCULATING TARGET
+    current = initialState
 
-targets = []
-targets.append(initialState)
+    targets = []
+    targets.append(initialState)
 
-for i in range(iter - 1):
-    current = UnityDLL.forward(current.x, current.v, desiredMass, h)
-    targets.append(current)
-target = current
+    for i in range(iter - 1):
+        current = UnityDLL.forward(current.x, current.v, desiredMass, h)
+        targets.append(current)
 
-
-# OPTIMIZING
-
-
-# TEST
-# value = 0.9
-# print(dGdp(value)[0])
-# print(UnityDLL.estimate(value, iter, h).dGdp[0])
-
-""" pa = 0.01
-while pa < desiredMass[0]:
-    print(str(round(pa, 2)), str(round(G(pa), 2)), dGdp(pa))
-    pa += 0.1 """
-
-
-def Minimize(m):
-    p0 = np.array([1.2])
+    p0 = np.array([1.2])  # initial parameter value
+    args = (iter, h, m_numDoFs, initialState, targets)  # extra info
 
     start = time.time()
-    res = scipy.optimize.minimize(G, p0, jac=dGdp, method=m)
+
+    res = scipy.optimize.minimize(
+        costFunction, p0, jac=jacobian, method=method, args=args
+    )
+
     end = time.time()
 
     # print(res.x)
@@ -149,7 +140,7 @@ def Minimize(m):
     return res.x
 
 
-Minimize("L-BFGS-B")
+Minimize()
 
 """ methods = ["CG", "BFGS", "Newton-CG", "L-BFGS-B", "TNC", "SLSQP", "trust-constr"]
 methods2 = ["Nelder-Mead", "Powell", "COBYLA"]

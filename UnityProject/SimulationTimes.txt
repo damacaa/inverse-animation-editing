@@ -1707,3 +1707,39 @@ Total: 0.0324ms
 6.Solving:                                  0.0027ms --> 7.09%
 Total: 0.0381ms
 
+4 vertices and 6 springs.
+1.Set up:                                   0.0166ms --> 29.9%
+2.Calculating forces:                       0.0089ms --> 16%
+3.Building matrices from triples:           0.0098ms --> 17.6%
+4.Calculating A and b:                      0.0141ms --> 25.4%
+5.Fixing:                                   0.0038ms --> 6.83%
+6.Solving:                                  0.0024ms --> 4.32%
+Total: 0.0556ms
+
+4 vertices and 6 springs.
+1.Set up:                                   0.0048ms --> 12.2%
+2.Calculating forces:                       0.0154ms --> 39.2%
+3.Building matrices from triples:           0.01ms --> 25.4%
+4.Calculating A and b:                      0.0034ms --> 8.65%
+5.Fixing:                                   0.0034ms --> 8.65%
+6.Solving:                                  0.0023ms --> 5.85%
+Total: 0.0393ms
+
+4 vertices and 6 springs.
+1.Set up:                                   0.0039ms --> 11%
+2.Calculating forces:                       0.0039ms --> 11%
+3.Building matrices from triples:           0.0051ms --> 14.4%
+4.Calculating A and b:                      0.0149ms --> 42%
+5.Fixing:                                   0.0027ms --> 7.61%
+6.Solving:                                  0.005ms --> 14.1%
+Total: 0.0355ms
+
+121 vertices and 600 springs.
+1.Set up:                                   0.0134ms --> 0.935%
+2.Calculating forces:                       0.34ms --> 23.8%
+3.Building matrices from triples:           0.466ms --> 32.5%
+4.Calculating A and b:                      0.168ms --> 11.7%
+5.Fixing:                                   0.211ms --> 14.8%
+6.Solving:                                  0.234ms --> 16.3%
+Total: 1.43ms
+

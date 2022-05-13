@@ -335,7 +335,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &513490258
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -475,7 +475,6 @@ MonoBehaviour:
   timeStep: 0.01
   parameter: 0.5
   iterations: 100
-  scene: {fileID: 4900000, guid: 38bd0f8ec1b80894b8ad0117db08f3fe, type: 3}
 --- !u!23 &568410414
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -776,7 +775,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!65 &805904076
 BoxCollider:
   m_ObjectHideFlags: 0

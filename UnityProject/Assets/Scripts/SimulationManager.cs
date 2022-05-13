@@ -49,9 +49,6 @@ public class SimulationManager : MonoBehaviour
     [SerializeField]
     int iterations = 1;
 
-    [SerializeField]
-    TextAsset scene;
-
     ICPPWrapper cpp;
     private void Awake()
     {
@@ -121,12 +118,12 @@ public class SimulationManager : MonoBehaviour
         }
 
         string json = JsonUtility.ToJson(info);
-
-        cpp = new ICPPWrapper(scene.text);
-
         string path = (Application.dataPath).ToString() + "/scene.txt";
 
         File.WriteAllText(path, json);
+
+        cpp = new ICPPWrapper(json);
+
 
         switch (mode)
         {
