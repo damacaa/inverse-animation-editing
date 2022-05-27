@@ -19,14 +19,14 @@ public class PlaneGenerator : MonoBehaviour
         int verticesPerFace = divisions + 2;
 
         int verticesPerWidth, verticesPerHeight;
-        if (transform.localScale.x > transform.localScale.y)
+        if (transform.localScale.x >= transform.localScale.z)
         {
             verticesPerWidth = verticesPerFace;
-            verticesPerHeight = Mathf.Max(3, Mathf.RoundToInt(verticesPerFace * (transform.localScale.y / transform.localScale.x)));
+            verticesPerHeight = Mathf.Max(2, Mathf.RoundToInt(verticesPerFace * (transform.localScale.z / transform.localScale.x)));
         }
         else
         {
-            verticesPerWidth = Mathf.Max(3, Mathf.RoundToInt(verticesPerFace * (transform.localScale.x / transform.localScale.y)));
+            verticesPerWidth = Mathf.Max(2, Mathf.RoundToInt(verticesPerFace * (transform.localScale.x / transform.localScale.z)));
             verticesPerHeight = verticesPerFace;
         }
 

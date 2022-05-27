@@ -7,15 +7,28 @@
 class Object;
 class Fixer;
 
-enum class Integration
-{
-	Explicit = 0,
-	Symplectic = 1,
-	Implicit = 2,
-};
+
 
 class PhysicsManager
 {
+public:
+	bool Updated = false;
+
+	enum class Integration
+	{
+		Explicit = 0,
+		Symplectic = 1,
+		Implicit = 2,
+	};
+
+	enum class Parameter
+	{
+		GlobalMass = 0,
+		GlobalStiffness = 1,
+		Mass = 2,
+		Stiffness = 3
+	};
+
 private:
 
 	struct SimulationInfo {
@@ -32,11 +45,13 @@ private:
 		Eigen::VectorXd dGdx, dGdv;
 	};
 
+	
+
 	bool Paused = false;
 	float TimeStep;
 	double tolerance = 1e-2;
 	Vector3f Gravity;
-	Integration integrationMethod = Integration::Implicit;
+	PhysicsManager::Integration integrationMethod = PhysicsManager::Integration::Implicit;
 
 	std::vector<Object*> SimObjects;
 	std::vector<Object*> PendingSimObjects;
@@ -51,10 +66,9 @@ private:
 	DebugHelper debugHelper;
 
 public:
-	bool Updated = false;
 
 	PhysicsManager(std::string info);
-	PhysicsManager(Integration _IntegrationMethod = Integration::Implicit, double tolerance = 1e-2);
+	PhysicsManager(PhysicsManager::Integration _IntegrationMethod = PhysicsManager::Integration::Implicit, double tolerance = 1e-2);
 	~PhysicsManager();
 
 	int AddObject(Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass);
@@ -83,11 +97,15 @@ public:
 
 	void SetParam(float param);
 
+	void SetParam(Eigen::VectorXd params, PhysicsManager::Parameter parameterType);
+
 	SimulationInfo GetInitialState();
 
 	SimulationInfo Forward(Eigen::VectorXd x, Eigen::VectorXd v, float h);
 
 	PhysicsManager::BackwardStepInfo Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h);
+
+	
 };
 
 

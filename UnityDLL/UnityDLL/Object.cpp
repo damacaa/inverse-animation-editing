@@ -232,10 +232,16 @@ void Object::GetForce(Eigen::VectorXd* force)
 		_springs[i].GetForce(force);
 }
 
-void Object::GetDp(Eigen::VectorXd* dforce)
+void Object::GetdFdp(Eigen::VectorXd* dforce)
 {
 	for (int i = 0; i < nSprings; ++i)
-		_springs[i].GetDForce(dforce);
+		_springs[i].GetdFdstiffness(dforce);
+}
+
+void Object::GetdFdp(std::vector<T>* dforce)
+{
+	for (int i = 0; i < nSprings; ++i)
+		_springs[i].GetdFdstiffness(dforce);
 }
 
 void Object::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel)
@@ -309,5 +315,13 @@ void Object::SetStiffness(double param)
 	for (size_t i = 0; i < nSprings; i++)
 	{
 		_springs[i].SetStiffness(param);
+	}
+}
+
+void Object::SetMass(Eigen::VectorXd params)
+{
+	for (size_t i = 0; i < nVerts; i++)
+	{
+		_nodes[i].SetMass(params(i));
 	}
 }

@@ -99,7 +99,7 @@ extern "C" {
 
 	__declspec(dllexport) void Initialize(int integrationMethod, float timeStep, float tolerance) {
 		if (!initialized) {
-			physicsManager = new PhysicsManager((Integration)integrationMethod, tolerance);
+			physicsManager = new PhysicsManager((PhysicsManager::Integration)integrationMethod, tolerance);
 			delta = timeStep;
 
 			counter = new MyCounter();

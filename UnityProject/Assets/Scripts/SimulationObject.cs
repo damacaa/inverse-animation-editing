@@ -224,7 +224,7 @@ public class SimulationObject : MonoBehaviour
         if (vertices.Length == 0)
             return;
 
-        debugVerts = vertices;
+        debugVerts = (Vector3[])vertices.Clone();
 
         for (int i = 0; i < vertices.Length; i++)
         {
@@ -250,6 +250,7 @@ public class SimulationObject : MonoBehaviour
         for (int i = 0; i < debugSprings.Length; i += 2)
         {
             Gizmos.DrawLine(debugVerts[debugSprings[i]], debugVerts[debugSprings[i + 1]]);
+            //Gizmos.DrawLine(transform.TransformPoint( mesh.vertices[debugSprings[i]]), transform.TransformPoint(mesh.vertices[debugSprings[i + 1]]));
         }
     }
 

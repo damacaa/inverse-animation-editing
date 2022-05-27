@@ -53,7 +53,9 @@ public:
 
 	void GetForce(Eigen::VectorXd* force);
 
-	void GetDp(Eigen::VectorXd* dforce);
+	void GetdFdp(Eigen::VectorXd* dforce);
+
+	void GetdFdp(std::vector<T>* dforce);
 
 	void GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel);
 
@@ -70,6 +72,8 @@ public:
 	Vector3f* GetVertices();
 
 	void SetMass(double param);
+
+	void SetMass(Eigen::VectorXd params);
 
 	void SetStiffness(double param);
 };

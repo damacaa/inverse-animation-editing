@@ -48,7 +48,7 @@ void Spring::GetForce(Eigen::VectorXd* force)
 	(*force)[nodeB->index + 2] -= f.z();
 }
 
-void Spring::GetDForce(Eigen::VectorXd* dforce)
+void Spring::GetdFdstiffness(Eigen::VectorXd* dforce)
 {
 	Eigen::Vector3d f = -(length - length0) * dir;//
 
@@ -59,6 +59,10 @@ void Spring::GetDForce(Eigen::VectorXd* dforce)
 	(*dforce)[nodeB->index] -= f.x();
 	(*dforce)[nodeB->index + 1] -= f.y();
 	(*dforce)[nodeB->index + 2] -= f.z();
+}
+
+void Spring::GetdFdstiffness(std::vector<T>* dforce)
+{
 }
 
 // Get Force Jacobian

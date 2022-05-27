@@ -1595,8 +1595,8 @@ MonoBehaviour:
     - 500
     - 500
     damping: 1
-  stiffness: 5
-  density: 1
+  stiffness: 0.75
+  density: 0.5
   damping: 0.5
   useBendingSprings: 1
   debugVerts:
@@ -1734,7 +1734,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9331257e56f254d45807ab7a74e8ccc0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  divisions: 9
+  divisions: 0
 --- !u!1 &942612671
 GameObject:
   m_ObjectHideFlags: 0
