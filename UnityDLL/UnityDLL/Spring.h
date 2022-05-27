@@ -41,6 +41,8 @@ public:
 
 	void GetForce(Eigen::VectorXd* force);
 
+	void GetDForce(Eigen::VectorXd* dforce);
+
 	void GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel);
 
 	bool operator==(const Spring& p) const;

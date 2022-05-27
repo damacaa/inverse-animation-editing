@@ -152,7 +152,7 @@ Object::Object(Vector3f* vertPos, bool* vertIsFixed, float vertMass, int nVerts,
 		_springs[i] = Spring(&_nodes[a], &_nodes[b]);
 		//springs[i].volume = springVolume[i];
 		_springs[i].SetStiffness(springStiffness[i]);
-		_springs[i].SetDamping(damping);
+		_springs[i].SetDamping(damping/2.0);
 	}
 }
 
@@ -183,7 +183,7 @@ void Object::Initialize(int* ind)
 
 	// Start scene nodes/edges
 	for (int i = 0; i < nVerts; ++i) {
-		d.PrintValue("", std::to_string(i));
+		//d.PrintValue("", std::to_string(i));
 		_nodes[i].Initialize(index + 3 * i); // Prepare
 	}
 
@@ -232,12 +232,12 @@ void Object::GetForce(Eigen::VectorXd* force)
 		_springs[i].GetForce(force);
 }
 
-#include <chrono>
+void Object::GetDp(Eigen::VectorXd* dforce)
+{
+	for (int i = 0; i < nSprings; ++i)
+		_springs[i].GetDForce(dforce);
+}
 
-using std::chrono::high_resolution_clock;
-using std::chrono::duration_cast;
-using std::chrono::duration;
-using std::chrono::milliseconds;
 void Object::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel)
 {
 	//DebugHelper debug = DebugHelper();
@@ -301,5 +301,13 @@ void Object::SetMass(double mass)
 	for (size_t i = 0; i < nVerts; i++)
 	{
 		_nodes[i].SetMass(mass);
+	}
+}
+
+void Object::SetStiffness(double param)
+{
+	for (size_t i = 0; i < nSprings; i++)
+	{
+		_springs[i].SetStiffness(param);
 	}
 }

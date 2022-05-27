@@ -65,10 +65,10 @@ public struct Float
 
 public class ICPPWrapper
 {
-    public ICPPWrapper(SimulationManager.Integration integrationMethod, float timeStep)
+    public ICPPWrapper(SimulationManager.Integration integrationMethod, float timeStep, float tolerance)
     {
         CPPWrapper.Destroy();
-        CPPWrapper.Initialize((int)integrationMethod, timeStep);
+        CPPWrapper.Initialize((int)integrationMethod, timeStep, tolerance);
     }
 
     public ICPPWrapper(string info)
@@ -244,7 +244,7 @@ public class ICPPWrapper
     public class CPPWrapper
     {
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void Initialize(int integrationMethod, float timeStep);
+        public static extern void Initialize(int integrationMethod, float timeStep, float tolerance);
 
         [DllImport(moduleName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void InitializeFromJSON(string info);

@@ -34,6 +34,7 @@ private:
 
 	bool Paused = false;
 	float TimeStep;
+	double tolerance = 1e-2;
 	Vector3f Gravity;
 	Integration integrationMethod = Integration::Implicit;
 
@@ -53,7 +54,7 @@ public:
 	bool Updated = false;
 
 	PhysicsManager(std::string info);
-	PhysicsManager(Integration _IntegrationMethod = Integration::Implicit);
+	PhysicsManager(Integration _IntegrationMethod = Integration::Implicit, double tolerance = 1e-2);
 	~PhysicsManager();
 
 	int AddObject(Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass);

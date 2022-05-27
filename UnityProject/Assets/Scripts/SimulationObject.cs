@@ -8,7 +8,6 @@ public class SimulationObject : MonoBehaviour
 {
     public int id;
 
-    [SerializeField]
     Mesh mesh;
     [SerializeField]
     public SimulationObjectData data;
@@ -20,6 +19,8 @@ public class SimulationObject : MonoBehaviour
     public float density = 1.0f;
     [SerializeField]
     public float damping = 1.0f;
+    [SerializeField]
+    bool useBendingSprings = true;
 
     [SerializeField]
     Vector3[] debugVerts;
@@ -34,10 +35,13 @@ public class SimulationObject : MonoBehaviour
 
     private void BuildData()
     {
+        if (TryGetComponent<PlaneGenerator>(out PlaneGenerator pg))
+            pg.BuildMesh();
+
         Debug.Log("Building " + name);
 
         data = new SimulationObjectData();
-        mesh = GetComponent<MeshFilter>().sharedMesh;
+        mesh = GetComponent<MeshFilter>().mesh;
 
         Fixer[] fixers = FindObjectsOfType<Fixer>();
 
@@ -86,8 +90,11 @@ public class SimulationObject : MonoBehaviour
                 Edge otherEdge;
                 if (edgeDictionary.TryGetValue(edges[x], out otherEdge))
                 {
-                    Edge newEdge = new Edge(edges[x].other, otherEdge.other, -1, stiffness / 2f);
-                    edgeDictionary.Add(newEdge, newEdge);
+                    if (useBendingSprings)
+                    {
+                        Edge newEdge = new Edge(edges[x].other, otherEdge.other, -1, stiffness / 2f);
+                        edgeDictionary.Add(newEdge, newEdge);
+                    }
                 }
                 else
                 {
@@ -173,7 +180,7 @@ public class SimulationObject : MonoBehaviour
                     otherEdge.volume += area;
 
 
-                    Edge newEdge = new Edge(edges[x].other, otherEdge.other, -1, stiffness / 2f);
+                    Edge newEdge = new Edge(edges[x].other, otherEdge.other, -1, stiffness / 4f);
                     newEdge.volume += 2f * area;
                     edgeDictionary.Add(newEdge, newEdge);
                 }

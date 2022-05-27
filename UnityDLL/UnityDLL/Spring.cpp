@@ -35,7 +35,7 @@ void Spring::UpdateState()
 // Get Force
 void Spring::GetForce(Eigen::VectorXd* force)
 {
-	Eigen::Vector3d f = -stiffness * (length - length0) * dir;
+	Eigen::Vector3d f = -stiffness * (length - length0) * dir;//
 	//Eigen::Vector3d f = -(volume / (length0 * length0)) * stiffness * (length - length0) * dir;
 	f += -damping * dir.dot(nodeA->vel - nodeB->vel) * dir;
 
@@ -48,6 +48,19 @@ void Spring::GetForce(Eigen::VectorXd* force)
 	(*force)[nodeB->index + 2] -= f.z();
 }
 
+void Spring::GetDForce(Eigen::VectorXd* dforce)
+{
+	Eigen::Vector3d f = -(length - length0) * dir;//
+
+	(*dforce)[nodeA->index] += f.x();
+	(*dforce)[nodeA->index + 1] += f.y();
+	(*dforce)[nodeA->index + 2] += f.z();
+	  
+	(*dforce)[nodeB->index] -= f.x();
+	(*dforce)[nodeB->index + 1] -= f.y();
+	(*dforce)[nodeB->index + 2] -= f.z();
+}
+
 // Get Force Jacobian
 void Spring::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel)
 {
@@ -56,6 +69,7 @@ void Spring::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel
 	Eigen::Matrix3d dFadxa = (-stiffness * (length - length0) / length * Eigen::Matrix3d::Identity()) - (stiffness * length0 / length * dirMat);
 	Eigen::Matrix3d dFadva = -damping * dirMat;
 
+	//damping = beta * stiffness
 	for (size_t i = 0; i < 3; i++)
 	{
 		for (size_t j = 0; j < 3; j++)
@@ -85,9 +99,9 @@ void Spring::SetStiffness(float stiffness)
 	this->stiffness = stiffness;
 }
 
-void Spring::SetDamping(float damping)
+void Spring::SetDamping(float beta)
 {
-	this->damping = damping;
+	damping = beta * stiffness;
 }
 
 void Spring::ComputeForces()

@@ -1,8 +1,7 @@
 from ast import arg
 import UnityDLL
 import numpy as np
-import scipy
-from scipy.optimize import fmin_bfgs
+import scipy.optimize
 import time
 
 lastP = 0
@@ -64,11 +63,14 @@ def dGdp(p, iter, h, m_numDoFs, initialState, targets):
     _dGdv = []
 
     for i in range(iter):
-        if i == iter - 1:
+        """if i == iter - 1:
             _dGdx.append(2.0 * (targets[iter - 1].x - steps[iter - 1].x))
         else:
             _dGdx.append(np.full(m_numDoFs, 0.0))
 
+        _dGdv.append(np.full(m_numDoFs, 0.0))"""
+
+        _dGdx.append(2.0 * (targets[i].x - steps[i].x))
         _dGdv.append(np.full(m_numDoFs, 0.0))
 
     i = iter - 2
@@ -95,17 +97,18 @@ def dGdp(p, iter, h, m_numDoFs, initialState, targets):
     return _dGdp
 
 
-def Minimize(method="L-BFGS-B", costFunction=G, jacobian=dGdp):
+def Minimize(method="L-BFGS-B", costFunction=g, jacobian=dGdp):
+
     data = open("D:/Projects/MassSpringSimulator/Python/scene.txt", "r").read()
 
     # PARAMETERS
-    iter = 10
+    iter = 100
     h = 0.01
 
-    desiredMass = np.full(1, 0.8)
+    desiredParameter = np.full(1, 100)
 
     print(
-        f"{'-'*60}\nIterations: {iter} Timestep: {h} Target parameter: {desiredMass}\n{'-'*60} "
+        f"{'-'*60}\nIterations: {iter} Timestep: {h} Target parameter: {desiredParameter}\n{'-'*60} "
     )
 
     # INITIALIZATION
@@ -119,7 +122,7 @@ def Minimize(method="L-BFGS-B", costFunction=G, jacobian=dGdp):
     targets.append(initialState)
 
     for i in range(iter - 1):
-        current = UnityDLL.forward(current.x, current.v, desiredMass, h)
+        current = UnityDLL.forward(current.x, current.v, desiredParameter, h)
         targets.append(current)
 
     p0 = np.array([1.2])  # initial parameter value
@@ -133,14 +136,16 @@ def Minimize(method="L-BFGS-B", costFunction=G, jacobian=dGdp):
 
     end = time.time()
 
-    # print(res.x)
-    print("ERROR: ", np.linalg.norm(desiredMass - res.x))
+    # print(res)
+    print("RESULT:", res.x)
+    print("ERROR: ", np.linalg.norm(desiredParameter - res.x))
     print("Time elapsed: ", str(round((end - start) * 1000.0, 1)), "ms")
 
     return res.x
 
 
-Minimize()
+Minimize(costFunction=G)
+
 
 """ methods = ["CG", "BFGS", "Newton-CG", "L-BFGS-B", "TNC", "SLSQP", "trust-constr"]
 methods2 = ["Nelder-Mead", "Powell", "COBYLA"]

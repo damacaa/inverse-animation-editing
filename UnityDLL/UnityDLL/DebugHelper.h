@@ -12,6 +12,8 @@ private:
 	std::map<std::string, double> durations;
 	std::map<std::string, int> occurances;
 
+	std::string path = "C:/Debug/";
+
 public:
 	DebugHelper() {};
 	~DebugHelper() {};

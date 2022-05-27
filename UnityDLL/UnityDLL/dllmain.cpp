@@ -87,17 +87,19 @@ extern "C" {
 			Update();
 			auto t2 = high_resolution_clock::now();
 
-			auto ms_int = duration_cast<milliseconds>(t2 - t1);
-			int sleepTime = max(0, delta - ms_int.count());
+			duration<double, std::milli> ms_double = t2 - t1;
+			double duration = ms_double.count();
+
+			int sleepTime = ceil(max(0.0, (double)delta - duration));
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
 			//std::this_thread::yield();
 		}
 	}
 
-	__declspec(dllexport) void Initialize(int integrationMethod, float timeStep) {
+	__declspec(dllexport) void Initialize(int integrationMethod, float timeStep, float tolerance) {
 		if (!initialized) {
-			physicsManager = new PhysicsManager((Integration)integrationMethod);
+			physicsManager = new PhysicsManager((Integration)integrationMethod, tolerance);
 			delta = timeStep;
 
 			counter = new MyCounter();

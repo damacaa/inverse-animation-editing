@@ -38,22 +38,27 @@ public class SimulationManager : MonoBehaviour
     [SerializeField]
     Mode mode = Mode.SimulateMultiThread;
 
-
+    [Header("Simulation parameters")]
     [SerializeField]
     Integration integrationMethod = Integration.Implicit;
     [SerializeField]
     float timeStep = 0.01f;
-    float lastTime = 0;
+    [SerializeField]
+    float tolerance = 1e-2f;
+
+    [Header("Optimization parameters")]
     [SerializeField]
     float parameter = 0.5f;
     [SerializeField]
     int iterations = 1;
 
+    float lastTime = 0;
+    
     ICPPWrapper cpp;
     private void Awake()
     {
         instance = this;
-        cpp = new ICPPWrapper(integrationMethod, timeStep);
+        cpp = new ICPPWrapper(integrationMethod, timeStep, tolerance);
     }
 
     private void Start()
@@ -108,6 +113,7 @@ public class SimulationManager : MonoBehaviour
         SimulationInfo info = new SimulationInfo();
         info.delta = timeStep;
         info.integrationMethod = (int)integrationMethod;
+        info.tolerance = tolerance;
 
         info.objects = new SimulationObjectData[simulationObjects.Count];
 
@@ -211,8 +217,9 @@ public class SimulationManager : MonoBehaviour
     [System.Serializable]
     public class SimulationInfo
     {
-        public float delta;
         public int integrationMethod;
+        public float delta;
+        public float tolerance;
         public SimulationObjectData[] objects;
     }
 }

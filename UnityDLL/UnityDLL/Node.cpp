@@ -56,11 +56,10 @@ void Node::GetForce(Eigen::VectorXd* force)
 
 void Node::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel)
 {
-	derivPos->push_back(T(index + 1, index + 1, mass * -9.81));
 
-	derivVel->push_back(T(index, index, -damping * vel.x()));
-	derivVel->push_back(T(index + 1, index + 1, -damping * vel.y()));
-	derivVel->push_back(T(index + 2, index + 2, -damping * vel.z()));
+	derivVel->push_back(T(index, index, -damping));
+	derivVel->push_back(T(index + 1, index + 1, -damping));
+	derivVel->push_back(T(index + 2, index + 2, -damping));
 }
 
 void Node::SetMass(double value)
@@ -70,8 +69,8 @@ void Node::SetMass(double value)
 	mass = value;
 }
 
-void Node::SetDamping(float damping)
+void Node::SetDamping(float alpha)
 {
-	this->damping = damping;
+	damping = alpha * mass;
 }
 

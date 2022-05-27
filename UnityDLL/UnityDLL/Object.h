@@ -16,7 +16,7 @@ public:
 	int id = -1;//Id to return vertices
 	int index = -1;//Id in matrix
 	bool updated = false;
-	float damping = 0.5f;
+	float damping = 0.5f;//Needs to be separated into two
 	float stiffness = 150.0f;
 	float density = 1.0f;
 
@@ -53,6 +53,8 @@ public:
 
 	void GetForce(Eigen::VectorXd* force);
 
+	void GetDp(Eigen::VectorXd* dforce);
+
 	void GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel);
 
 	void GetMass(std::vector<T>* mass);
@@ -67,6 +69,8 @@ public:
 
 	Vector3f* GetVertices();
 
-	void SetMass(double _density);
+	void SetMass(double param);
+
+	void SetStiffness(double param);
 };
 
