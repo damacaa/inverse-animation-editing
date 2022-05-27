@@ -16,11 +16,12 @@ public:
 };
 
 std::string _info;
+std::string _settings = "nG";
 
-
-ForwardResult Initialize(std::string info)
+ForwardResult Initialize(std::string info, std::string settings)
 {
 	_info = info;
+	_settings = settings;
 	PhysicsManager physicsManager = PhysicsManager(_info);
 	physicsManager.Start();
 
@@ -54,7 +55,7 @@ ForwardResult Forward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd para
 {
 	PhysicsManager physicsManager = PhysicsManager(_info);
 	physicsManager.Start();
-	physicsManager.SetParam(parameters, PhysicsManager::Parameter::Mass);
+	physicsManager.SetParam(parameters, _settings);
 
 	auto info = physicsManager.Forward(x, v, h);
 
@@ -65,13 +66,13 @@ ForwardResult Forward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd para
 	return result;
 }
 
-BackwardResult Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, Eigen::VectorXd parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h)
+BackwardResult Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, Eigen::VectorXd parameters, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h)
 {
 	PhysicsManager physicsManager = PhysicsManager(_info);
 	physicsManager.Start();
-	physicsManager.SetParam(parameter, PhysicsManager::Parameter::Mass);
+	physicsManager.SetParam(parameters, _settings);
 
-	auto info = physicsManager.Backward(x, v, x1, v1, parameter(0), dGdx1, dGdv1, h);
+	auto info = physicsManager.Backward(x, v, x1, v1, dGdx1, dGdv1, h, _settings);
 
 	BackwardResult result;
 	result.dGdp = info.dGdp;

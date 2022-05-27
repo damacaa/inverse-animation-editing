@@ -9,8 +9,6 @@ from numpy import random
 lastP = 0
 steps = []
 
-nVert = 4
-
 
 def g(p, iter, h, m_numDoFs, initialState, targets):
     global lastP
@@ -62,7 +60,7 @@ def dGdp(p, iter, h, m_numDoFs, initialState, targets):
         current = UnityDLL.forward(current.x, current.v, p, h)
         steps.append(current)
 
-    _dGdp = np.full(nVert, 0.0)
+    _dGdp = np.full(p.size, 0.0)
     _dGdx = []
     _dGdv = []
 
@@ -101,22 +99,23 @@ def dGdp(p, iter, h, m_numDoFs, initialState, targets):
     return _dGdp
 
 
-def Minimize(method="L-BFGS-B", costFunction=g, jacobian=dGdp):
+def Minimize(method="L-BFGS-B", costFunction=G, jacobian=dGdp):
 
     data = open("D:/Projects/MassSpringSimulator/Python/scene.txt", "r").read()
 
     # PARAMETERS
     iter = 100
     h = 0.01
+    settings = "nL"
 
-    desiredParameter = random.rand(nVert) + 0.5
+    desiredParameter = random.rand(10) + 0.5
 
     print(
-        f"{'-'*60}\nIterations: {iter} Timestep: {h} Target parameter: {desiredParameter}\n{'-'*60} "
+        f"{'-'*60}\nSettings: {settings} Iterations: {iter} Timestep: {h} Target parameter: {desiredParameter}\n{'-'*60} "
     )
 
     # INITIALIZATION
-    initialState = UnityDLL.initialize(data)
+    initialState = UnityDLL.initialize(data, settings)
     m_numDoFs = initialState.x.size
 
     # CALCULATING TARGET
@@ -129,26 +128,27 @@ def Minimize(method="L-BFGS-B", costFunction=g, jacobian=dGdp):
         current = UnityDLL.forward(current.x, current.v, desiredParameter, h)
         targets.append(current)
 
-    p0 = np.full(nVert, 0.5)  # initial parameter value
+    p0 = np.full(desiredParameter.size, 1)  # initial parameter value
     args = (iter, h, m_numDoFs, initialState, targets)  # extra info
 
-    start = time.time()
+    # G(desiredParameter, iter, h, m_numDoFs, initialState, targets)
+    # dGdp(desiredParameter, iter, h, m_numDoFs, initialState, targets)
 
+    start = time.time()
     res = scipy.optimize.minimize(
         costFunction, p0, jac=jacobian, method=method, args=args
     )
-
     end = time.time()
 
     print(res)
     print("RESULT:", res.x)
-    print("ERROR: ", np.linalg.norm(desiredParameter - res.x))
+    print("ERROR: ", abs(desiredParameter - res.x))
     print("Time elapsed: ", str(round((end - start) * 1000.0, 1)), "ms")
 
     return res.x
 
 
-Minimize(costFunction=G)
+Minimize()
 
 
 """ methods = ["CG", "BFGS", "Newton-CG", "L-BFGS-B", "TNC", "SLSQP", "trust-constr"]

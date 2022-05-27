@@ -76,5 +76,7 @@ public:
 	void SetMass(Eigen::VectorXd params);
 
 	void SetStiffness(double param);
+
+	void SetStiffness(Eigen::VectorXd params);
 };
 

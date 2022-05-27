@@ -43,7 +43,7 @@ public:
 
 	void GetdFdstiffness(Eigen::VectorXd* dforce);
 
-	void GetdFdstiffness(std::vector<T>* dforce);
+	void GetdFdstiffness(std::vector<T>* dforce, int col);
 
 	void GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel);
 

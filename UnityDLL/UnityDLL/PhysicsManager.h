@@ -21,14 +21,6 @@ public:
 		Implicit = 2,
 	};
 
-	enum class Parameter
-	{
-		GlobalMass = 0,
-		GlobalStiffness = 1,
-		Mass = 2,
-		Stiffness = 3
-	};
-
 private:
 
 	struct SimulationInfo {
@@ -44,8 +36,6 @@ private:
 		Eigen::VectorXd dGdp;//Tantos como parametros haya
 		Eigen::VectorXd dGdx, dGdv;
 	};
-
-	
 
 	bool Paused = false;
 	float TimeStep;
@@ -97,13 +87,13 @@ public:
 
 	void SetParam(float param);
 
-	void SetParam(Eigen::VectorXd params, PhysicsManager::Parameter parameterType);
+	void SetParam(Eigen::VectorXd params, std::string settings);
 
 	SimulationInfo GetInitialState();
 
 	SimulationInfo Forward(Eigen::VectorXd x, Eigen::VectorXd v, float h);
 
-	PhysicsManager::BackwardStepInfo Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h);
+	PhysicsManager::BackwardStepInfo Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h, std::string settings);
 
 	
 };
