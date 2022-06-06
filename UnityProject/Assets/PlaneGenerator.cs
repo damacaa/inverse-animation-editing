@@ -6,14 +6,27 @@ public class PlaneGenerator : MonoBehaviour
 {
     [SerializeField]
     protected int divisions = 10;
-
-    // Start is called before the first frame update
-    void Start()
+    Mesh _mesh;
+    public Mesh Mesh
     {
+        get
+        {
+            if (_mesh)
+                return _mesh;
 
+            _mesh = BuildMesh();
+            return _mesh;
+        }
     }
 
-    public void BuildMesh()
+    // Start is called before the first frame update
+
+    private void Awake()
+    {
+        GetComponent<MeshFilter>().mesh = Mesh;
+    }
+
+    public Mesh BuildMesh()
     {
         //Mesh info
         int verticesPerFace = divisions + 2;
@@ -90,6 +103,6 @@ public class PlaneGenerator : MonoBehaviour
         mesh.RecalculateBounds();
         mesh.RecalculateTangents();
 
-        GetComponent<MeshFilter>().mesh = mesh;
+        return mesh;
     }
 }

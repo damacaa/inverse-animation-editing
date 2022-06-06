@@ -1,1 +1,0 @@
-{"integrationMethod":2,"delta":0.0010000000474974514,"tolerance":0.0010000000474974514,"objects":[{"vertPos":[{"x":-5.0,"y":0.0,"z":-5.0},{"x":5.0,"y":0.0,"z":-5.0},{"x":-5.0,"y":0.0,"z":5.0},{"x":5.0,"y":0.0,"z":5.0}],"vertIsFixed":[false,false,true,true],"vertMass":0.5,"springs":[0,2,0,3,2,3,1,2,0,1,1,3],"springStiffness":[0.75,0.75,0.75,0.375,0.75,0.75],"damping":0.5}]}

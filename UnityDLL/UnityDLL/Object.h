@@ -25,15 +25,17 @@ public:
 	Vector3f* vertexArray = 0;
 	Vector3f* vertexArray2 = 0;
 	int nVerts = 0;
+	int nSprings = 0;
 
 	std::vector<Node> _nodes;
 	std::vector<Spring> _springs;
 
-	int nSprings = 0;
+	std::string optimizationSettings;
+
 
 	Object(Vector3f* vertices, int nVerts, int* triangles, int nTriangles, float stiffness, float mass);
 
-	Object(Vector3f* vertPos, bool* vertIsFixed, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping);
+	Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping, std::string optimizationSettings);
 	
 	~Object();
 

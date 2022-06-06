@@ -9,45 +9,57 @@ public class SimulationObject : MonoBehaviour
     public int id;
 
     Mesh mesh;
-    [SerializeField]
-    public SimulationObjectData data;
 
+    [Header("Parameters")]
 
     [SerializeField]
     public float stiffness = 100f;
     [SerializeField]
-    public float density = 1.0f;
+    public float mass = 1.0f;
     [SerializeField]
     public float damping = 1.0f;
     [SerializeField]
     bool useBendingSprings = true;
+    [SerializeField]
+    string optimizationSettings = "nn";
 
+    public SimulationObjectData Data
+    {
+        get { return Init(); }
+    }
+
+    [Header("Stuff")]
+    [SerializeField]
+    SimulationObjectData _data;
     [SerializeField]
     Vector3[] debugVerts;
     [SerializeField]
     int[] debugSprings;
 
-    private void Awake()
+    public SimulationObjectData Init()
     {
-        BuildData();
-        SimulationManager.simulationObjects.Add(this);
+        mesh = GetComponent<MeshFilter>().mesh;
+        _data = BuildData(mesh);
+        debugVerts = _data.vertPos;
+        debugSprings = _data.springs;
+        return _data;
     }
 
-    private void BuildData()
+    private SimulationObjectData BuildData(Mesh mesh)
     {
         if (TryGetComponent<PlaneGenerator>(out PlaneGenerator pg))
             pg.BuildMesh();
 
         Debug.Log("Building " + name);
 
-        data = new SimulationObjectData();
-        mesh = GetComponent<MeshFilter>().mesh;
+        SimulationObjectData data = new SimulationObjectData();
 
         Fixer[] fixers = FindObjectsOfType<Fixer>();
 
         //Node positions
         Vector3[] vertices = new Vector3[mesh.vertices.Length];
         bool[] vertIsFixed = new bool[vertices.Length];
+        float[] vertMass = new float[vertices.Length];
         for (int i = 0; i < vertices.Length; i++)
         {
             Vector3 worldPos = transform.TransformPoint(mesh.vertices[i]);
@@ -62,13 +74,12 @@ public class SimulationObject : MonoBehaviour
                     break;
                 }
             }
+
+            vertMass[i] = mass / vertices.Length;
         }
         data.vertPos = vertices;
         data.vertIsFixed = vertIsFixed;
-        debugVerts = vertices;
-
-        //Node volumes
-        data.vertMass = density; //d = m / v  m = d / v
+        data.vertMass = vertMass; //d = m / v  m = d / v
 
         //Creating edges
         EdgeEqualityComparer edgeEqualityComparer = new EdgeEqualityComparer();
@@ -92,7 +103,7 @@ public class SimulationObject : MonoBehaviour
                 {
                     if (useBendingSprings)
                     {
-                        Edge newEdge = new Edge(edges[x].other, otherEdge.other, -1, stiffness / 2f);
+                        Edge newEdge = new Edge(edges[x].other, otherEdge.other, -1, stiffness / 4f);
                         edgeDictionary.Add(newEdge, newEdge);
                     }
                 }
@@ -120,8 +131,9 @@ public class SimulationObject : MonoBehaviour
         }
 
         data.damping = damping;
+        data.optimizationSettings = optimizationSettings;
 
-        debugSprings = data.springs;
+        return data;
     }
 
     private void BuildParametrizedData()
@@ -210,7 +222,7 @@ public class SimulationObject : MonoBehaviour
             id++;
         }
 
-        data.density = density;
+        data.density = mass;
         data.damping = damping;
 
         debugSprings = data.springs;
@@ -223,6 +235,7 @@ public class SimulationObject : MonoBehaviour
 
         if (vertices.Length == 0)
             return;
+
 
         debugVerts = (Vector3[])vertices.Clone();
 
@@ -261,6 +274,13 @@ public class SimulationObject : MonoBehaviour
         mesh = GetComponent<MeshFilter>().sharedMesh;
         BuildData();*/
     }
+
+    public SimulationObjectData GetDataInEditor()
+    {
+        SimulationObjectData data = BuildData(GetComponent<PlaneGenerator>().Mesh);
+        return data;
+    }
+
 #endif
 }
 
@@ -270,12 +290,13 @@ public class SimulationObjectData
     public Vector3[] vertPos;
     //public float[] vertVolume;
     public bool[] vertIsFixed;
-    public float vertMass;
+    public float[] vertMass;
     public int[] springs;
     public float[] springStiffness;
     //public float[] springVolume;
     //public float density;
     public float damping;
+    public string optimizationSettings;
 }
 
 [System.Serializable]

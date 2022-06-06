@@ -198,7 +198,7 @@ public class ICPPWrapper
 
         if (count == 0)
         {
-            //Debug.Log("Vertices not ready");
+            Debug.Log($"Vertices of object {id} not ready");
         }
 
         Vector3[] vertices = new Vector3[count];

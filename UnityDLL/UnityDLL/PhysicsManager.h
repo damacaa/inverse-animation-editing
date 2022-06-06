@@ -21,7 +21,6 @@ public:
 		Implicit = 2,
 	};
 
-private:
 
 	struct SimulationInfo {
 		SimulationInfo() {}
@@ -36,6 +35,7 @@ private:
 		Eigen::VectorXd dGdp;//Tantos como parametros haya
 		Eigen::VectorXd dGdx, dGdv;
 	};
+private:
 
 	bool Paused = false;
 	float TimeStep;
@@ -63,7 +63,7 @@ public:
 
 	int AddObject(Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass);
 
-	int AddObject(Vector3f* vertPos, bool* vertIsFixed, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping);
+	int AddObject(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping, std::string optimizationSettings);
 
 	void AddFixer(Vector3f position, Vector3f scale);
 

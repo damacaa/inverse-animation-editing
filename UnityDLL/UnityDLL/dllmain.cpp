@@ -149,7 +149,8 @@ extern "C" {
 	__declspec(dllexport) int AddObject(Vector3f* vertPos, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping)
 	{
 		std::lock_guard<std::mutex> lock(vertexMutex);
-		return physicsManager->AddObject(vertPos, new bool[nVerts], vertMass, nVerts, springs, springStiffness, nSprings, damping);
+		//return physicsManager->AddObject(vertPos, new bool[nVerts], vertMass, nVerts, springs, springStiffness, nSprings, damping);
+		return -1;
 	}
 
 	__declspec(dllexport) void AddFixer(Vector3f position, Vector3f scale) {

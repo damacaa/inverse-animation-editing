@@ -110,9 +110,10 @@ Object::Object(Vector3f* vertices, int nVerts, int* _triangles, int nTriangles, 
 
 	delete[] newsprings;
 	delete[] triangles;
+
 }
 
-Object::Object(Vector3f* vertPos, bool* vertIsFixed, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping)
+Object::Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping, std::string optimizationSettings)
 {
 	//this->density = density;
 	this->stiffness = stiffness;
@@ -139,7 +140,7 @@ Object::Object(Vector3f* vertPos, bool* vertIsFixed, float vertMass, int nVerts,
 			(double)vertPos[i].z);
 
 		//nodes[i].volume = vertVolume[i];
-		_nodes[i].SetMass(vertMass);
+		_nodes[i].SetMass(vertMass[i]);
 		_nodes[i].SetDamping(damping);
 		_nodes[i].isFixed = vertIsFixed[i];
 	}
@@ -154,6 +155,9 @@ Object::Object(Vector3f* vertPos, bool* vertIsFixed, float vertMass, int nVerts,
 		_springs[i].SetStiffness(springStiffness[i]);
 		_springs[i].SetDamping(damping/2.0);
 	}
+
+	this->optimizationSettings = optimizationSettings;
+
 }
 
 Object::~Object()
