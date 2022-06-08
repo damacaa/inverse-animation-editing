@@ -8,6 +8,7 @@ public class Edge
     public int b;
     public int other;
 
+    public float length = 0;
     public float volume = 0;
     public float stiffness = 0;
 

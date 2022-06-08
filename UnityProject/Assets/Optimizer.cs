@@ -19,7 +19,23 @@ public class Optimizer
     public static void Optimize()
     {
         string strCmdText;
-        strCmdText = "/C python d:/Projects/MassSpringSimulator/Python/hello.py";   //This command to open a new notepad
+        strCmdText = "/c python d:/Projects/MassSpringSimulator/Python/hello.py & pause";   //This command to open a new notepad
+        System.Diagnostics.Process.Start("CMD.exe", strCmdText); //Start cmd process
+    }
+    
+
+    [MenuItem("Optimizer/Generate and optimize")]
+    public static void GenerateAndOptimize()
+    {
+        GenerateSceneFile();
+        Optimize();
+    }
+
+    [MenuItem("Optimizer/Update package")]
+    public static void UpdatePackage()
+    {
+        string strCmdText;
+        strCmdText = "/k d: & cd \"D:\\Projects\\MassSpringSimulator\\Python\" & python -m pip install \"d:/ Projects / MassSpringSimulator / UnityDLL\"";   //This command to open a new notepad
         System.Diagnostics.Process.Start("CMD.exe", strCmdText); //Start cmd process
     }
 }

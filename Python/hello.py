@@ -31,13 +31,13 @@ def g(p, iter, h, m_numDoFs, initialState, targets):
 
 def G(p, iter, h, m_numDoFs, initialState, targets, settings):
 
-    current = initialState
-
     steps = [initialState] + UnityDLL.forwardLoop(
         initialState.x, initialState.v, p, settings, h, iter - 1
     )
 
-    """steps = [initialState]
+    """
+    current = initialState
+    steps = [initialState]
 
     for i in range(iter - 1):
         current = UnityDLL.forward(current.x, current.v, p, h)
@@ -54,10 +54,12 @@ def G(p, iter, h, m_numDoFs, initialState, targets, settings):
 def dGdp(p, iter, h, m_numDoFs, initialState, targets, settings):
 
     steps = []
-    current = initialState
+
     steps.append(initialState)
 
-    """for i in range(iter - 1):
+    """
+        current = initialState
+        for i in range(iter - 1):
         current = UnityDLL.forward(current.x, current.v, p, h)
         steps.append(current)"""
 
@@ -117,8 +119,8 @@ def Minimize(method="L-BFGS-B", costFunction=G, jacobian=dGdp, callback=None):
     data_dict = json.loads(data)
 
     # PARAMETERS
-    iter = 50
-    h = 0.03
+    iter = 100
+    h = 0.02
 
     masses = []
     stiffnesses = []
@@ -151,7 +153,7 @@ def Minimize(method="L-BFGS-B", costFunction=G, jacobian=dGdp, callback=None):
     # desiredParameter = random.rand(6) + 0.5
 
     print(
-        f"{'-'*60}\nSettings: {settings} Iterations: {iter} Timestep: {h} Target parameter: {desiredParameter}\n{'-'*60} "
+        f"{'-'*60}\nSettings: {settings} Iterations: {iter} Timestep: {h} Target parameter:\n {desiredParameter}\n{'-'*60} "
     )
 
     # INITIALIZATION
@@ -162,16 +164,16 @@ def Minimize(method="L-BFGS-B", costFunction=G, jacobian=dGdp, callback=None):
     targets = [initialState] + UnityDLL.forwardLoop(
         initialState.x,
         initialState.v,
-        desiredParameter,
+        np.full(0, 0,),
         "nn" * len(data_dict["objects"]),
         h,
         iter - 1,
     )
 
-    p0 = np.full(desiredParameter.size, 1)  # initial parameter value
+    p0 = np.full(desiredParameter.size, 0.1)  # initial parameter value
     args = (iter, h, m_numDoFs, initialState, targets, settings)  # extra info
-    bnds = [(0, 10000)] * p0.size  # parameter bounds
-    options = {"maxiter": 15000, "maxfun": 100000, "ftol": 0.001}
+    bnds = [(0.0001, 10000)] * p0.size  # parameter bounds
+    options = {"maxiter": 15000, "maxfun": 100000}
 
     # G(desiredParameter, iter, h, m_numDoFs, initialState, targets)
     # dGdp(desiredParameter, iter, h, m_numDoFs, initialState, targets)
@@ -224,8 +226,16 @@ def Minimize(method="L-BFGS-B", costFunction=G, jacobian=dGdp, callback=None):
     text_file = open(
         "D:/Projects/MassSpringSimulator/UnityProject/Assets/scene_optimized.txt", "w"
     )
-    n = text_file.write(newData)
+    text_file.write(newData)
     text_file.close()
+
+    log_file = open("C:/debug/log.txt", "a+")
+    log_file.write(
+        f"{'-'*60}\nSettings: {settings} Iterations: {iter} Timestep: {h} Target parameter: {desiredParameter}\n{'-'*60}\n")
+    log_file.write(str(res)+"\n")
+    log_file.write("Time elapsed:\n" +
+                   str(round((end - start) * 1000.0, 1)) + " ms\n\n")
+    log_file.close()
 
     return res.x
 
@@ -242,8 +252,8 @@ def ShowProgress(p):
         a = 0
 
 
-# Minimize(callback=ShowProgress)
-print(UnityDLL.test())
+Minimize(callback=ShowProgress)
+# print(UnityDLL.test())
 
 
 """ methods = ["CG", "BFGS", "Newton-CG", "L-BFGS-B", "TNC", "SLSQP", "trust-constr"]

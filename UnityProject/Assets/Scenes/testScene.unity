@@ -351,7 +351,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   stiffness: 100
-  mass: 1
+  density: 1
   damping: 1
   useBendingSprings: 0
   optimizationSettings: nn
@@ -484,6 +484,7 @@ MonoBehaviour:
   sceneInfo: {fileID: 4900000, guid: f4f5ba4ac5d2776438018ee0c8b1d932, type: 3}
   simulationObjects:
   - {fileID: 1954706708}
+  - {fileID: 934463275}
 --- !u!23 &568410414
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -845,10 +846,27 @@ PrefabInstance:
     - target: {fileID: 3435907659964988901, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435907659964988926, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
+        type: 3}
+      propertyPath: optimizationSettings
+      value: Gn
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 65d21f6d7128b144cbe8c5d65bc25ad6, type: 3}
+--- !u!114 &934463275 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3435907659964988926, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
+    type: 3}
+  m_PrefabInstance: {fileID: 934463274}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fffe23a3bb235ee4bbb3b8ea716969be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &942612671
 GameObject:
   m_ObjectHideFlags: 0
@@ -1058,7 +1076,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   stiffness: 1000
-  mass: 1
+  density: 1
   damping: 1
   useBendingSprings: 1
   optimizationSettings: nn
@@ -1558,12 +1576,7 @@ PrefabInstance:
     - target: {fileID: 3435907659964988926, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
         type: 3}
       propertyPath: optimizationSettings
-      value: GG
-      objectReference: {fileID: 0}
-    - target: {fileID: 3435907659964988927, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
-        type: 3}
-      propertyPath: divisions
-      value: 3
+      value: nG
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 65d21f6d7128b144cbe8c5d65bc25ad6, type: 3}

@@ -57,26 +57,35 @@ public class SimulationManager : MonoBehaviour
     private void Awake()
     {
         instance = this;
-        cpp = new ICPPWrapper(integrationMethod, timeStep, tolerance);
+        //cpp = new ICPPWrapper(integrationMethod, timeStep, tolerance);
     }
 
     private void Start()
     {
-        SimulationObjectData[] objects = new SimulationObjectData[simulationObjects.Count];
-        for (int i = 0; i < objects.Length; i++)
-        {
-            objects[i] = simulationObjects[i].Data;
-            simulationObjects[i].id = i;
-        }
-
-        string json = SceneToJson(objects);
-        
         if (sceneInfo == null || !useFile)
         {
+            SimulationObjectData[] objects = new SimulationObjectData[simulationObjects.Count];
+            for (int i = 0; i < objects.Length; i++)
+            {
+                objects[i] = simulationObjects[i].Data;
+                simulationObjects[i].id = i;
+            }
+
+            string json = SceneToJson(objects);
             cpp = new ICPPWrapper(json);
         }
         else
+        {
+            SimulationInfo si = JsonUtility.FromJson<SimulationInfo>(sceneInfo.text);
+
+            for (int i = 0; i < simulationObjects.Count; i++)
+            {
+                simulationObjects[i].Data = si.objects[i];
+                simulationObjects[i].id = i;
+            }
+
             cpp = new ICPPWrapper(sceneInfo.text);
+        }
 
 
 
@@ -89,7 +98,6 @@ public class SimulationManager : MonoBehaviour
                 break;
             case Mode.SimulateMultiThread:
                 cpp.StartSimulation(true);
-                break;
                 break;
             default:
                 break;

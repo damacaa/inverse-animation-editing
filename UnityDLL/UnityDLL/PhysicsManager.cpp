@@ -571,7 +571,7 @@ void PhysicsManager::SetParam(Eigen::VectorXd params, std::string settings)
 
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
-		char massMode = settings[2*i];
+		char massMode = settings[2 * i];
 
 		switch (massMode)
 		{
@@ -592,11 +592,8 @@ void PhysicsManager::SetParam(Eigen::VectorXd params, std::string settings)
 		default:
 			break;
 		}
-	}
 
-	for (int i = 0; i < SimObjects.size(); i++)
-	{
-		char stiffnessMode = settings[(2 * i)+1];
+		char stiffnessMode = settings[(2 * i) + 1];
 
 		switch (stiffnessMode)
 		{
@@ -718,117 +715,165 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 	//Derivada constraint dinámica --> dcdp = uT * dGdp
 	//Derivada constraint dinámica + fixing --> dcdp = uT * dGdp
 
-	
+	//std::vector<Eigen::VectorXd> derivadasParametros;
 
+	std::vector <Eigen::VectorXd>  ds;
 
-	Eigen::VectorXd dGdp_mass;
+	int paramOffset = 0;
+	int vertOffset = 0;
+	int springOffset = 0;
 
-	char massMode = settings[0];
-
-	switch (massMode)
+	for (int i = 0; i < SimObjects.size(); i++)
 	{
-	case 'g':
-	case 'G':
-	{
-		// GLOBAL MASS
-		Eigen::VectorXd dcdp = v1 - v;
-		for (size_t i = 0; i < m_numDoFs / 3; i++)
+		char massMode = settings[(size_t)2 * i];
+		int nVerts = SimObjects[i]->nVerts;
+
+		switch (massMode)
 		{
-			if (fixedIndices[i]) {
-				dcdp(3 * i) = 0;
-				dcdp((3 * i) + 1) = 0;
-				dcdp((3 * i) + 2) = 0;
+		case 'g':
+		case 'G':
+		{
+			// GLOBAL MASS
+			Eigen::VectorXd dcdp = v1 - v;
+			for (size_t idx = vertOffset; idx < (size_t)vertOffset + nVerts; idx++)
+			{
+				if (fixedIndices[idx]) {
+					dcdp(3 * idx) = 0;
+					dcdp((3 * idx) + 1) = 0;
+					dcdp((3 * idx) + 2) = 0;
+				}
 			}
-		}
-		dGdp_mass = -u.transpose() * dcdp;
-		break;
-	}
-	case 'l':
-	case 'L':
-	{
-		// LOCAL MASS
-		Eigen::VectorXd dcdp = v1 - v;
 
-		std::vector<T> dcdpTiplets = std::vector<T>();
-		//c filas p columnas
-		int j = 0;
-		for (size_t i = 0; i < m_numDoFs; i += 3)
+
+			ss << "dcdp: " << dcdp.segment((size_t)vertOffset * 3, (size_t)nVerts * 3).format(VecFormat) << sep;
+
+			//Eigen::VectorXd dGdp_mass = -u.segment(vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdp.segment(vertOffset * 3, (size_t)nVerts * 3);
+			Eigen::VectorXd dGdp_mass = -u.segment((size_t)vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdp.segment((size_t)vertOffset * 3, (size_t)nVerts * 3);
+
+			ds.push_back(dGdp_mass);
+			paramOffset += 1;
+
+			break;
+		}
+		case 'l':
+		case 'L':
 		{
-			if (!fixedIndices[i / 3]) {
-				dcdpTiplets.push_back(T(i, j, dcdp(i)));
-				dcdpTiplets.push_back(T(i + 1, j, dcdp(i + 1)));
-				dcdpTiplets.push_back(T(i + 2, j, dcdp(i + 2)));
+			// LOCAL MASS
+			Eigen::VectorXd dcdp = v1 - v;
+
+			std::vector<T> dcdpTiplets = std::vector<T>();
+			//c filas p columnas
+
+			for (size_t i = 0; i < nVerts; i++)
+			{
+				int idx = i + vertOffset;
+				if (!fixedIndices[idx]) {
+					dcdpTiplets.push_back(T((3 * i) + 0, i, dcdp((3 * idx) + 0)));
+					dcdpTiplets.push_back(T((3 * i) + 1, i, dcdp((3 * idx) + 1)));
+					dcdpTiplets.push_back(T((3 * i) + 2, i, dcdp((3 * idx) + 2)));
+				}
+
 			}
-			j++;
+
+			SpMat dcdpMat((size_t)nVerts * 3, nVerts);
+			dcdpMat.setFromTriplets(dcdpTiplets.begin(), dcdpTiplets.end());
+
+			ss << Eigen::MatrixXd(dcdpMat).format(MatFormat) << sep;
+
+			Eigen::VectorXd dGdp_mass = -u.segment((size_t)vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdpMat; //Vector de tantas posiciones como parámetros haya
+
+			ss << dGdp_mass.format(VecFormat) << sep;
+
+			ds.push_back(dGdp_mass);
+			paramOffset += nVerts;
+
+			break;
+		}
 		}
 
-		SpMat dcdpMat(m_numDoFs, m_numDoFs / 3);
-		dcdpMat.setFromTriplets(dcdpTiplets.begin(), dcdpTiplets.end(), [](const double& a, const double& b) { return a + b; });
 
-		ss << Eigen::MatrixXd(dcdpMat).format(MatFormat) << sep;
+		int nSprings = SimObjects[i]->nSprings;
 
-		dGdp_mass = -u.transpose() * dcdpMat; //Vector de tantas posiciones como parámetros haya
+		char stiffnessMode = settings[(size_t)(2 * i) + 1];
 
-		ss << dGdp_mass.format(VecFormat) << sep;
-
-		break;
-	}
-	default:
-		dGdp_mass = Eigen::VectorXd::Constant(0, 0);
-		break;
-	}
-
-	Eigen::VectorXd dGdp_stiffness;
-	char stiffnessMode = settings[1];
-	switch (stiffnessMode)
-	{
-	case 'g':
-	case 'G':
-	{
-		// GLOBAL STIFFNESS
-		Eigen::VectorXd dcdp = h * dFdp;
-		dGdp_stiffness = -u.transpose() * dcdp;
-
-		ss << "dFdp: " << dFdp.format(VecFormat) << sep;
-	}
-	break;
-	case 'l':
-	case 'L':
-	{
-		// LOCAL STIFFNESS
-		/*igen::VectorXd dcdp = h * dFdp;//Stiffness
-
-		std::vector<T> dcdpTiplets = std::vector<T>();
-		//c filas p columnas
-		int j = 0;
-		for (size_t i = 0; i < m_numDoFs; i += 3)
+		switch (stiffnessMode)
 		{
-			dcdpTiplets.push_back(T(i, j, dcdp(i)));
-			dcdpTiplets.push_back(T(i + 1, j, dcdp(i + 1)));
-			dcdpTiplets.push_back(T(i + 2, j, dcdp(i + 2)));
-			j++;
-		}*/
-
-		SpMat dcdpMat(m_numDoFs, SimObjects[0]->nSprings);
-		dcdpMat.setFromTriplets(dFdpTriplets.begin(), dFdpTriplets.end());
-
-		dGdp_stiffness = -u.transpose() * dcdpMat; //Vector de tantas posiciones como parámetros haya
-
-		ss << "u: " << u.format(VecFormat) << sep;
-		ss << "dcdpMat:\n" << Eigen::MatrixXd(dcdpMat) << sep;
-		ss << "dGdp2:\n" << dGdp_stiffness.format(VecFormat) << sep;
-		//dGdp2 = -u.transpose() * Eigen::VectorXd::Constant(6, 0);
+		case 'g':
+		case 'G':
+		{
+			// GLOBAL STIFFNESS
+			Eigen::VectorXd dcdp = h * dFdp;
+			Eigen::VectorXd dGdp_stiffness = -u.segment((size_t)vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdp.segment((size_t)vertOffset * 3, (size_t)nVerts * 3);
+			ds.push_back(dGdp_stiffness);
+			paramOffset += 1;
+			//ss << "dFdp: " << dFdp.format(VecFormat) << sep;
+		}
 		break;
-	}
-	default:
-		dGdp_stiffness = Eigen::VectorXd::Constant(0, 0);
-		break;
+		case 'l':
+		case 'L':
+		{
+			// LOCAL STIFFNESS
+			SpMat dcdpMat((size_t)nVerts * 3, nSprings);
+
+			std::vector<T> abc = std::vector<T>();
+
+			for (size_t i = 0; i < dFdpTriplets.size(); i++)
+			{
+				T t = dFdpTriplets[i];
+
+				if (t.col() < springOffset || t.col() >= springOffset + nSprings)
+					continue;
+
+				if (t.row() < 3 * vertOffset || t.row() >= 3 * (vertOffset + nVerts))
+					continue;
+
+				abc.push_back(T(t.row() - (3 * vertOffset), t.col() - springOffset, t.value()));
+			}
+
+			dcdpMat.setFromTriplets(abc.begin(), abc.end());
+
+
+			ss << "u: " << u.format(VecFormat) << sep;
+			ss << "dcdpMat:\n" << Eigen::MatrixXd(dcdpMat) << sep;
+
+			Eigen::VectorXd dGdp_stiffness = -u.segment((size_t)vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdpMat; //Vector de tantas posiciones como parámetros haya
+			ds.push_back(dGdp_stiffness);
+
+			ss << "dGdp2:\n" << dGdp_stiffness.format(VecFormat) << sep;
+
+			//dGdp2 = -u.transpose() * Eigen::VectorXd::Constant(6, 0);
+			paramOffset += nSprings;
+			break;
+		}
+		default:
+			break;
+		}
+
+		vertOffset += nVerts;
+		springOffset += nSprings;
 	}
 
-	Eigen::VectorXd vec_joined(dGdp_mass.size() + dGdp_stiffness.size());
-	vec_joined << dGdp_mass, dGdp_stiffness;
 
-	info.dGdp = vec_joined;
+	Eigen::VectorXd  dGdpTotal;
+
+	for (size_t i = 0; i < ds.size(); i++)
+	{
+
+		Eigen::VectorXd vec_joined(ds[i].size() + dGdpTotal.size());
+		vec_joined << dGdpTotal, ds[i];
+
+		dGdpTotal = vec_joined;
+		ss << "+" << ds[i].format(VecFormat) << sep;
+		ss << "dGdp" << i << ": " << dGdpTotal.format(VecFormat) << sep;
+	}
+
+
+	info.dGdp = dGdpTotal;
+
+
+	/**/
+
+
 
 	//Eigen::VectorXd dcdp = v1 - v; //Mass
 

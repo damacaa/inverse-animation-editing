@@ -11,7 +11,7 @@ public class PlaneGenerator : MonoBehaviour
     {
         get
         {
-            if (_mesh)
+            if (Application.isPlaying && _mesh)
                 return _mesh;
 
             _mesh = BuildMesh();
