@@ -24,15 +24,13 @@ public class SimulationManager : MonoBehaviour
         }
     }
 
-    public static List<SimulationObject> simulationObjects = new List<SimulationObject>();
 
 
     public enum Mode
     {
         None,
         SimulateSingleThread,
-        SimulateMultiThread,
-        Estimate
+        SimulateMultiThread
     }
 
     [SerializeField]
@@ -48,87 +46,49 @@ public class SimulationManager : MonoBehaviour
 
     [Header("Optimization parameters")]
     [SerializeField]
-    float parameter = 0.5f;
+    int iterations = 100;
     [SerializeField]
-    int iterations = 1;
+    bool useFile = false;
+    [SerializeField]
+    TextAsset sceneInfo;
 
-    float lastTime = 0;
-    
+    [Header("Scene")]
+    public List<SimulationObject> simulationObjects = new List<SimulationObject>();
+
     ICPPWrapper cpp;
     private void Awake()
     {
         instance = this;
-        cpp = new ICPPWrapper(integrationMethod, timeStep, tolerance);
+        //cpp = new ICPPWrapper(integrationMethod, timeStep, tolerance);
     }
 
     private void Start()
     {
-
-        /*foreach (SimulationObject so in simulationObjects)
+        if (sceneInfo == null || !useFile)
         {
-            Mesh mesh = so.GetComponent<MeshFilter>().mesh;
-
-            Vector3[] vertices = mesh.vertices;
-
-            for (int i = 0; i < vertices.Length; i++)
+            SimulationObjectData[] objects = new SimulationObjectData[simulationObjects.Count];
+            for (int i = 0; i < objects.Length; i++)
             {
-                vertices[i] = so.transform.TransformPoint(vertices[i]);
+                objects[i] = simulationObjects[i].Data;
+                simulationObjects[i].id = i;
             }
 
-            int id = SimulationManager.Instance.AddObject(vertices, mesh.triangles, so.stiffness, so.mass);
-            so.id = id;
-            so.name = "Id: " + id;
-        }*/
-
-        /*foreach (SimulationObject so in simulationObjects)
+            string json = SceneToJson(objects);
+            cpp = new ICPPWrapper(json);
+        }
+        else
         {
-            Vector3[] vertPos = so.data.vertPos;
-            float[] vertVolume = so.data.vertVolume;
-            int[] springs = so.data.springs;
-            float[] springStiffness = so.data.springStiffness;
-            float[] springVolume = so.data.springVolume;
-            float density = so.data.density;
-            float damping = so.data.damping;
+            SimulationInfo si = JsonUtility.FromJson<SimulationInfo>(sceneInfo.text);
 
-            int id = SimulationManager.Instance.AddObject(vertPos, vertVolume, springs, springStiffness, springVolume, density, damping);
-            so.id = id;
-            so.name = "Id: " + id;
-        }*/
+            for (int i = 0; i < simulationObjects.Count; i++)
+            {
+                simulationObjects[i].Data = si.objects[i];
+                simulationObjects[i].id = i;
+            }
 
-        /*foreach (SimulationObject so in simulationObjects)
-        {
-            Vector3[] vertPos = so.data.vertPos;
-            float vertMass = so.data.vertMass;
-            int[] springs = so.data.springs;
-            float[] springStiffness = so.data.springStiffness;
-            float damping = so.data.damping;
-
-            int id = SimulationManager.Instance.AddObject(vertPos, vertMass, springs, springStiffness, damping);
-            so.id = id;
-            so.name = "Id: " + id;
+            cpp = new ICPPWrapper(sceneInfo.text);
         }
 
-        */
-
-        SimulationInfo info = new SimulationInfo();
-        info.delta = timeStep;
-        info.integrationMethod = (int)integrationMethod;
-        info.tolerance = tolerance;
-
-        info.objects = new SimulationObjectData[simulationObjects.Count];
-
-        for (int i = 0; i < simulationObjects.Count; i++)
-        {
-            info.objects[i] = simulationObjects[i].data;
-            simulationObjects[i].id = i;
-        }
-
-        string json = JsonUtility.ToJson(info);
-        string path = (Application.dataPath).ToString() + "/scene.txt";
-
-        File.WriteAllText(path, json);
-
-        cpp = new ICPPWrapper(json);
 
 
         switch (mode)
@@ -141,12 +101,41 @@ public class SimulationManager : MonoBehaviour
             case Mode.SimulateMultiThread:
                 cpp.StartSimulation(true);
                 break;
-            case Mode.Estimate:
-                print(cpp.Estimate(parameter, iterations));
-                break;
             default:
                 break;
         }
+    }
+
+    public string SceneToJson(SimulationObjectData[] objects)
+    {
+        SimulationInfo info = new SimulationInfo();
+        info.delta = timeStep;
+        info.integrationMethod = (int)integrationMethod;
+        info.tolerance = tolerance;
+        info.optimizationIterations = iterations;
+
+        info.objects = new SimulationObjectData[objects.Length];
+
+        for (int i = 0; i < objects.Length; i++)
+        {
+            info.objects[i] = objects[i];
+        }
+
+        return JsonUtility.ToJson(info);
+    }
+
+    public static string SceneToJsonInEditor()
+    {
+        SimulationManager manager = FindObjectOfType<SimulationManager>();
+
+        SimulationObjectData[] objects = new SimulationObjectData[manager.simulationObjects.Count];
+        for (int i = 0; i < objects.Length; i++)
+        {
+            objects[i] = manager.simulationObjects[i].GetDataInEditor();
+        }
+
+        string json = manager.SceneToJson(objects);
+        return json;
     }
 
     /*public int AddObject(Vector3[] vertices, int[] triangles, float stiffness, float mass)
@@ -173,7 +162,6 @@ public class SimulationManager : MonoBehaviour
     public Vector3[] GetVertices(int id)
     {
         Vector3[] vertices = cpp.GetVertices(id);
-
 
         //Debug.Log(vertices[1]);
 
@@ -220,6 +208,7 @@ public class SimulationManager : MonoBehaviour
         public int integrationMethod;
         public float delta;
         public float tolerance;
+        public int optimizationIterations;
         public SimulationObjectData[] objects;
     }
 }

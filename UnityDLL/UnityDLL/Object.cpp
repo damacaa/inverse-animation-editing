@@ -110,9 +110,10 @@ Object::Object(Vector3f* vertices, int nVerts, int* _triangles, int nTriangles, 
 
 	delete[] newsprings;
 	delete[] triangles;
+
 }
 
-Object::Object(Vector3f* vertPos, bool* vertIsFixed, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping)
+Object::Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping, std::string optimizationSettings)
 {
 	//this->density = density;
 	this->stiffness = stiffness;
@@ -139,7 +140,7 @@ Object::Object(Vector3f* vertPos, bool* vertIsFixed, float vertMass, int nVerts,
 			(double)vertPos[i].z);
 
 		//nodes[i].volume = vertVolume[i];
-		_nodes[i].SetMass(vertMass);
+		_nodes[i].SetMass(vertMass[i]);
 		_nodes[i].SetDamping(damping);
 		_nodes[i].isFixed = vertIsFixed[i];
 	}
@@ -154,6 +155,9 @@ Object::Object(Vector3f* vertPos, bool* vertIsFixed, float vertMass, int nVerts,
 		_springs[i].SetStiffness(springStiffness[i]);
 		_springs[i].SetDamping(damping/2.0);
 	}
+
+	this->optimizationSettings = optimizationSettings;
+
 }
 
 Object::~Object()
@@ -232,10 +236,16 @@ void Object::GetForce(Eigen::VectorXd* force)
 		_springs[i].GetForce(force);
 }
 
-void Object::GetDp(Eigen::VectorXd* dforce)
+void Object::GetdFdp(Eigen::VectorXd* dforce)
 {
 	for (int i = 0; i < nSprings; ++i)
-		_springs[i].GetDForce(dforce);
+		_springs[i].GetdFdstiffness(dforce);
+}
+
+void Object::GetdFdp(std::vector<T>* dforce, int springOffset)
+{
+	for (int i = 0; i < nSprings; ++i)
+		_springs[i].GetdFdstiffness(dforce, i + springOffset);
 }
 
 void Object::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel)
@@ -309,5 +319,21 @@ void Object::SetStiffness(double param)
 	for (size_t i = 0; i < nSprings; i++)
 	{
 		_springs[i].SetStiffness(param);
+	}
+}
+
+void Object::SetMass(Eigen::VectorXd params)
+{
+	for (size_t i = 0; i < nVerts; i++)
+	{
+		_nodes[i].SetMass(params(i));
+	}
+}
+
+void Object::SetStiffness(Eigen::VectorXd params)
+{
+	for (size_t i = 0; i < nSprings; i++)
+	{
+		_springs[i].SetStiffness(params(i));
 	}
 }

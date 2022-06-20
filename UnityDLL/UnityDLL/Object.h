@@ -25,15 +25,17 @@ public:
 	Vector3f* vertexArray = 0;
 	Vector3f* vertexArray2 = 0;
 	int nVerts = 0;
+	int nSprings = 0;
 
 	std::vector<Node> _nodes;
 	std::vector<Spring> _springs;
 
-	int nSprings = 0;
+	std::string optimizationSettings;
+
 
 	Object(Vector3f* vertices, int nVerts, int* triangles, int nTriangles, float stiffness, float mass);
 
-	Object(Vector3f* vertPos, bool* vertIsFixed, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping);
+	Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping, std::string optimizationSettings);
 	
 	~Object();
 
@@ -53,7 +55,9 @@ public:
 
 	void GetForce(Eigen::VectorXd* force);
 
-	void GetDp(Eigen::VectorXd* dforce);
+	void GetdFdp(Eigen::VectorXd* dforce);
+
+	void GetdFdp(std::vector<T>* dforce, int springOffset);
 
 	void GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel);
 
@@ -71,6 +75,10 @@ public:
 
 	void SetMass(double param);
 
+	void SetMass(Eigen::VectorXd params);
+
 	void SetStiffness(double param);
+
+	void SetStiffness(Eigen::VectorXd params);
 };
 

@@ -27,11 +27,12 @@ PhysicsManager::PhysicsManager(std::string info)
 
 		Vector3f* vertPos = new Vector3f[nVerts];
 		bool* vertIsFixed = new bool[nVerts];
-		float vertMass = obj["vertMass"];
+		float* vertMass = new float[nVerts];
 
-		int* springs = new int[(int)nSprings * 2];
+		int* springs = new int[(size_t)(nSprings * 2)];
 		float* springStiffness = new float[nSprings];
 		float damping = obj["damping"];
+		std::string optimizationSettings = obj["optimizationSettings"];
 
 		std::string s = "";
 		for (size_t j = 0; j < nVerts; j++)
@@ -43,7 +44,7 @@ PhysicsManager::PhysicsManager(std::string info)
 			float z = pos["z"];
 
 			vertPos[j] = Vector3f(x, y, z);
-
+			vertMass[j] = obj["vertMass"][j];
 			vertIsFixed[j] = obj["vertIsFixed"][j];
 		}
 
@@ -54,10 +55,9 @@ PhysicsManager::PhysicsManager(std::string info)
 			springStiffness[j] = obj["springStiffness"][j];
 		}
 
-		int id = AddObject(vertPos, vertIsFixed, vertMass, nVerts, springs, springStiffness, nSprings, damping);
+		int id = AddObject(vertPos, vertIsFixed, vertMass, nVerts, springs, springStiffness, nSprings, damping, optimizationSettings);
 		//Vector3f* vertPos, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping
 	}
-
 }
 
 PhysicsManager::PhysicsManager(Integration _IntegrationMethod, double tolerance)
@@ -110,25 +110,13 @@ int PhysicsManager::AddObject(Vector3f* vertices, int nVertices, int* triangles,
 	return o->id;
 }
 
-int PhysicsManager::AddObject(Vector3f* vertPos, bool* vertIsFixed, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping)
+int PhysicsManager::AddObject(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping, std::string optimizationSettings)
 {
-	Object* o = new Object(vertPos, vertIsFixed, vertMass, nVerts, springs, springStiffness, nSprings, damping);
+	Object* o = new Object(vertPos, vertIsFixed, vertMass, nVerts, springs, springStiffness, nSprings, damping, optimizationSettings);
 	o->id = (int)SimObjects.size() + (int)PendingSimObjects.size();
 	SimObjects.push_back(o);
 
-	std::string s = "";
-
-	for (size_t i = 0; i < nVerts; i++)
-	{
-		s += std::to_string(vertPos[i].x) + ", " + std::to_string(vertPos[i].y) + ", " + std::to_string(vertPos[i].z) + "\n";
-		s += vertIsFixed[i] + "\n";
-		s += std::to_string(vertMass) + "\n";
-		s += std::to_string(nVerts) + "\n\n";
-
-		s += std::to_string(o->_nodes[i].position.x()) + ", " + std::to_string(o->_nodes[i].position.y()) + ", " + std::to_string(o->_nodes[i].position.z()) + "\n";
-	}
-
-	debugHelper.PrintValue(s, "objectInit");
+	//debugHelper.PrintValue(s, "objectInit");
 
 	needsRestart = true;
 	return o->id;
@@ -342,6 +330,13 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationI
 	SpMat A = firstPart + (-h * h) * dFdx;
 	Eigen::VectorXd b = firstPart * v + h * f;
 
+	//b1 = (M - h dF / dv) v0 + h F0
+
+	//bi + 1 = M v0 + h Fi - h dF / dv vi - h2 dF / dx xi
+
+
+
+
 	//FIXING
 	debugHelper.RecordTime("5.Fixing");
 
@@ -388,6 +383,8 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationI
 	v = cg.solveWithGuess(b, v);
 
 	x += h * v;
+
+	//xi+1 = x0 + h vi+1
 
 	debugHelper.Wait();
 
@@ -489,7 +486,7 @@ float PhysicsManager::Estimate(float parameter, int iter, float h, Eigen::Vector
 
 	for (int i = iter - 2; i >= 0; i--)
 	{
-		BackwardStepInfo backStepResult = Backward(steps[i].x, steps[i].v, steps[i + 1].x, steps[i + 1].v, parameter, dGdx[i + 1], dGdv[i + 1], h);//dGdp, dGdx, dGdv
+		BackwardStepInfo backStepResult = Backward(steps[i].x, steps[i].v, steps[i + 1].x, steps[i + 1].v, dGdx[i + 1], dGdv[i + 1], h, "LL");//dGdp, dGdx, dGdv
 
 		//Global
 		dGdp += backStepResult.dGdp;
@@ -577,6 +574,58 @@ void PhysicsManager::SetParam(float param)
 	}
 }
 
+void PhysicsManager::SetParam(Eigen::VectorXd params, std::string settings)
+{
+	int offset = 0;
+
+	for (int i = 0; i < SimObjects.size(); i++)
+	{
+		char massMode = settings[2 * i];
+
+		switch (massMode)
+		{
+		case 'g':
+		case 'G':
+		{
+			SimObjects[i]->SetMass(params(offset));
+			offset += 1;
+			break;
+		}
+		case 'l':
+		case 'L':
+		{
+			SimObjects[i]->SetMass(params.segment(offset, SimObjects[i]->nVerts));
+			offset += SimObjects[i]->nVerts;
+			break;
+		}
+		default:
+			break;
+		}
+
+		char stiffnessMode = settings[(2 * i) + 1];
+
+		switch (stiffnessMode)
+		{
+		case 'g':
+		case 'G':
+		{
+			SimObjects[i]->SetStiffness(params(offset));
+			offset += 1;
+			break;
+		}
+		case 'l':
+		case 'L':
+		{
+			SimObjects[i]->SetStiffness(params.segment(offset, SimObjects[i]->nSprings));
+			offset += SimObjects[i]->nSprings;
+			break;
+		}
+		default:
+			break;
+		}
+	}
+}
+
 PhysicsManager::SimulationInfo PhysicsManager::GetInitialState()
 {
 	Eigen::VectorXd x = Eigen::VectorXd(m_numDoFs);
@@ -595,12 +644,18 @@ PhysicsManager::SimulationInfo PhysicsManager::Forward(Eigen::VectorXd x, Eigen:
 	return StepImplicit(h, SimulationInfo(x, v));
 }
 
-PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, float parameter, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h)
+PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h, std::string settings)
 {
-	//SpMat M(m_numDoFs, m_numDoFs);
+	std::string sep = "\n----------------------------------------\n";
+	Eigen::IOFormat VecFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
+	Eigen::IOFormat MatFormat(4, 0, ", ", "\n", "[", "]");
+	std::stringstream ss;
+	ss.str("Back propagation results\n");
 
-	Eigen::VectorXd f1 = Eigen::VectorXd::Constant(m_numDoFs, 0.0);//Forces
-	Eigen::VectorXd df1 = Eigen::VectorXd::Constant(m_numDoFs, 0.0);
+
+
+	//Eigen::VectorXd f1 = Eigen::VectorXd::Constant(m_numDoFs, 0.0);//Forces
+	Eigen::VectorXd dFdp = Eigen::VectorXd::Constant(m_numDoFs, 0.0);
 
 	//Eigen::VectorXd x = current.x;
 	SpMat dFdx(m_numDoFs, m_numDoFs);;
@@ -610,29 +665,49 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 	std::vector<T> derivPos = std::vector<T>();
 	std::vector<T> derivVel = std::vector<T>();
 	std::vector<T> masses = std::vector<T>();
+	std::vector<T> dFdpTriplets = std::vector<T>();
+
+	std::vector<bool> fixedIndices(m_numDoFs);
 
 	//FORCES
+	int nSprings = 0;
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
 		SimObjects[i]->SetPosition(&x);
 		SimObjects[i]->SetVelocity(&v);
 		SimObjects[i]->GetMass(&masses);
-		SimObjects[i]->GetForce(&f1);
-		//Podría pasar uT a esta función para hacer el cálculo dentro de la función
-		SimObjects[i]->GetDp(&df1);
+		//SimObjects[i]->GetForce(&f1);
 		SimObjects[i]->GetForceJacobian(&derivPos, &derivVel);
+		SimObjects[i]->GetFixedIndices(&fixedIndices);
+
+		SimObjects[i]->GetdFdp(&dFdp); //Podría pasar uT a esta función para hacer el cálculo dentro de la función
+		SimObjects[i]->GetdFdp(&dFdpTriplets, nSprings);
+		nSprings += SimObjects[i]->nSprings;
 	}
 
 	dFdx.setFromTriplets(derivPos.begin(), derivPos.end(), [](const double& a, const double& b) { return a + b; });
 	dFdv.setFromTriplets(derivVel.begin(), derivVel.end(), [](const double& a, const double& b) { return a + b; });
 	M.setFromTriplets(masses.begin(), masses.end());
 
-
-	//Backward
-	BackwardStepInfo info = BackwardStepInfo();
-
 	SpMat A = M - (h * dFdv) + ((-h * h) * dFdx);
 	Eigen::VectorXd b = (h * dGdx1) + dGdv1;
+
+	/*for (int i = 0; i < A.outerSize(); i++) {
+		for (SpMat::InnerIterator j(A, i); j; ++j) {
+			if (fixedIndices[i] || fixedIndices[j.row()])
+				if (i == j.row())
+					j.valueRef() = 1;
+				else
+					j.valueRef() = 0;
+		}
+	}
+
+	for (size_t i = 0; i < m_numDoFs; i++)
+	{
+		if (fixedIndices[i]) {
+			b[i] = 0;
+		}
+	}*/
 
 	Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::UnitLower | Eigen::UnitUpper> cg;
 	cg.setTolerance(tolerance);
@@ -640,15 +715,171 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 
 	Eigen::VectorXd u = cg.solve(b);
 
-	//dGdp: Vector de tantas posiciones como parámetros haya, en este caso 1
+	//Backward
+	BackwardStepInfo info = BackwardStepInfo();
 
-	//Eigen::VectorXd c = M * v1 - M * v - h * f1;
+	// Constraint dinámica --> c = M * v1 - M * v - h * f1
+	// Constraint fixing --> S * v1 = 0 ,S matriz de selección (diagonal con 1 donde esté fijado)
 
-	//Eigen::VectorXd dcdp = v1 - v; //Masa
+	//Constraint dinámica + fixing --> c = M * v1 – M * v – h * (I – ST * S) f1 = 0
 
-	Eigen::VectorXd dcdp = (h * df1);
+	//Derivada constraint dinámica --> dcdp = uT * dGdp
+	//Derivada constraint dinámica + fixing --> dcdp = uT * dGdp
 
-	info.dGdp = Eigen::VectorXd::Constant(1, (-u.transpose() * dcdp)(0));
+	//std::vector<Eigen::VectorXd> derivadasParametros;
+
+	std::vector <Eigen::VectorXd>  ds;
+
+	int paramOffset = 0;
+	int vertOffset = 0;
+	int springOffset = 0;
+
+	for (int i = 0; i < SimObjects.size(); i++)
+	{
+		char massMode = settings[(size_t)2 * i];
+		char stiffnessMode = settings[(size_t)(2 * i) + 1];
+
+		int nVerts = SimObjects[i]->nVerts;
+		int nSprings = SimObjects[i]->nSprings;
+
+		switch (massMode)
+		{
+		case 'g':
+		case 'G':
+		{
+			// GLOBAL MASS
+			Eigen::VectorXd dcdp = v1 - v;
+			for (size_t j = vertOffset; j < (size_t)vertOffset + nVerts; j++)
+			{
+				if (fixedIndices[j]) {
+					dcdp(3 * j) = 0;
+					dcdp((3 * j) + 1) = 0;
+					dcdp((3 * j) + 2) = 0;
+				}
+			}
+
+			//Eigen::VectorXd dGdp_mass = -u.segment(vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdp.segment(vertOffset * 3, (size_t)nVerts * 3);
+			Eigen::VectorXd dGdp_mass = -u.segment((size_t)vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdp.segment((size_t)vertOffset * 3, (size_t)nVerts * 3);
+
+			ds.push_back(dGdp_mass);
+			paramOffset += 1;
+
+			break;
+		}
+		case 'l':
+		case 'L':
+		{
+			// LOCAL MASS
+			Eigen::VectorXd dcdp = v1 - v;
+
+			std::vector<T> dcdpTiplets = std::vector<T>();
+			//c filas p columnas
+
+			for (size_t j = 0; j < nVerts; j++)
+			{
+				int idx = j + vertOffset;
+				if (!fixedIndices[idx]) {
+					dcdpTiplets.push_back(T((3 * j) + 0, j, dcdp((3 * idx) + 0)));
+					dcdpTiplets.push_back(T((3 * j) + 1, j, dcdp((3 * idx) + 1)));
+					dcdpTiplets.push_back(T((3 * j) + 2, j, dcdp((3 * idx) + 2)));
+				}
+
+			}
+
+			SpMat dcdpMat((size_t)nVerts * 3, nVerts);
+			dcdpMat.setFromTriplets(dcdpTiplets.begin(), dcdpTiplets.end());
+
+			Eigen::VectorXd dGdp_mass = -u.segment((size_t)vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdpMat; //Vector de tantas posiciones como parámetros haya
+
+			ds.push_back(dGdp_mass);
+			paramOffset += nVerts;
+
+			break;
+		}
+		}
+
+		switch (stiffnessMode)
+		{
+		case 'g':
+		case 'G':
+		{
+			// GLOBAL STIFFNESS
+			Eigen::VectorXd dcdp = h * dFdp;
+			Eigen::VectorXd dGdp_stiffness = -u.segment((size_t)vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdp.segment((size_t)vertOffset * 3, (size_t)nVerts * 3);
+			ds.push_back(dGdp_stiffness);
+			paramOffset += 1;
+		}
+		break;
+		case 'l':
+		case 'L':
+		{
+			// LOCAL STIFFNESS
+			SpMat dcdpMat((size_t)nVerts * 3, nSprings);
+			std::vector<T> abc = std::vector<T>();
+
+			for (size_t j = 0; j < dFdpTriplets.size(); j++)
+			{
+				T t = dFdpTriplets[j];
+
+				if (t.col() < springOffset || t.col() >= springOffset + nSprings)
+					continue;
+
+				if (t.row() < 3 * vertOffset || t.row() >= 3 * (vertOffset + nVerts))
+					continue;
+
+				abc.push_back(T(t.row() - (3 * vertOffset), t.col() - springOffset, t.value()));
+			}
+
+			dcdpMat.setFromTriplets(abc.begin(), abc.end());
+
+			Eigen::VectorXd dGdp_stiffness = -u.segment((size_t)vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdpMat; //Vector de tantas posiciones como parámetros haya
+			ds.push_back(dGdp_stiffness);
+
+			//dGdp2 = -u.transpose() * Eigen::VectorXd::Constant(6, 0);
+			paramOffset += nSprings;
+			break;
+		}
+		default:
+			break;
+		}
+
+		vertOffset += nVerts;
+		springOffset += nSprings;
+	}
+
+
+	Eigen::VectorXd  dGdpTotal;
+
+	for (size_t i = 0; i < ds.size(); i++)
+	{
+
+		Eigen::VectorXd vec_joined(ds[i].size() + dGdpTotal.size());
+		vec_joined << dGdpTotal, ds[i];
+
+		dGdpTotal = vec_joined;
+	}
+
+
+	info.dGdp = dGdpTotal;
+
+
+	/**/
+
+
+
+	//Eigen::VectorXd dcdp = v1 - v; //Mass
+
+
+	//info.dGdp = Eigen::VectorXd::Constant(1, (-u.transpose() * dcdp)(0));//old
+
+
+
+	/*ss << "dcdp: " << dcdp.format(CommaInitFmt) << sep;
+	ss << "d:\n" << Eigen::MatrixXd(dcdpMat) << sep;
+	ss << "u: " << u.format(CommaInitFmt) << sep;
+	ss << "dGdp: " << info.dGdp.format(CommaInitFmt) << sep;*/
+	std::string result = ss.str();
+	//debugHelper.PrintValue(result, "backstep");
 
 	//dGdx
 	info.dGdx = dGdx1 + h * (u.transpose() * dFdx).transpose();

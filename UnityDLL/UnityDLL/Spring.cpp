@@ -48,17 +48,37 @@ void Spring::GetForce(Eigen::VectorXd* force)
 	(*force)[nodeB->index + 2] -= f.z();
 }
 
-void Spring::GetDForce(Eigen::VectorXd* dforce)
+void Spring::GetdFdstiffness(Eigen::VectorXd* dforce)
 {
 	Eigen::Vector3d f = -(length - length0) * dir;//
 
-	(*dforce)[nodeA->index] += f.x();
-	(*dforce)[nodeA->index + 1] += f.y();
-	(*dforce)[nodeA->index + 2] += f.z();
-	  
-	(*dforce)[nodeB->index] -= f.x();
-	(*dforce)[nodeB->index + 1] -= f.y();
-	(*dforce)[nodeB->index + 2] -= f.z();
+	if (!nodeA->isFixed) {
+		(*dforce)[nodeA->index] += f.x();
+		(*dforce)[nodeA->index + 1] += f.y();
+		(*dforce)[nodeA->index + 2] += f.z();
+	}
+
+	if (!nodeB->isFixed) {
+		(*dforce)[nodeB->index] -= f.x();
+		(*dforce)[nodeB->index + 1] -= f.y();
+		(*dforce)[nodeB->index + 2] -= f.z();
+	}
+}
+
+void Spring::GetdFdstiffness(std::vector<T>* dforce, int col)
+{
+	Eigen::Vector3d f = -(length - length0) * dir;
+	if (!nodeA->isFixed) {
+		dforce->push_back(T(nodeA->index, col, f(0)));
+		dforce->push_back(T(nodeA->index + 1, col, f(1)));
+		dforce->push_back(T(nodeA->index + 2, col, f(2)));
+	}
+
+	if (!nodeB->isFixed) {
+		dforce->push_back(T(nodeB->index, col, -f(0)));
+		dforce->push_back(T(nodeB->index + 1, col, -f(1)));
+		dforce->push_back(T(nodeB->index + 2, col, -f(2)));
+	}
 }
 
 // Get Force Jacobian
