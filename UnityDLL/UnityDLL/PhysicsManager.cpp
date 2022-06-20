@@ -330,6 +330,13 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationI
 	SpMat A = firstPart + (-h * h) * dFdx;
 	Eigen::VectorXd b = firstPart * v + h * f;
 
+	//b1 = (M - h dF / dv) v0 + h F0
+
+	//bi + 1 = M v0 + h Fi - h dF / dv vi - h2 dF / dx xi
+
+
+
+
 	//FIXING
 	debugHelper.RecordTime("5.Fixing");
 
@@ -376,6 +383,8 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationI
 	v = cg.solveWithGuess(b, v);
 
 	x += h * v;
+
+	//xi+1 = x0 + h vi+1
 
 	debugHelper.Wait();
 
@@ -661,6 +670,7 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 	std::vector<bool> fixedIndices(m_numDoFs);
 
 	//FORCES
+	int nSprings = 0;
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
 		SimObjects[i]->SetPosition(&x);
@@ -671,7 +681,8 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 		SimObjects[i]->GetFixedIndices(&fixedIndices);
 
 		SimObjects[i]->GetdFdp(&dFdp); //Podría pasar uT a esta función para hacer el cálculo dentro de la función
-		SimObjects[i]->GetdFdp(&dFdpTriplets);
+		SimObjects[i]->GetdFdp(&dFdpTriplets, nSprings);
+		nSprings += SimObjects[i]->nSprings;
 	}
 
 	dFdx.setFromTriplets(derivPos.begin(), derivPos.end(), [](const double& a, const double& b) { return a + b; });
@@ -726,7 +737,10 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
 		char massMode = settings[(size_t)2 * i];
+		char stiffnessMode = settings[(size_t)(2 * i) + 1];
+
 		int nVerts = SimObjects[i]->nVerts;
+		int nSprings = SimObjects[i]->nSprings;
 
 		switch (massMode)
 		{
@@ -735,17 +749,14 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 		{
 			// GLOBAL MASS
 			Eigen::VectorXd dcdp = v1 - v;
-			for (size_t idx = vertOffset; idx < (size_t)vertOffset + nVerts; idx++)
+			for (size_t j = vertOffset; j < (size_t)vertOffset + nVerts; j++)
 			{
-				if (fixedIndices[idx]) {
-					dcdp(3 * idx) = 0;
-					dcdp((3 * idx) + 1) = 0;
-					dcdp((3 * idx) + 2) = 0;
+				if (fixedIndices[j]) {
+					dcdp(3 * j) = 0;
+					dcdp((3 * j) + 1) = 0;
+					dcdp((3 * j) + 2) = 0;
 				}
 			}
-
-
-			ss << "dcdp: " << dcdp.segment((size_t)vertOffset * 3, (size_t)nVerts * 3).format(VecFormat) << sep;
 
 			//Eigen::VectorXd dGdp_mass = -u.segment(vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdp.segment(vertOffset * 3, (size_t)nVerts * 3);
 			Eigen::VectorXd dGdp_mass = -u.segment((size_t)vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdp.segment((size_t)vertOffset * 3, (size_t)nVerts * 3);
@@ -764,13 +775,13 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 			std::vector<T> dcdpTiplets = std::vector<T>();
 			//c filas p columnas
 
-			for (size_t i = 0; i < nVerts; i++)
+			for (size_t j = 0; j < nVerts; j++)
 			{
-				int idx = i + vertOffset;
+				int idx = j + vertOffset;
 				if (!fixedIndices[idx]) {
-					dcdpTiplets.push_back(T((3 * i) + 0, i, dcdp((3 * idx) + 0)));
-					dcdpTiplets.push_back(T((3 * i) + 1, i, dcdp((3 * idx) + 1)));
-					dcdpTiplets.push_back(T((3 * i) + 2, i, dcdp((3 * idx) + 2)));
+					dcdpTiplets.push_back(T((3 * j) + 0, j, dcdp((3 * idx) + 0)));
+					dcdpTiplets.push_back(T((3 * j) + 1, j, dcdp((3 * idx) + 1)));
+					dcdpTiplets.push_back(T((3 * j) + 2, j, dcdp((3 * idx) + 2)));
 				}
 
 			}
@@ -778,11 +789,7 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 			SpMat dcdpMat((size_t)nVerts * 3, nVerts);
 			dcdpMat.setFromTriplets(dcdpTiplets.begin(), dcdpTiplets.end());
 
-			ss << Eigen::MatrixXd(dcdpMat).format(MatFormat) << sep;
-
 			Eigen::VectorXd dGdp_mass = -u.segment((size_t)vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdpMat; //Vector de tantas posiciones como parámetros haya
-
-			ss << dGdp_mass.format(VecFormat) << sep;
 
 			ds.push_back(dGdp_mass);
 			paramOffset += nVerts;
@@ -790,11 +797,6 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 			break;
 		}
 		}
-
-
-		int nSprings = SimObjects[i]->nSprings;
-
-		char stiffnessMode = settings[(size_t)(2 * i) + 1];
 
 		switch (stiffnessMode)
 		{
@@ -806,7 +808,6 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 			Eigen::VectorXd dGdp_stiffness = -u.segment((size_t)vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdp.segment((size_t)vertOffset * 3, (size_t)nVerts * 3);
 			ds.push_back(dGdp_stiffness);
 			paramOffset += 1;
-			//ss << "dFdp: " << dFdp.format(VecFormat) << sep;
 		}
 		break;
 		case 'l':
@@ -814,12 +815,11 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 		{
 			// LOCAL STIFFNESS
 			SpMat dcdpMat((size_t)nVerts * 3, nSprings);
-
 			std::vector<T> abc = std::vector<T>();
 
-			for (size_t i = 0; i < dFdpTriplets.size(); i++)
+			for (size_t j = 0; j < dFdpTriplets.size(); j++)
 			{
-				T t = dFdpTriplets[i];
+				T t = dFdpTriplets[j];
 
 				if (t.col() < springOffset || t.col() >= springOffset + nSprings)
 					continue;
@@ -832,14 +832,8 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 
 			dcdpMat.setFromTriplets(abc.begin(), abc.end());
 
-
-			ss << "u: " << u.format(VecFormat) << sep;
-			ss << "dcdpMat:\n" << Eigen::MatrixXd(dcdpMat) << sep;
-
 			Eigen::VectorXd dGdp_stiffness = -u.segment((size_t)vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdpMat; //Vector de tantas posiciones como parámetros haya
 			ds.push_back(dGdp_stiffness);
-
-			ss << "dGdp2:\n" << dGdp_stiffness.format(VecFormat) << sep;
 
 			//dGdp2 = -u.transpose() * Eigen::VectorXd::Constant(6, 0);
 			paramOffset += nSprings;
@@ -863,8 +857,6 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 		vec_joined << dGdpTotal, ds[i];
 
 		dGdpTotal = vec_joined;
-		ss << "+" << ds[i].format(VecFormat) << sep;
-		ss << "dGdp" << i << ": " << dGdpTotal.format(VecFormat) << sep;
 	}
 
 
@@ -887,7 +879,7 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 	ss << "u: " << u.format(CommaInitFmt) << sep;
 	ss << "dGdp: " << info.dGdp.format(CommaInitFmt) << sep;*/
 	std::string result = ss.str();
-	debugHelper.PrintValue(result, "backstep");
+	//debugHelper.PrintValue(result, "backstep");
 
 	//dGdx
 	info.dGdx = dGdx1 + h * (u.transpose() * dFdx).transpose();

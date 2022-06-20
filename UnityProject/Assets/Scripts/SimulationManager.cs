@@ -46,6 +46,8 @@ public class SimulationManager : MonoBehaviour
 
     [Header("Optimization parameters")]
     [SerializeField]
+    int iterations = 100;
+    [SerializeField]
     bool useFile = false;
     [SerializeField]
     TextAsset sceneInfo;
@@ -110,6 +112,7 @@ public class SimulationManager : MonoBehaviour
         info.delta = timeStep;
         info.integrationMethod = (int)integrationMethod;
         info.tolerance = tolerance;
+        info.optimizationIterations = iterations;
 
         info.objects = new SimulationObjectData[objects.Length];
 
@@ -205,6 +208,7 @@ public class SimulationManager : MonoBehaviour
         public int integrationMethod;
         public float delta;
         public float tolerance;
+        public int optimizationIterations;
         public SimulationObjectData[] objects;
     }
 }

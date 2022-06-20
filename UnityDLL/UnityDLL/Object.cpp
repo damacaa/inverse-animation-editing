@@ -242,10 +242,10 @@ void Object::GetdFdp(Eigen::VectorXd* dforce)
 		_springs[i].GetdFdstiffness(dforce);
 }
 
-void Object::GetdFdp(std::vector<T>* dforce)
+void Object::GetdFdp(std::vector<T>* dforce, int springOffset)
 {
 	for (int i = 0; i < nSprings; ++i)
-		_springs[i].GetdFdstiffness(dforce, i);
+		_springs[i].GetdFdstiffness(dforce, i + springOffset);
 }
 
 void Object::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel)

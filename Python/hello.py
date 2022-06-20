@@ -44,11 +44,12 @@ def G(p, iter, h, m_numDoFs, initialState, targets, settings):
         steps.append(current)"""
 
     G = 0
-    for i in range(iter):
+    for i in range(iter):  # cambiar a steps
         G += np.linalg.norm(targets[i].x - steps[i].x) ** 2
     # G = G / iter
 
     return (100 / (iter / p.size)) * G
+    # return G
 
 
 def dGdp(p, iter, h, m_numDoFs, initialState, targets, settings):
@@ -81,6 +82,8 @@ def dGdp(p, iter, h, m_numDoFs, initialState, targets, settings):
 
         _dGdx.append((100 / (iter / p.size)) * 2.0 *
                      (targets[i].x - steps[i].x))
+
+        # _dGdx.append(2.0 * (targets[i].x - steps[i].x))
         _dGdv.append(np.full(m_numDoFs, 0.0))
 
     i = iter - 2
@@ -119,11 +122,10 @@ def Minimize(method="L-BFGS-B", costFunction=G, jacobian=dGdp, callback=None):
     data_dict = json.loads(data)
 
     # PARAMETERS
-    iter = 100
-    h = 0.02
+    iter = data_dict["optimizationIterations"]
+    h = data_dict["delta"]
 
-    masses = []
-    stiffnesses = []
+    p = []
 
     settings = ""
 
@@ -134,21 +136,18 @@ def Minimize(method="L-BFGS-B", costFunction=G, jacobian=dGdp, callback=None):
         stiffnessMode = _settings[1]
 
         if massMode == "L":
-            masses += o["vertMass"]
+            p += o["vertMass"]
         elif massMode == "G":
-            masses += [Average(o["vertMass"])]
+            p += [Average(o["vertMass"])]
 
         if stiffnessMode == "L":
-            stiffnesses += o["springStiffness"]
+            p += o["springStiffness"]
         elif stiffnessMode == "G":
-            stiffnesses += [Average(o["springStiffness"])]
+            p += [Average(o["springStiffness"])]
 
         settings += _settings
 
-    desiredMass = np.array(masses)
-    desiredStiffness = np.array(stiffnesses)
-
-    desiredParameter = np.concatenate((desiredMass, desiredStiffness), axis=0)
+    desiredParameter = np.array(p)
 
     # desiredParameter = random.rand(6) + 0.5
 
@@ -173,7 +172,7 @@ def Minimize(method="L-BFGS-B", costFunction=G, jacobian=dGdp, callback=None):
     p0 = np.full(desiredParameter.size, 0.1)  # initial parameter value
     args = (iter, h, m_numDoFs, initialState, targets, settings)  # extra info
     bnds = [(0.0001, 10000)] * p0.size  # parameter bounds
-    options = {"maxiter": 15000, "maxfun": 100000}
+    options = {"maxiter": 10000, "maxfun": 15000}
 
     # G(desiredParameter, iter, h, m_numDoFs, initialState, targets)
     # dGdp(desiredParameter, iter, h, m_numDoFs, initialState, targets)
@@ -192,6 +191,11 @@ def Minimize(method="L-BFGS-B", costFunction=G, jacobian=dGdp, callback=None):
     end = time.time()
 
     print(res)
+
+    for i in range(min(10, len(desiredParameter))):
+        sign = "+" if (np.sign(res.jac[i]) >= 0) else "-"
+        print(round(desiredParameter[i], 4), " --> ",
+              round(res.x[i], 4), sign, "\n")
 
     # print("RESULT:\n", np.round(res.x, 3))
     # print("ERROR\n: ", abs(desiredParameter - res.x))
@@ -253,8 +257,9 @@ def ShowProgress(p):
 
 
 Minimize(callback=ShowProgress)
-# print(UnityDLL.test())
 
+# scipy.optimize.show_options(solver="minimize", method="L-BFGS-B", disp=True)
+# print(UnityDLL.test())
 
 """ methods = ["CG", "BFGS", "Newton-CG", "L-BFGS-B", "TNC", "SLSQP", "trust-constr"]
 methods2 = ["Nelder-Mead", "Powell", "COBYLA"]

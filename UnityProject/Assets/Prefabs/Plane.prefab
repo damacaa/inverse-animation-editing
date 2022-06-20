@@ -100,7 +100,9 @@ MonoBehaviour:
   density: 1
   damping: 0.5
   useBendingSprings: 1
-  optimizationSettings: nn
+  parametrize: 1
+  massOptimizationMode: 0
+  stiffnessOptimizationMode: 0
   _data:
     vertPos: []
     vertIsFixed: 
@@ -244,4 +246,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9331257e56f254d45807ab7a74e8ccc0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  divisions: 1
+  divisions: 5

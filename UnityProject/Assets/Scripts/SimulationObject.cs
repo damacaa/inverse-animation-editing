@@ -22,6 +22,22 @@ public class SimulationObject : MonoBehaviour
     [SerializeField]
     bool useBendingSprings = true;
     [SerializeField]
+    bool parametrize = true;
+
+
+    enum OptimizationMode
+    {
+        None,
+        Homogeneous,
+        Heterogeneous
+    }
+
+    [Header("Optimization parameters")]
+    [SerializeField]
+    OptimizationMode massOptimizationMode = OptimizationMode.None;
+    [SerializeField]
+    OptimizationMode stiffnessOptimizationMode = OptimizationMode.None;
+
     string optimizationSettings = "nn";
 
     public SimulationObjectData Data
@@ -43,44 +59,6 @@ public class SimulationObject : MonoBehaviour
     [SerializeField]
     int[] debugSprings;
 
-    Gradient gradient;
-    GradientColorKey[] colorKey;
-    GradientAlphaKey[] alphaKey;
-    Color[] debugColors;
-    float maxStiffness;
-
-    void GenerateDebugInfo()
-    {
-        gradient = new Gradient();
-
-        // Populate the color keys at the relative time 0 and 1 (0 and 100%)
-        colorKey = new GradientColorKey[2];
-        colorKey[0].color = Color.green;
-        colorKey[0].time = 0.0f;
-        colorKey[1].color = Color.red;
-        colorKey[1].time = 1.0f;
-
-        // Populate the alpha  keys at relative time 0 and 1  (0 and 100%)
-        alphaKey = new GradientAlphaKey[2];
-        alphaKey[0].alpha = 1.0f;
-        alphaKey[0].time = 0.0f;
-        alphaKey[1].alpha = 1.0f;
-        alphaKey[1].time = 1.0f;
-
-        gradient.SetKeys(colorKey, alphaKey);
-
-        maxStiffness = _data.springStiffness.Max();
-        debugColors = new Color[_data.springStiffness.Length];
-        for (int i = 0; i < debugColors.Length; i++)
-        {
-            debugColors[i] = gradient.Evaluate(_data.springStiffness[i] / maxStiffness);
-        }
-
-        debugVerts = _data.vertPos;
-        debugSprings = _data.springs;
-    }
-
-
     public SimulationObjectData Init()
     {
         mesh = GetComponent<MeshFilter>().mesh;
@@ -90,8 +68,15 @@ public class SimulationObject : MonoBehaviour
         return _data;
     }
 
-
     private SimulationObjectData BuildData(Mesh mesh)
+    {
+        if (parametrize)
+            return BuildDataP(mesh);
+        else
+            return BuildDataO(mesh);
+    }
+
+    private SimulationObjectData BuildDataP(Mesh mesh)
     {
         if (TryGetComponent<PlaneGenerator>(out PlaneGenerator pg))
             pg.BuildMesh();
@@ -128,7 +113,6 @@ public class SimulationObject : MonoBehaviour
         }
         data.vertPos = vertices;
         data.vertIsFixed = vertIsFixed;
-
 
         //Creating edges
         EdgeEqualityComparer edgeEqualityComparer = new EdgeEqualityComparer();
@@ -196,6 +180,7 @@ public class SimulationObject : MonoBehaviour
         }
         data.vertMass = vertMass;
 
+        data.triangles = mesh.triangles;
         data.damping = damping;
         data.optimizationSettings = optimizationSettings;
 
@@ -283,6 +268,7 @@ public class SimulationObject : MonoBehaviour
             id++;
         }
 
+        data.triangles = mesh.triangles;
         data.damping = damping;
         data.optimizationSettings = optimizationSettings;
 
@@ -310,16 +296,52 @@ public class SimulationObject : MonoBehaviour
         mesh.RecalculateTangents();
     }
 
+    Gradient gradient;
+    GradientColorKey[] colorKey;
+    GradientAlphaKey[] alphaKey;
+    Color[] debugColors;
+    float maxStiffness;
+    void GenerateDebugInfo()
+    {
+        gradient = new Gradient();
+
+        // Populate the color keys at the relative time 0 and 1 (0 and 100%)
+        colorKey = new GradientColorKey[2];
+        colorKey[0].color = Color.green;
+        colorKey[0].time = 0.0f;
+        colorKey[1].color = Color.red;
+        colorKey[1].time = 1.0f;
+
+        // Populate the alpha  keys at relative time 0 and 1  (0 and 100%)
+        alphaKey = new GradientAlphaKey[2];
+        alphaKey[0].alpha = 1.0f;
+        alphaKey[0].time = 0.0f;
+        alphaKey[1].alpha = 1.0f;
+        alphaKey[1].time = 1.0f;
+
+        gradient.SetKeys(colorKey, alphaKey);
+
+        maxStiffness = _data.springStiffness.Max();
+        debugColors = new Color[_data.springStiffness.Length];
+        for (int i = 0; i < debugColors.Length; i++)
+        {
+            debugColors[i] = gradient.Evaluate(_data.springStiffness[i] / maxStiffness);
+        }
+
+        debugVerts = _data.vertPos;
+        debugSprings = _data.springs;
+    }
+
 #if UNITY_EDITOR
     private void OnDrawGizmos()
     {
-        if (!Application.isPlaying)
+        if (!Application.isPlaying || Selection.activeGameObject != gameObject)
             return;
 
-        /*for (int i = 0; i < mesh.vertices.Length; i++)
+        for (int i = 0; i < mesh.vertices.Length; i++)
         {
-            Handles.Label(transform.TransformPoint(mesh.vertices[i]), i.ToString());
-        }*/
+            Handles.Label(debugVerts[i], i.ToString());
+        }
 
         for (int i = 0; i < debugSprings.Length / 2; i++)
         {
@@ -335,6 +357,36 @@ public class SimulationObject : MonoBehaviour
             return;
         mesh = GetComponent<MeshFilter>().sharedMesh;
         BuildData();*/
+
+        optimizationSettings = "";
+        switch (massOptimizationMode)
+        {
+            case OptimizationMode.None:
+                optimizationSettings += "n";
+                break;
+            case OptimizationMode.Homogeneous:
+                optimizationSettings += "G";
+                break;
+            case OptimizationMode.Heterogeneous:
+                optimizationSettings += "L";
+                break;
+            default:
+                break;
+        }
+        switch (stiffnessOptimizationMode)
+        {
+            case OptimizationMode.None:
+                optimizationSettings += "n";
+                break;
+            case OptimizationMode.Homogeneous:
+                optimizationSettings += "G";
+                break;
+            case OptimizationMode.Heterogeneous:
+                optimizationSettings += "L";
+                break;
+            default:
+                break;
+        }
     }
 
     public SimulationObjectData GetDataInEditor()
@@ -355,6 +407,7 @@ public class SimulationObjectData
     public float[] vertMass;
     public int[] springs;
     public float[] springStiffness;
+    public int[] triangles;
     //public float[] springVolume;
     //public float density;
     public float damping;

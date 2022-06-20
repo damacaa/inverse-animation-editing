@@ -57,7 +57,7 @@ public:
 
 	void GetdFdp(Eigen::VectorXd* dforce);
 
-	void GetdFdp(std::vector<T>* dforce);
+	void GetdFdp(std::vector<T>* dforce, int springOffset);
 
 	void GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel);
 
