@@ -154,6 +154,7 @@
   <ItemGroup>
     <ClInclude Include="DebugHelper.h" />
     <ClInclude Include="dllmain.h" />
+    <ClInclude Include="Face.h" />
     <ClInclude Include="Fixer.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Node.h" />
@@ -166,6 +167,7 @@
   <ItemGroup>
     <ClCompile Include="DebugHelper.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="Face.cpp" />
     <ClCompile Include="Fixer.cpp" />
     <ClCompile Include="Node.cpp" />
     <ClCompile Include="Object.cpp" />

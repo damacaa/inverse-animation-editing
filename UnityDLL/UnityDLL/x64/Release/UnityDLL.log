@@ -1,105 +1,98 @@
-﻿  PhysicsManager.cpp
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(25,37): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(26,43): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(258,28): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+﻿  Face.cpp
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(44,35): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(458,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(770,42): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(44,25): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(771,50): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(45,47): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(772,50): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(45,33): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-  Spring.cpp
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Spring.cpp(10,51): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Spring.cpp(31,19): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Spring.cpp(72,28): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(46,47): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Spring.cpp(73,36): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(46,33): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Spring.cpp(74,36): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(48,35): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Spring.cpp(78,28): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(48,25): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Spring.cpp(79,36): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(49,47): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Spring.cpp(80,36): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(49,33): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Spring.cpp(97,74): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(50,47): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Spring.cpp(98,74): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(50,33): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Spring.cpp(99,77): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(52,35): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Spring.cpp(100,77): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(52,25): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Spring.cpp(102,74): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(53,47): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Spring.cpp(103,74): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(53,33): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Spring.cpp(104,77): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(54,47): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Spring.cpp(105,77): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(54,33): warning C4244: 'argument': conversion from 'Eigen::Index' to 'const StorageIndex', possible loss of data
           with
           [
               StorageIndex=int
           ]
-D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Spring.cpp(131,17): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
      Creating library D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.lib and object D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.exp
   Generating code
-  9 of 5375 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
-    4 functions were new in current compilation
-    45 functions had inline decision re-evaluated but remain unchanged
+  3 of 5432 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    35 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   UnityDLL.vcxproj -> D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.dll

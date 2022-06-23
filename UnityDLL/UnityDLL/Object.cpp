@@ -113,7 +113,7 @@ Object::Object(Vector3f* vertices, int nVerts, int* _triangles, int nTriangles, 
 
 }
 
-Object::Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping, std::string optimizationSettings)
+Object::Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, int* triangles, int nTriangles, double dragCoefficient, float damping, std::string optimizationSettings, PhysicsManager* physicsManager)
 {
 	//this->density = density;
 	this->stiffness = stiffness;
@@ -121,6 +121,7 @@ Object::Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts
 
 	this->nVerts = nVerts;
 	this->nSprings = nSprings;
+	this->nFaces = nTriangles / 3;
 
 	vertexArray = new Vector3f[nVerts];
 	vertexArray2 = new Vector3f[nVerts];
@@ -129,7 +130,7 @@ Object::Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts
 	memcpy(vertexArray2, vertexArray, sizeof(Vector3f) * nVerts);
 
 	//Create nodes
-	_nodes =  std::vector<Node>(nVerts);
+	_nodes = std::vector<Node>(nVerts);
 	for (int i = 0; i < nVerts; i++) {
 
 		_nodes[i].meshId = i;
@@ -153,10 +154,21 @@ Object::Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts
 		_springs[i] = Spring(&_nodes[a], &_nodes[b]);
 		//springs[i].volume = springVolume[i];
 		_springs[i].SetStiffness(springStiffness[i]);
-		_springs[i].SetDamping(damping/2.0);
+		_springs[i].SetDamping(damping / 2.0);
 	}
 
+	_faces = std::vector<Face>(this->nFaces);
+	for (size_t i = 0; i < this->nFaces; i++)
+	{
+		int id = 3 * i;
+		_faces[i] = Face(&_nodes[triangles[id]], &_nodes[triangles[id + 1]], &_nodes[triangles[id + 2]], dragCoefficient);
+	}
+
+	this->dragCoefficient = dragCoefficient;
+
 	this->optimizationSettings = optimizationSettings;
+
+	this->physicsManager = physicsManager;
 
 }
 
@@ -234,6 +246,9 @@ void Object::GetForce(Eigen::VectorXd* force)
 
 	for (int i = 0; i < nSprings; ++i)
 		_springs[i].GetForce(force);
+
+	for (int i = 0; i < nFaces; ++i)
+		_faces[i].GetForce(force);
 }
 
 void Object::GetdFdp(Eigen::VectorXd* dforce)
@@ -250,18 +265,14 @@ void Object::GetdFdp(std::vector<T>* dforce, int springOffset)
 
 void Object::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel)
 {
-	//DebugHelper debug = DebugHelper();
-	//std::string a = std::to_string(nVertices) + " vertices";
-	//debug.RecordTime(a);
 	for (int i = 0; i < nVerts; ++i)
 		_nodes[i].GetForceJacobian(derivPos, derivVel);
 
-	//a = std::to_string(nSprings) + " springs";
-	//debug.RecordTime(a);
 	for (int i = 0; i < nSprings; ++i)
 		_springs[i].GetForceJacobian(derivPos, derivVel);
 
-	//debug.PrintTimes("forces");
+	for (int i = 0; i < nFaces; ++i)
+		_faces[i].GetForceJacobian(derivPos, derivVel);
 }
 
 void Object::GetFixedIndices(std::vector<bool>* fixedIndices)

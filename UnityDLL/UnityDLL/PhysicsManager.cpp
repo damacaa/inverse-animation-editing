@@ -24,13 +24,18 @@ PhysicsManager::PhysicsManager(std::string info)
 
 		int nVerts = obj["vertPos"].size();
 		int nSprings = obj["springs"].size() / 2;
+		int nTriangles = obj["triangles"].size();
 
 		Vector3f* vertPos = new Vector3f[nVerts];
 		bool* vertIsFixed = new bool[nVerts];
 		float* vertMass = new float[nVerts];
 
-		int* springs = new int[(size_t)(nSprings * 2)];
+		int* springs = new int[(size_t)(nSprings * 2.0)];
 		float* springStiffness = new float[nSprings];
+
+		int* triangles = new int[(size_t)obj["triangles"].size()];
+		double dragCoefficient = obj["dragCoefficient"];
+
 		float damping = obj["damping"];
 		std::string optimizationSettings = obj["optimizationSettings"];
 
@@ -55,7 +60,13 @@ PhysicsManager::PhysicsManager(std::string info)
 			springStiffness[j] = obj["springStiffness"][j];
 		}
 
-		int id = AddObject(vertPos, vertIsFixed, vertMass, nVerts, springs, springStiffness, nSprings, damping, optimizationSettings);
+		for (size_t j = 0; j < nTriangles; j++)
+		{
+			triangles[j] = (int)obj["triangles"][j];
+		}
+
+
+		int id = AddObject(vertPos, vertIsFixed, vertMass, nVerts, springs, springStiffness, nSprings, triangles, nTriangles, dragCoefficient, damping, optimizationSettings);
 		//Vector3f* vertPos, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping
 	}
 }
@@ -110,9 +121,14 @@ int PhysicsManager::AddObject(Vector3f* vertices, int nVertices, int* triangles,
 	return o->id;
 }
 
-int PhysicsManager::AddObject(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping, std::string optimizationSettings)
+int PhysicsManager::AddObject(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts,
+	int* springs, float* springStiffness, int nSprings, int* triangles, int nTriangles,
+	double dragCoefficient, float damping, std::string optimizationSettings)
 {
-	Object* o = new Object(vertPos, vertIsFixed, vertMass, nVerts, springs, springStiffness, nSprings, damping, optimizationSettings);
+	Object* o = new Object(vertPos, vertIsFixed, vertMass, nVerts,
+		springs, springStiffness, nSprings, triangles, nTriangles,
+		dragCoefficient, damping, optimizationSettings, this);
+
 	o->id = (int)SimObjects.size() + (int)PendingSimObjects.size();
 	SimObjects.push_back(o);
 
@@ -221,6 +237,8 @@ void PhysicsManager::UpdatePhysics(float time, float h)
 
 PhysicsManager::SimulationInfo PhysicsManager::StepSymplectic(float h, SimulationInfo simulationInfo)
 {
+	debugHelper.enabled = false;
+
 	debugHelper.RecordTime("1.Set up");
 	Eigen::VectorXd x = simulationInfo.x;
 	Eigen::VectorXd v = simulationInfo.v;
@@ -334,9 +352,7 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationI
 
 	//bi + 1 = M v0 + h Fi - h dF / dv vi - h2 dF / dx xi
 
-
-
-
+	
 	//FIXING
 	debugHelper.RecordTime("5.Fixing");
 

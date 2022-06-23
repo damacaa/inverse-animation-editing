@@ -99,6 +99,7 @@ MonoBehaviour:
   stiffness: 500
   density: 1
   damping: 0.5
+  dragCoefficient: 0
   useBendingSprings: 1
   parametrize: 1
   massOptimizationMode: 0
@@ -109,6 +110,8 @@ MonoBehaviour:
     vertMass: []
     springs: 
     springStiffness: []
+    triangles: 
+    dragCoefficient: 0
     damping: 0
     optimizationSettings: 
   debugVerts:

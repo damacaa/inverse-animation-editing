@@ -63,7 +63,7 @@ public:
 
 	int AddObject(Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass);
 
-	int AddObject(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping, std::string optimizationSettings);
+	int AddObject(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, int* triangles, int nTriangles, double dragCoefficient, float damping, std::string optimizationSettings);
 
 	void AddFixer(Vector3f position, Vector3f scale);
 
