@@ -20,6 +20,9 @@ public class SimulationObject : MonoBehaviour
     [SerializeField]
     public float damping = 1.0f;
     [SerializeField]
+    public float dragCoefficient = 1.0f;
+
+    [SerializeField]
     bool useBendingSprings = true;
     [SerializeField]
     bool parametrize = true;
@@ -182,6 +185,7 @@ public class SimulationObject : MonoBehaviour
 
         data.triangles = mesh.triangles;
         data.damping = damping;
+        data.dragCoefficient = dragCoefficient;
         data.optimizationSettings = optimizationSettings;
 
         return data;
@@ -270,6 +274,7 @@ public class SimulationObject : MonoBehaviour
 
         data.triangles = mesh.triangles;
         data.damping = damping;
+        data.dragCoefficient = dragCoefficient;
         data.optimizationSettings = optimizationSettings;
 
         return data;
@@ -410,6 +415,7 @@ public class SimulationObjectData
     public int[] triangles;
     //public float[] springVolume;
     //public float density;
+    public float dragCoefficient;
     public float damping;
     public string optimizationSettings;
 }

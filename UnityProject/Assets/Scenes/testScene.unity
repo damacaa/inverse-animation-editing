@@ -462,6 +462,7 @@ MonoBehaviour:
   stiffness: 100
   density: 1
   damping: 1
+  dragCoefficient: 1
   useBendingSprings: 0
   parametrize: 1
   massOptimizationMode: 0
@@ -472,6 +473,8 @@ MonoBehaviour:
     vertMass: []
     springs: 
     springStiffness: []
+    triangles: 
+    dragCoefficient: 0
     damping: 0
     optimizationSettings: 
   debugVerts:
@@ -587,16 +590,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e574c45ae3e46f488cf9b8e9f126c57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mode: 1
+  mode: 2
   integrationMethod: 2
-  timeStep: 0.02
+  timeStep: 0.01
   tolerance: 0.001
   iterations: 100
-  useFile: 1
+  useFile: 0
   sceneInfo: {fileID: 4900000, guid: f4f5ba4ac5d2776438018ee0c8b1d932, type: 3}
   simulationObjects:
   - {fileID: 1954706708}
-  - {fileID: 1581470445}
 --- !u!23 &568410414
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -893,7 +895,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &821428697
 Transform:
   m_ObjectHideFlags: 0
@@ -992,7 +994,7 @@ PrefabInstance:
     - target: {fileID: 3435907659964988901, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3435907659964988926, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
         type: 3}
@@ -1212,6 +1214,7 @@ MonoBehaviour:
   stiffness: 1000
   density: 1
   damping: 1
+  dragCoefficient: 1
   useBendingSprings: 1
   parametrize: 1
   massOptimizationMode: 0
@@ -1222,6 +1225,8 @@ MonoBehaviour:
     vertMass: []
     springs: 
     springStiffness: []
+    triangles: 
+    dragCoefficient: 0
     damping: 0
     optimizationSettings: 
   debugVerts:
@@ -1551,7 +1556,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!65 &1330907955
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1734,18 +1739,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!114 &1581470445 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3435907659964988926, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
-    type: 3}
-  m_PrefabInstance: {fileID: 934463274}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fffe23a3bb235ee4bbb3b8ea716969be, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1909640531
 GameObject:
   m_ObjectHideFlags: 0
@@ -1941,18 +1934,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3435907659964988926, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
         type: 3}
-      propertyPath: stiffness
-      value: 500
-      objectReference: {fileID: 0}
-    - target: {fileID: 3435907659964988926, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
-        type: 3}
       propertyPath: massOptimizationMode
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 3435907659964988926, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
+    - target: {fileID: 3435907659964988927, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
         type: 3}
-      propertyPath: stiffnessOptimizationMode
-      value: 0
+      propertyPath: divisions
+      value: 10
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 65d21f6d7128b144cbe8c5d65bc25ad6, type: 3}
