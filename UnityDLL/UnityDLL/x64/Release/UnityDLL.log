@@ -89,10 +89,44 @@ D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Face.cpp(54,33): warning C4244
           [
               StorageIndex=int
           ]
+  Object.cpp
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Object.cpp(73,39): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Object.cpp(74,37): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Object.cpp(83,46): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Object.cpp(157,34): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Object.cpp(163,17): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Object.cpp(332,28): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\Object.cpp(348,34): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+  PhysicsManager.cpp
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(25,37): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(26,43): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(27,43): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(276,28): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(497,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(810,29): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(812,65): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(813,65): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(814,65): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
      Creating library D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.lib and object D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.exp
   Generating code
-  3 of 5432 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+  10 of 5505 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    35 functions had inline decision re-evaluated but remain unchanged
+    30 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   UnityDLL.vcxproj -> D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.dll

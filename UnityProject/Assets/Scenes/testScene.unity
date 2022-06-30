@@ -681,7 +681,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &699657456
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1556,7 +1556,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1330907955
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1934,7 +1934,17 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3435907659964988926, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
         type: 3}
+      propertyPath: dragCoefficient
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435907659964988926, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
+        type: 3}
       propertyPath: massOptimizationMode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435907659964988926, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
+        type: 3}
+      propertyPath: stiffnessOptimizationMode
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3435907659964988927, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
