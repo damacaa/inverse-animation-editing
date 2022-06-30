@@ -21,7 +21,7 @@ void Face::GetForce(Eigen::VectorXd* force)
 	normal = side1.cross(side2);
 	area = 0.5 * normal.norm();
 
-	Eigen::Vector3d windForce = dragCoefficient * area * normal.dot(wind - avgVel) * normal;
+	Eigen::Vector3d windForce = dragCoefficient * area * normal.dot(wind - avgVel) * normal / 3.0;
 
 	(*force)[A->index] += windForce.x();
 	(*force)[A->index + 1] += windForce.y();
@@ -38,7 +38,7 @@ void Face::GetForce(Eigen::VectorXd* force)
 
 void Face::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel)
 {
-	Eigen::Vector3d windForce = dragCoefficient * area * normal;
+	Eigen::Vector3d windForce = dragCoefficient * area * normal / 3.0;
 	//double windForce = dragCoefficient * area;
 
 	derivVel->push_back(T(A->index, A->index, windForce(0)));

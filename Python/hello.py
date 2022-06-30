@@ -172,7 +172,8 @@ def Minimize(method="L-BFGS-B", costFunction=G, jacobian=dGdp, callback=None):
     p0 = np.full(desiredParameter.size, 0.1)  # initial parameter value
     args = (iter, h, m_numDoFs, initialState, targets, settings)  # extra info
     bnds = [(0.0001, 10000)] * p0.size  # parameter bounds
-    options = {"maxiter": 10000, "maxfun": 15000}
+    options = {"maxiter": 10000, "maxfun": 15000,
+               "ftol": 1e-06, "gtol": 1e-06}
 
     # G(desiredParameter, iter, h, m_numDoFs, initialState, targets)
     # dGdp(desiredParameter, iter, h, m_numDoFs, initialState, targets)

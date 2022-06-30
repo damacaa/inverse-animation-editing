@@ -299,108 +299,122 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationI
 	debugHelper.RecordTime("1.Set up");
 	Eigen::VectorXd x = simulationInfo.x;
 	Eigen::VectorXd v = simulationInfo.v;
-	Eigen::VectorXd f = Eigen::VectorXd::Constant(m_numDoFs, 0.0);//Forces
 
-	SpMat dFdx(m_numDoFs, m_numDoFs);
-	SpMat dFdv(m_numDoFs, m_numDoFs);
-	std::vector<T> derivPos = std::vector<T>();
-	std::vector<T> derivVel = std::vector<T>();
-
-	SpMat M(m_numDoFs, m_numDoFs);
-	std::vector<T> masses = std::vector<T>();
-
-	//SpMat Mi(m_numDoFs, m_numDoFs);
-	//std::vector<T> massesi = std::vector<T>();
-
-	std::vector<bool> fixedIndices(m_numDoFs);
-
-	for (int i = 0; i < SimObjects.size(); i++)
+	for (int iter = 0; iter < 10; iter++)
 	{
-		SimObjects[i]->SetPosition(&x);
-		SimObjects[i]->SetVelocity(&v);
 
-		SimObjects[i]->GetMass(&masses);
-		//SimObjects[i]->GetMassInverse(&massesi);
-		SimObjects[i]->GetFixedIndices(&fixedIndices);
-	}
+		Eigen::VectorXd f = Eigen::VectorXd::Constant(m_numDoFs, 0.0);//Forces
 
-	//FORCES
-	debugHelper.RecordTime("2.Calculating forces");
-	for (int i = 0; i < SimObjects.size(); i++)
-	{
-		SimObjects[i]->GetForce(&f);
-		SimObjects[i]->GetForceJacobian(&derivPos, &derivVel);
-	}
+		SpMat dFdx(m_numDoFs, m_numDoFs);
+		SpMat dFdv(m_numDoFs, m_numDoFs);
+		std::vector<T> derivPos = std::vector<T>();
+		std::vector<T> derivVel = std::vector<T>();
 
-	debugHelper.RecordTime("3.Building matrices from triples");
-	//For future reference maybe
-	//https://stackoverflow.com/questions/45301305/set-sparsity-pattern-of-eigensparsematrix-without-memory-overhead
-	dFdx.setFromTriplets(derivPos.begin(), derivPos.end(), [](const double& a, const double& b) { return a + b; });
-	dFdv.setFromTriplets(derivVel.begin(), derivVel.end(), [](const double& a, const double& b) { return a + b; });
-	M.setFromTriplets(masses.begin(), masses.end());
-	//Mi.setFromTriplets(massesi.begin(), massesi.end());
+		SpMat M(m_numDoFs, m_numDoFs);
+		std::vector<T> masses = std::vector<T>();
 
-	//MATRIX OPERATIONS
-	debugHelper.RecordTime("4.Calculating A and b");
+		//SpMat Mi(m_numDoFs, m_numDoFs);
+		//std::vector<T> massesi = std::vector<T>();
 
-	SpMat firstPart = M + (-h) * dFdv;
+		std::vector<bool> fixedIndices(m_numDoFs);
 
-	SpMat A = firstPart + (-h * h) * dFdx;
-	Eigen::VectorXd b = firstPart * v + h * f;
 
-	//b1 = (M - h dF / dv) v0 + h F0
+		for (int i = 0; i < SimObjects.size(); i++)
+		{
+			SimObjects[i]->SetPosition(&x);
+			SimObjects[i]->SetVelocity(&v);
 
-	//bi + 1 = M v0 + h Fi - h dF / dv vi - h2 dF / dx xi
-
-	
-	//FIXING
-	debugHelper.RecordTime("5.Fixing");
-
-	//OLD FIXING
-	/*std::vector<T> tripletsA;
-	for (int i = 0; i < A.outerSize(); i++)
-		for (typename Eigen::SparseMatrix<double>::InnerIterator it(A, i); it; ++it) {
-			if (!fixedIndices[it.row()] && !fixedIndices[it.col()])
-				tripletsA.push_back(T(it.row(), it.col(), it.value())); //tripletsA.emplace_back(it.row(), it.col(), it.value());
-			else if (it.row() == it.col())
-				tripletsA.push_back(T(it.row(), it.col(), 1));//tripletsA.emplace_back(it.row(), it.col(), 1);
+			SimObjects[i]->GetMass(&masses);
+			//SimObjects[i]->GetMassInverse(&massesi);
+			SimObjects[i]->GetFixedIndices(&fixedIndices);
 		}
-	A.setFromTriplets(tripletsA.begin(), tripletsA.end());*/
 
-	for (int i = 0; i < A.outerSize(); i++) {
-		for (SpMat::InnerIterator j(A, i); j; ++j) {
-			if (fixedIndices[i] || fixedIndices[j.row()])
-				if (i == j.row())
-					j.valueRef() = 1;
-				else
-					j.valueRef() = 0;
+		//FORCES
+		debugHelper.RecordTime("2.Calculating forces");
+		for (int i = 0; i < SimObjects.size(); i++)
+		{
+			SimObjects[i]->GetForce(&f);
+			SimObjects[i]->GetForceJacobian(&derivPos, &derivVel);
 		}
-	}
 
-	for (size_t i = 0; i < m_numDoFs; i++)
-	{
-		if (fixedIndices[i]) {
-			b[i] = 0;
+		debugHelper.RecordTime("3.Building matrices from triples");
+		//For future reference maybe
+		//https://stackoverflow.com/questions/45301305/set-sparsity-pattern-of-eigensparsematrix-without-memory-overhead
+		dFdx.setFromTriplets(derivPos.begin(), derivPos.end(), [](const double& a, const double& b) { return a + b; });
+		dFdv.setFromTriplets(derivVel.begin(), derivVel.end(), [](const double& a, const double& b) { return a + b; });
+		M.setFromTriplets(masses.begin(), masses.end());
+		//Mi.setFromTriplets(massesi.begin(), massesi.end());
+
+		//MATRIX OPERATIONS
+		debugHelper.RecordTime("4.Calculating A and b");
+
+		SpMat firstPart = M + (-h) * dFdv;
+
+		SpMat A = firstPart + (-h * h) * dFdx;
+		Eigen::VectorXd b;
+
+		//b1 = (M - h dF / dv) v0 + h F0
+
+		//bi + 1 = M v0 + h Fi - h dF / dv vi - h2 dF / dx xi
+
+		if (iter == 0) {
+			b = firstPart * v + h * f;
 		}
+		else {
+			b = (M * simulationInfo.v) + (h * f) - (h * dFdv * v) - (h * h * dFdx * x);
+		}
+
+		//FIXING
+		debugHelper.RecordTime("5.Fixing");
+
+		//OLD FIXING
+		/*std::vector<T> tripletsA;
+		for (int i = 0; i < A.outerSize(); i++)
+			for (typename Eigen::SparseMatrix<double>::InnerIterator it(A, i); it; ++it) {
+				if (!fixedIndices[it.row()] && !fixedIndices[it.col()])
+					tripletsA.push_back(T(it.row(), it.col(), it.value())); //tripletsA.emplace_back(it.row(), it.col(), it.value());
+				else if (it.row() == it.col())
+					tripletsA.push_back(T(it.row(), it.col(), 1));//tripletsA.emplace_back(it.row(), it.col(), 1);
+			}
+		A.setFromTriplets(tripletsA.begin(), tripletsA.end());*/
+
+		for (int i = 0; i < A.outerSize(); i++) {
+			for (SpMat::InnerIterator j(A, i); j; ++j) {
+				if (fixedIndices[i] || fixedIndices[j.row()])
+					if (i == j.row())
+						j.valueRef() = 1;
+					else
+						j.valueRef() = 0;
+			}
+		}
+
+		for (size_t i = 0; i < m_numDoFs; i++)
+		{
+			if (fixedIndices[i]) {
+				b[i] = 0;
+			}
+		}
+
+		//SOLVING
+		debugHelper.RecordTime("6.Solving");
+		//A.Solve(b, v);
+		//Eigen::SimplicialCholesky<SpMat> chol(A);
+		//v = chol.solve(b);
+
+
+		Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::Lower | Eigen::Upper> cg;//UnitLower UnitUpper
+		cg.setTolerance(tolerance);
+		cg.compute(A);
+
+
+		v = cg.solveWithGuess(b, v);
+		//xi+1 = x0 + h vi+1
+		x = simulationInfo.x + h * v;
+
 	}
-
-	//SOLVING
-	debugHelper.RecordTime("6.Solving");
-	//A.Solve(b, v);
-	//Eigen::SimplicialCholesky<SpMat> chol(A);
-	//v = chol.solve(b);
-
-
-	Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::Lower | Eigen::Upper> cg;//UnitLower UnitUpper
-	cg.setTolerance(tolerance);
-	cg.compute(A);
-
 	//v = v + h * (f * Mi);
-	v = cg.solveWithGuess(b, v);
+	//x = simulationInfo.x + h * v;
 
-	x += h * v;
-
-	//xi+1 = x0 + h vi+1
 
 	debugHelper.Wait();
 
