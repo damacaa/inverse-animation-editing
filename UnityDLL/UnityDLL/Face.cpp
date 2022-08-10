@@ -21,7 +21,7 @@ void Face::GetForce(Eigen::VectorXd* force)
 	normal = side1.cross(side2);
 	area = 0.5 * normal.norm();
 
-	Eigen::Vector3d windForce = dragCoefficient * area * normal.dot(wind - avgVel) * normal / 3.0;
+	Eigen::Vector3d windForce = dragCoefficient * area  * (normal * normal.transpose()) * (wind - avgVel) / 3.0;
 
 	(*force)[A->index] += windForce.x();
 	(*force)[A->index + 1] += windForce.y();
@@ -38,18 +38,17 @@ void Face::GetForce(Eigen::VectorXd* force)
 
 void Face::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel)
 {
-	Eigen::Vector3d windForce = dragCoefficient * area * normal / 3.0;
+	//Eigen::Vector3d windForce = dragCoefficient * area * normal / 3.0;
+	Eigen::Matrix3d dfwindForce = -(1.0 / 3.0) * dragCoefficient * area * normal * normal.transpose();
 	//double windForce = dragCoefficient * area;
 
-	derivVel->push_back(T(A->index, A->index, windForce(0)));
-	derivVel->push_back(T(A->index + 1, A->index + 1, windForce(1)));
-	derivVel->push_back(T(A->index + 2, A->index + 2, windForce(2)));
-
-	derivVel->push_back(T(B->index, B->index, windForce(0)));
-	derivVel->push_back(T(B->index + 1, B->index + 1, windForce(1)));
-	derivVel->push_back(T(B->index + 2, B->index + 2, windForce(2)));
-
-	derivVel->push_back(T(C->index, C->index, windForce(0)));
-	derivVel->push_back(T(C->index + 1, C->index + 1, windForce(1)));
-	derivVel->push_back(T(C->index + 2, C->index + 2, windForce(2)));
+	for (size_t i = 0; i < 3; i++)
+	{
+		for (size_t j = 0; j < 3; j++)
+		{
+			derivVel->push_back(T(A->index + i, A->index + j, dfwindForce(i, j)));
+			derivVel->push_back(T(B->index + i, B->index + j, dfwindForce(i, j)));
+			derivVel->push_back(T(C->index + i, C->index + j, dfwindForce(i, j)));
+		}
+	}
 }
