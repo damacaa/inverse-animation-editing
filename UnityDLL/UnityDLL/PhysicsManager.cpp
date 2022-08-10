@@ -113,6 +113,7 @@ PhysicsManager::~PhysicsManager()
 
 int PhysicsManager::AddObject(Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass)
 {
+	//Obsolete
 	Object* o = new Object(vertices, nVertices, triangles, nTriangles, stiffness, mass);
 	o->id = (int)SimObjects.size() + (int)PendingSimObjects.size();
 	PendingSimObjects.push_back(o);
@@ -125,6 +126,8 @@ int PhysicsManager::AddObject(Vector3f* vertPos, bool* vertIsFixed, float* vertM
 	int* springs, float* springStiffness, int nSprings, int* triangles, int nTriangles,
 	double dragCoefficient, float damping, std::string optimizationSettings)
 {
+	std::lock_guard<std::mutex> lock(vertexMutex);
+
 	Object* o = new Object(vertPos, vertIsFixed, vertMass, nVerts,
 		springs, springStiffness, nSprings, triangles, nTriangles,
 		dragCoefficient, damping, optimizationSettings, this);
@@ -132,22 +135,24 @@ int PhysicsManager::AddObject(Vector3f* vertPos, bool* vertIsFixed, float* vertM
 	o->id = (int)SimObjects.size() + (int)PendingSimObjects.size();
 	SimObjects.push_back(o);
 
-	//debugHelper.PrintValue(s, "objectInit");
-
 	needsRestart = true;
 	return o->id;
 }
 
 void PhysicsManager::AddFixer(Vector3f position, Vector3f scale)
 {
+	std::lock_guard<std::mutex> lock(vertexMutex);
+
 	Fixer* f = new Fixer(position, scale);
-	PendingFixers.push_back(f);
+	Fixers.push_back(f);
 
 	needsRestart = true;
 }
 
 void PhysicsManager::Start()
 {
+	std::lock_guard<std::mutex> lock(vertexMutex);
+
 	for (size_t i = 0; i < PendingSimObjects.size(); i++)
 	{
 		SimObjects.push_back(PendingSimObjects[i]);
@@ -230,9 +235,17 @@ void PhysicsManager::UpdatePhysics(float time, float h)
 		break;
 	}
 
-	UpdateObjects();
+	std::lock_guard<std::mutex> lock(vertexMutex);
+
+	for (int i = 0; i < SimObjects.size(); i++)
+	{
+		SimObjects[i]->SetPosition(&newSimulationInfo.x);
+		SimObjects[i]->UpdateVertices();
+		SimObjects[i]->SetVelocity(&newSimulationInfo.v);
+	}
 
 	info = newSimulationInfo;
+	Updated = true;
 }
 
 PhysicsManager::SimulationInfo PhysicsManager::StepSymplectic(float h, SimulationInfo simulationInfo)
@@ -425,15 +438,6 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationI
 	return newData;
 }
 
-void PhysicsManager::UpdateObjects()
-{
-	for (int i = 0; i < SimObjects.size(); i++)
-	{
-		SimObjects[i]->SetPosition(&info.x);
-		SimObjects[i]->SetVelocity(&info.v);
-	}
-}
-
 float PhysicsManager::Estimate(float parameter, int iter, float h, Eigen::VectorXd* _dGdp)
 {
 	//Simulation to define target
@@ -543,17 +547,11 @@ float PhysicsManager::Estimate(float parameter, int iter, float h, Eigen::Vector
 	return g;
 }
 
-void PhysicsManager::UpdateVertices() {
-	for (size_t i = 0; i < SimObjects.size(); i++)
-	{
-		SimObjects[i]->UpdateVertices();
-	}
-
-	Updated = true;
-}
 
 Vector3f* PhysicsManager::GetVertices(int* count)
 {
+	std::lock_guard<std::mutex> lock(vertexMutex);
+
 	if (!Updated) {
 		*count = 0;
 		return new Vector3f;
@@ -585,6 +583,8 @@ Vector3f* PhysicsManager::GetVertices(int* count)
 
 Vector3f* PhysicsManager::GetVertices(int id, int* count)
 {
+	std::lock_guard<std::mutex> lock(vertexMutex);
+
 	if (id >= SimObjects.size() || !SimObjects[id]->updated) {
 		*count = 0;
 		return new Vector3f;
@@ -665,12 +665,12 @@ PhysicsManager::SimulationInfo PhysicsManager::GetInitialState()
 		SimObjects[i]->GetPosition(&x);
 		SimObjects[i]->GetVelocity(&v);
 	}
+
 	return SimulationInfo(x, v);
 }
 
 PhysicsManager::SimulationInfo PhysicsManager::Forward(Eigen::VectorXd x, Eigen::VectorXd v, float h)
 {
-	//Updates springs?
 	return StepImplicit(h, SimulationInfo(x, v));
 }
 

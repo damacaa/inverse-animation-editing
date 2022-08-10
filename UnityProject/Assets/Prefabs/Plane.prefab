@@ -96,10 +96,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   id: -1
-  stiffness: 500
-  density: 1
-  damping: 0.5
-  dragCoefficient: 0
+  stiffness: 100
+  density: 0.1
+  damping: 0.05
+  dragCoefficient: 5
   useBendingSprings: 1
   parametrize: 1
   massOptimizationMode: 0
@@ -249,4 +249,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9331257e56f254d45807ab7a74e8ccc0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  divisions: 5
+  divisions: 10
