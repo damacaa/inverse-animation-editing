@@ -592,7 +592,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mode: 2
   integrationMethod: 2
-  timeStep: 0.01
+  timeStep: 0.1
   tolerance: 0.001
   iterations: 100
   useFile: 0
@@ -1934,8 +1934,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3435907659964988926, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
         type: 3}
+      propertyPath: density
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435907659964988926, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
+        type: 3}
       propertyPath: dragCoefficient
-      value: 50
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3435907659964988926, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
         type: 3}
@@ -1950,7 +1955,7 @@ PrefabInstance:
     - target: {fileID: 3435907659964988927, guid: 65d21f6d7128b144cbe8c5d65bc25ad6,
         type: 3}
       propertyPath: divisions
-      value: 10
+      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 65d21f6d7128b144cbe8c5d65bc25ad6, type: 3}
