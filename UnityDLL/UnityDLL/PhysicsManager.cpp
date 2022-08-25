@@ -307,13 +307,13 @@ PhysicsManager::SimulationInfo PhysicsManager::StepSymplectic(float h, Simulatio
 	return newSimulationInfo;
 }
 
-PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationInfo simulationInfo)
+PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationInfo simulationInfo, int iterations)
 {
 	debugHelper.RecordTime("1.Set up");
 	Eigen::VectorXd x = simulationInfo.x;
 	Eigen::VectorXd v = simulationInfo.v;
 
-	for (int iter = 0; iter < 10; iter++)
+	for (int iter = 0; iter < iterations; iter++)
 	{
 
 		Eigen::VectorXd f = Eigen::VectorXd::Constant(m_numDoFs, 0.0);//Forces
@@ -671,7 +671,7 @@ PhysicsManager::SimulationInfo PhysicsManager::GetInitialState()
 
 PhysicsManager::SimulationInfo PhysicsManager::Forward(Eigen::VectorXd x, Eigen::VectorXd v, float h)
 {
-	return StepImplicit(h, SimulationInfo(x, v));
+	return StepImplicit(h, SimulationInfo(x, v), 10);
 }
 
 PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h, std::string settings)

@@ -1,9 +1,35 @@
-﻿  dllmain.cpp
+﻿  PhysicsManager.cpp
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(25,37): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(26,43): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(27,43): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(289,28): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(501,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(810,29): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(812,65): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(813,65): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(814,65): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+  dllmain.cpp
 D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\dllmain.cpp(89,18): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
      Creating library D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.lib and object D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.exp
   Generating code
-  5 of 5793 functions (<0.1%) were compiled, the rest were copied from previous compilation.
-    2 functions were new in current compilation
-    36 functions had inline decision re-evaluated but remain unchanged
+  15 of 5793 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
+    9 functions were new in current compilation
+    70 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   UnityDLL.vcxproj -> D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.dll

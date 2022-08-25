@@ -78,7 +78,7 @@ public:
 
 	SimulationInfo StepSymplectic(float h, SimulationInfo simulationInfo);
 
-	SimulationInfo StepImplicit(float h, SimulationInfo simulationInfo);
+	SimulationInfo StepImplicit(float h, SimulationInfo simulationInfo, int iterations = 1);
 
 	Vector3f* GetVertices(int* count);
 
