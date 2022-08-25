@@ -43,6 +43,9 @@ private:
 	Vector3f Gravity;
 	PhysicsManager::Integration integrationMethod = PhysicsManager::Integration::Implicit;
 
+	std::mutex vertexMutex;
+	std::mutex vertexMutex2;
+
 	std::vector<Object*> SimObjects;
 	std::vector<Object*> PendingSimObjects;
 	std::vector<Fixer*> Fixers;
@@ -71,15 +74,11 @@ public:
 
 	void UpdatePhysics(float time, float h);
 
-	void UpdateObjects();
-
 	float Estimate(float parameter, int iter, float h, Eigen::VectorXd* _dGdp);
 
 	SimulationInfo StepSymplectic(float h, SimulationInfo simulationInfo);
 
 	SimulationInfo StepImplicit(float h, SimulationInfo simulationInfo);
-
-	void UpdateVertices();
 
 	Vector3f* GetVertices(int* count);
 

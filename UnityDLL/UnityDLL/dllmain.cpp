@@ -24,8 +24,7 @@ float delta = 0.01f;
 MyCounter* counter = 0;
 
 int nUpdates = 0;
-std::mutex vertexMutex;
-std::mutex vertexMutex2;
+std::mutex physManMutex;
 
 MyCounter* threadCounter = 0;
 std::thread myThread;
@@ -63,13 +62,10 @@ extern "C" {
 		updating = true;
 		simulationTime += delta;
 
-
 		//!!!!
 		/*This may take a long time, depending on your simulation.*/
-		std::lock_guard<std::mutex> lock(vertexMutex); /*Locks mutex and releases mutex once the guard is (implicitly) destroyed*/
-		physicsManager->UpdatePhysics(simulationTime, delta);//Simulation
-		std::lock_guard<std::mutex> lock2(vertexMutex2);
-		physicsManager->UpdateVertices();
+		if (physicsManager)
+			physicsManager->UpdatePhysics(simulationTime, delta);
 
 		nUpdates++;
 		updating = false;
@@ -148,14 +144,13 @@ extern "C" {
 
 	__declspec(dllexport) int AddObject(Vector3f* vertPos, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping)
 	{
-		std::lock_guard<std::mutex> lock(vertexMutex);
 		//return physicsManager->AddObject(vertPos, new bool[nVerts], vertMass, nVerts, springs, springStiffness, nSprings, damping);
 		return -1;
 	}
 
 	__declspec(dllexport) void AddFixer(Vector3f position, Vector3f scale) {
-		std::lock_guard<std::mutex> lock(vertexMutex);
-		physicsManager->AddFixer(position, scale);
+		if (physicsManager)
+			physicsManager->AddFixer(position, scale);
 	}
 
 	__declspec(dllexport) void Destroy() {
@@ -174,8 +169,7 @@ extern "C" {
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-			std::lock_guard<std::mutex> lock2(vertexMutex2);
-			std::lock_guard<std::mutex> lock(vertexMutex);
+			std::lock_guard<std::mutex> lock(physManMutex);
 			delete counter;
 			delete threadCounter;
 			delete physicsManager;
@@ -217,7 +211,6 @@ extern "C" {
 		/*Depending on how Update is being executed, vertexArray might being updated at the same time. To prevent race conditions, we have to wait
 		for the lock of vertexArray and copy all data to a second array. Unity/C# will process the data in the second array. In the meantime
 		the data in the first array can be updated.*/
-		std::lock_guard<std::mutex> lock(vertexMutex2);
 
 
 		if (!running) {
