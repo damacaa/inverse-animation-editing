@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Node.h"
+#include "Collider.h"
 
 void Node::Initialize(int ind)
 {
@@ -44,7 +45,7 @@ void Node::GetMassInv(std::vector<T>* massTripletVector)
 	(*massTripletVector).push_back(T(index + 2, index + 2, 1.0 / mass));
 }
 
-void Node::GetForce(Eigen::VectorXd* force)
+void Node::GetForce(Eigen::VectorXd* force, std::vector<Collider*> colliders)
 {
 	Eigen::Vector3d forceV = Eigen::Vector3d(0, -mass * 9.81, 0);
 	forceV += -damping * vel;
@@ -52,10 +53,31 @@ void Node::GetForce(Eigen::VectorXd* force)
 	(*force)[index] = forceV.x();
 	(*force)[index + 1] = forceV.y();
 	(*force)[index + 2] = forceV.z();
+
+	for (Collider* collider : colliders)
+	{
+		Eigen::Vector3d f = collider->GetForce(position);
+		(*force)[index] += f.x();
+		(*force)[index + 1] += f.y();
+		(*force)[index + 2] += f.z();
+	}
 }
 
-void Node::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel)
+void Node::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel, std::vector<Collider*> colliders)
 {
+	//Needs fix!
+	for (Collider* collider : colliders)
+	{
+		Eigen::Matrix3d dfdx = collider->GetJacobian(position);
+
+		for (size_t i = 0; i < 3; i++)
+		{
+			for (size_t j = 0; j < 3; j++)
+			{
+				derivPos->push_back(T(index + i, index + j, dfdx(i, j)));
+			}
+		}
+	}
 
 	derivVel->push_back(T(index, index, -damping));
 	derivVel->push_back(T(index + 1, index + 1, -damping));

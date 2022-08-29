@@ -54,6 +54,7 @@ public class SimulationManager : MonoBehaviour
 
     [Header("Scene")]
     public List<SimulationObject> simulationObjects = new List<SimulationObject>();
+    public List<MSSCollider> colliders = new List<MSSCollider>();
 
     ICPPWrapper cpp;
     private void Awake()
@@ -66,6 +67,7 @@ public class SimulationManager : MonoBehaviour
     {
         if (sceneInfo == null || !useFile)
         {
+            //Collect information from scene
             SimulationObjectData[] objects = new SimulationObjectData[simulationObjects.Count];
             for (int i = 0; i < objects.Length; i++)
             {
@@ -73,11 +75,20 @@ public class SimulationManager : MonoBehaviour
                 simulationObjects[i].id = i;
             }
 
-            string json = SceneToJson(objects);
+            ColliderData[] colliders_ = new ColliderData[colliders.Count];
+            for (int i = 0; i < colliders_.Length; i++)
+            {
+                colliders_[i] = colliders[i].Data;
+                colliders[i].id = i;
+            }
+
+            string json = SceneToJson(objects, colliders_);
+            //File.WriteAllText(Application.dataPath+"\\scene.txt", json);
             cpp = new ICPPWrapper(json);
         }
         else
         {
+            //Read scene file
             SimulationInfo si = JsonUtility.FromJson<SimulationInfo>(sceneInfo.text);
 
             for (int i = 0; i < simulationObjects.Count; i++)
@@ -106,6 +117,20 @@ public class SimulationManager : MonoBehaviour
         }
     }
 
+    private string SceneToJson(SimulationObjectData[] objects, ColliderData[] colliders_)
+    {
+        SimulationInfo info = new SimulationInfo();
+        info.delta = timeStep;
+        info.integrationMethod = (int)integrationMethod;
+        info.tolerance = tolerance;
+        info.optimizationIterations = iterations;
+
+        info.objects = objects;
+        info.colliders = colliders_;
+
+        return JsonUtility.ToJson(info);
+    }
+
     public string SceneToJson(SimulationObjectData[] objects)
     {
         SimulationInfo info = new SimulationInfo();
@@ -114,12 +139,7 @@ public class SimulationManager : MonoBehaviour
         info.tolerance = tolerance;
         info.optimizationIterations = iterations;
 
-        info.objects = new SimulationObjectData[objects.Length];
-
-        for (int i = 0; i < objects.Length; i++)
-        {
-            info.objects[i] = objects[i];
-        }
+        info.objects = objects;
 
         return JsonUtility.ToJson(info);
     }
@@ -134,7 +154,14 @@ public class SimulationManager : MonoBehaviour
             objects[i] = manager.simulationObjects[i].GetDataInEditor();
         }
 
-        string json = manager.SceneToJson(objects);
+        ColliderData[] colliders_ = new ColliderData[manager.colliders.Count];
+        for (int i = 0; i < colliders_.Length; i++)
+        {
+            colliders_[i] = manager.colliders[i].Data;
+            manager.colliders[i].id = i;
+        }
+
+        string json = manager.SceneToJson(objects, colliders_);
         return json;
     }
 
@@ -210,6 +237,7 @@ public class SimulationManager : MonoBehaviour
         public float tolerance;
         public int optimizationIterations;
         public SimulationObjectData[] objects;
+        public ColliderData[] colliders;
     }
 }
 

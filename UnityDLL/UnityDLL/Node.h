@@ -2,6 +2,7 @@
 #include "Types.h"
 #include <math.h>   
 
+class Collider;
 class Node
 {
 private:
@@ -20,7 +21,7 @@ public:
 	double thickness = 0;
 	double damping = 1;
 	double gravity = -9.81f;
-	
+
 	double mass = 1;
 	double volume = 1;
 	double density = 1;
@@ -41,9 +42,9 @@ public:
 
 	void GetMassInv(std::vector<T>* massTripletVector);
 
-	void GetForce(Eigen::VectorXd* force);
+	void GetForce(Eigen::VectorXd* force, std::vector<Collider*> colliders);
 
-	void GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel);
+	void GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel, std::vector<Collider*> colliders);
 
 	void SetMass(double _density);
 

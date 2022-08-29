@@ -5,7 +5,9 @@
 #include "Face.h"
 #include "Fixer.h"
 
+
 class PhysicsManager;
+class Collider;
 class Object
 {
 private:
@@ -59,13 +61,13 @@ public:
 
 	void SetVelocity(Eigen::VectorXd* velocity);
 
-	void GetForce(Eigen::VectorXd* force);
+	void GetForce(Eigen::VectorXd* force, std::vector<Collider*> colliders);
 
 	void GetdFdp(Eigen::VectorXd* dforce);
 
 	void GetdFdp(std::vector<T>* dforce, int springOffset);
 
-	void GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel);
+	void GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel, std::vector<Collider*> colliders);
 
 	void GetMass(std::vector<T>* mass);
 
