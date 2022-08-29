@@ -10,7 +10,7 @@ public:
 	Node* C;
 
 	double dragCoefficient;
-	Eigen::Vector3d wind = Eigen::Vector3d(1, 0, 1);
+	Eigen::Vector3d wind = Eigen::Vector3d(1, 0, 0);
 	Eigen::Vector3d normal = Eigen::Vector3d(0, 1, 0);;
 	double area = 0;
 

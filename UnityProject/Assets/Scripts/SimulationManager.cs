@@ -83,6 +83,7 @@ public class SimulationManager : MonoBehaviour
             }
 
             string json = SceneToJson(objects, colliders_);
+            //File.WriteAllText(Application.dataPath+"\\scene.txt", json);
             cpp = new ICPPWrapper(json);
         }
         else
@@ -138,12 +139,7 @@ public class SimulationManager : MonoBehaviour
         info.tolerance = tolerance;
         info.optimizationIterations = iterations;
 
-        info.objects = new SimulationObjectData[objects.Length];
-
-        for (int i = 0; i < objects.Length; i++)
-        {
-            info.objects[i] = objects[i];
-        }
+        info.objects = objects;
 
         return JsonUtility.ToJson(info);
     }
@@ -158,7 +154,14 @@ public class SimulationManager : MonoBehaviour
             objects[i] = manager.simulationObjects[i].GetDataInEditor();
         }
 
-        string json = manager.SceneToJson(objects);
+        ColliderData[] colliders_ = new ColliderData[manager.colliders.Count];
+        for (int i = 0; i < colliders_.Length; i++)
+        {
+            colliders_[i] = manager.colliders[i].Data;
+            manager.colliders[i].id = i;
+        }
+
+        string json = manager.SceneToJson(objects, colliders_);
         return json;
     }
 

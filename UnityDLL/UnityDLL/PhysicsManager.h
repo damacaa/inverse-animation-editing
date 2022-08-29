@@ -67,6 +67,7 @@ public:
 	PhysicsManager(std::string info);
 	PhysicsManager(PhysicsManager::Integration _IntegrationMethod = PhysicsManager::Integration::Implicit, double tolerance = 1e-2);
 	~PhysicsManager();
+	PhysicsManager(const PhysicsManager&) {}
 
 	int AddObject(Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass);
 
@@ -100,7 +101,7 @@ public:
 
 	PhysicsManager::BackwardStepInfo Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h, std::string settings);
 
-	
+
 };
 
 

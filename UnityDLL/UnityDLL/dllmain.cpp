@@ -86,7 +86,7 @@ extern "C" {
 			duration<double, std::milli> ms_double = t2 - t1;
 			double duration = ms_double.count();
 
-			int sleepTime = ceil(max(0.0, (double)delta - duration));
+			int sleepTime = ceil(max(0.0, (1000.0 * (double)delta) - duration));
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
 			//std::this_thread::yield();

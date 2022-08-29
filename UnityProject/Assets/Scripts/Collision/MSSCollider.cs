@@ -4,18 +4,21 @@ using UnityEngine;
 
 public class MSSCollider : MonoBehaviour
 {
-    public ColliderData Data {
-        get {
+    public ColliderData Data
+    {
+        get
+        {
             ColliderData cd = new ColliderData();
             cd.type = 1;//0 plane //1 sphere
             cd.pos = transform.position;
             cd.rot = transform.rotation.eulerAngles;
-            cd.scale = transform.localScale;
-            return cd; 
+            cd.scale = transform.localScale + new Vector3(thickness, thickness, thickness);
+            return cd;
         }
     }
     public int id;
-   
+    public float thickness = 0;
+
 }
 
 [System.Serializable]

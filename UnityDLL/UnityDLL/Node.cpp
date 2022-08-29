@@ -47,17 +47,6 @@ void Node::GetMassInv(std::vector<T>* massTripletVector)
 
 void Node::GetForce(Eigen::VectorXd* force, std::vector<Collider*> colliders)
 {
-	for (Collider* collider : colliders)
-	{
-		Eigen::Vector3d f = collider->GetForce(position);
-		if (f.norm() > 0) {
-			(*force)[index] = f.x();
-			(*force)[index + 1] = f.y();
-			(*force)[index + 2] = f.z();
-			return;
-		}
-	}
-
 	Eigen::Vector3d forceV = Eigen::Vector3d(0, -mass * 9.81, 0);
 	forceV += -damping * vel;
 
@@ -65,6 +54,13 @@ void Node::GetForce(Eigen::VectorXd* force, std::vector<Collider*> colliders)
 	(*force)[index + 1] = forceV.y();
 	(*force)[index + 2] = forceV.z();
 
+	for (Collider* collider : colliders)
+	{
+		Eigen::Vector3d f = collider->GetForce(position);
+		(*force)[index] += f.x();
+		(*force)[index + 1] += f.y();
+		(*force)[index + 2] += f.z();
+	}
 }
 
 void Node::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel, std::vector<Collider*> colliders)
@@ -72,12 +68,14 @@ void Node::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel, 
 	//Needs fix!
 	for (Collider* collider : colliders)
 	{
-		Eigen::Vector3d f = collider->GetForce(position);
-		if (f.norm() > 0) {
-			derivVel->push_back(T(index, index, -1));
-			derivVel->push_back(T(index + 1, index + 1, -1));
-			derivVel->push_back(T(index + 2, index + 2, -1));
-			return;
+		Eigen::Matrix3d dfdx = collider->GetJacobian(position);
+
+		for (size_t i = 0; i < 3; i++)
+		{
+			for (size_t j = 0; j < 3; j++)
+			{
+				derivPos->push_back(T(index + i, index + j, dfdx(i, j)));
+			}
 		}
 	}
 
