@@ -239,10 +239,10 @@ void Object::SetVelocity(Eigen::VectorXd* velocity)
 		_nodes[i].SetVelocity(velocity);
 }
 
-void Object::GetForce(Eigen::VectorXd* force)
+void Object::GetForce(Eigen::VectorXd* force, std::vector<Collider*> colliders)
 {
 	for (int i = 0; i < nVerts; ++i)
-		_nodes[i].GetForce(force);
+		_nodes[i].GetForce(force, colliders);
 
 	for (int i = 0; i < nSprings; ++i)
 		_springs[i].GetForce(force);
@@ -263,10 +263,10 @@ void Object::GetdFdp(std::vector<T>* dforce, int springOffset)
 		_springs[i].GetdFdstiffness(dforce, i + springOffset);
 }
 
-void Object::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel)
+void Object::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel, std::vector<Collider*> colliders)
 {
 	for (int i = 0; i < nVerts; ++i)
-		_nodes[i].GetForceJacobian(derivPos, derivVel);
+		_nodes[i].GetForceJacobian(derivPos, derivVel, colliders);
 
 	for (int i = 0; i < nSprings; ++i)
 		_springs[i].GetForceJacobian(derivPos, derivVel);

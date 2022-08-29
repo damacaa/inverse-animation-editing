@@ -54,6 +54,7 @@ public class SimulationManager : MonoBehaviour
 
     [Header("Scene")]
     public List<SimulationObject> simulationObjects = new List<SimulationObject>();
+    public List<MSSCollider> colliders = new List<MSSCollider>();
 
     ICPPWrapper cpp;
     private void Awake()
@@ -66,6 +67,7 @@ public class SimulationManager : MonoBehaviour
     {
         if (sceneInfo == null || !useFile)
         {
+            //Collect information from scene
             SimulationObjectData[] objects = new SimulationObjectData[simulationObjects.Count];
             for (int i = 0; i < objects.Length; i++)
             {
@@ -73,11 +75,19 @@ public class SimulationManager : MonoBehaviour
                 simulationObjects[i].id = i;
             }
 
-            string json = SceneToJson(objects);
+            ColliderData[] colliders_ = new ColliderData[colliders.Count];
+            for (int i = 0; i < colliders_.Length; i++)
+            {
+                colliders_[i] = colliders[i].Data;
+                colliders[i].id = i;
+            }
+
+            string json = SceneToJson(objects, colliders_);
             cpp = new ICPPWrapper(json);
         }
         else
         {
+            //Read scene file
             SimulationInfo si = JsonUtility.FromJson<SimulationInfo>(sceneInfo.text);
 
             for (int i = 0; i < simulationObjects.Count; i++)
@@ -104,6 +114,20 @@ public class SimulationManager : MonoBehaviour
             default:
                 break;
         }
+    }
+
+    private string SceneToJson(SimulationObjectData[] objects, ColliderData[] colliders_)
+    {
+        SimulationInfo info = new SimulationInfo();
+        info.delta = timeStep;
+        info.integrationMethod = (int)integrationMethod;
+        info.tolerance = tolerance;
+        info.optimizationIterations = iterations;
+
+        info.objects = objects;
+        info.colliders = colliders_;
+
+        return JsonUtility.ToJson(info);
     }
 
     public string SceneToJson(SimulationObjectData[] objects)
@@ -210,6 +234,7 @@ public class SimulationManager : MonoBehaviour
         public float tolerance;
         public int optimizationIterations;
         public SimulationObjectData[] objects;
+        public ColliderData[] colliders;
     }
 }
 

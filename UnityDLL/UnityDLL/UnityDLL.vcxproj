@@ -152,6 +152,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Collider.h" />
     <ClInclude Include="DebugHelper.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Face.h" />
@@ -165,6 +166,7 @@
     <ClInclude Include="Types.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Collider.cpp" />
     <ClCompile Include="DebugHelper.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Face.cpp" />

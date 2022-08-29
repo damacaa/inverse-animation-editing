@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "PhysicsManager.h"
 #include "Object.h"
+#include "Collider.h"
 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
@@ -68,6 +69,15 @@ PhysicsManager::PhysicsManager(std::string info)
 
 		int id = AddObject(vertPos, vertIsFixed, vertMass, nVerts, springs, springStiffness, nSprings, triangles, nTriangles, dragCoefficient, damping, optimizationSettings);
 		//Vector3f* vertPos, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping
+	}
+
+	for (size_t i = 0; i < js["colliders"].size(); i++)
+	{
+		json obj = js["colliders"][i];
+		Vector3f pos = Vector3f(obj["pos"]["x"], obj["pos"]["y"], obj["pos"]["z"]);
+		Vector3f rot = Vector3f(obj["rot"]["x"], obj["rot"]["y"], obj["rot"]["z"]);
+		Vector3f scale = Vector3f(obj["scale"]["x"], obj["scale"]["y"], obj["scale"]["z"]);
+		int id = AddCollider(obj["type"], pos, rot, scale);
 	}
 }
 
@@ -137,6 +147,24 @@ int PhysicsManager::AddObject(Vector3f* vertPos, bool* vertIsFixed, float* vertM
 
 	needsRestart = true;
 	return o->id;
+}
+
+int PhysicsManager::AddCollider(int type, Vector3f pos, Vector3f rot, Vector3f scale)
+{
+	Eigen::Vector3d _pos = Eigen::Vector3d(pos.x, pos.y, pos.z);
+	Eigen::Vector3d _rot = Eigen::Vector3d(rot.x, rot.y, rot.z);
+	Eigen::Vector3d _scale = Eigen::Vector3d(scale.x, scale.y, scale.z);
+
+	Eigen::IOFormat VecFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
+	std::stringstream ss;
+	ss << "pos: " << _pos.format(VecFormat) << "\n";
+	ss << "rot: " << _rot.format(VecFormat) << "\n";
+	ss << "scale: " << _scale.format(VecFormat) << "\n";
+
+	debugHelper.PrintValue(ss.str(), "collider");
+
+	Colliders.push_back(new Collider(type, _pos, _rot, _scale));
+	return 0;
 }
 
 void PhysicsManager::AddFixer(Vector3f position, Vector3f scale)
@@ -274,7 +302,7 @@ PhysicsManager::SimulationInfo PhysicsManager::StepSymplectic(float h, Simulatio
 
 	debugHelper.RecordTime("2.Forces");
 	for (int i = 0; i < SimObjects.size(); i++)
-		SimObjects[i]->GetForce(&f);
+		SimObjects[i]->GetForce(&f, Colliders);
 
 	debugHelper.RecordTime("3.Fixing");
 	std::vector<bool> fixedIndices(m_numDoFs); // m_numDoFs/3?
@@ -346,8 +374,8 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationI
 		debugHelper.RecordTime("2.Calculating forces");
 		for (int i = 0; i < SimObjects.size(); i++)
 		{
-			SimObjects[i]->GetForce(&f);
-			SimObjects[i]->GetForceJacobian(&derivPos, &derivVel);
+			SimObjects[i]->GetForce(&f, Colliders);
+			SimObjects[i]->GetForceJacobian(&derivPos, &derivVel, Colliders);
 		}
 
 		debugHelper.RecordTime("3.Building matrices from triples");
@@ -707,7 +735,7 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 		SimObjects[i]->SetVelocity(&v);
 		SimObjects[i]->GetMass(&masses);
 		//SimObjects[i]->GetForce(&f1);
-		SimObjects[i]->GetForceJacobian(&derivPos, &derivVel);
+		SimObjects[i]->GetForceJacobian(&derivPos, &derivVel, Colliders);
 		SimObjects[i]->GetFixedIndices(&fixedIndices);
 
 		SimObjects[i]->GetdFdp(&dFdp); //Podría pasar uT a esta función para hacer el cálculo dentro de la función

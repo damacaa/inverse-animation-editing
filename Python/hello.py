@@ -35,35 +35,18 @@ def G(p, iter, h, m_numDoFs, initialState, targets, settings):
         initialState.x, initialState.v, p, settings, h, iter - 1
     )
 
-    """
-    current = initialState
-    steps = [initialState]
-
-    for i in range(iter - 1):
-        current = UnityDLL.forward(current.x, current.v, p, h)
-        steps.append(current)"""
-
     G = 0
     for i in range(iter):  # cambiar a steps
         G += np.linalg.norm(targets[i].x - steps[i].x) ** 2
     # G = G / iter
 
     return (100 / (iter / p.size)) * G
-    # return G
 
 
 def dGdp(p, iter, h, m_numDoFs, initialState, targets, settings):
 
     steps = []
-
     steps.append(initialState)
-
-    """
-        current = initialState
-        for i in range(iter - 1):
-        current = UnityDLL.forward(current.x, current.v, p, h)
-        steps.append(current)"""
-
     steps = [initialState] + UnityDLL.forwardLoop(
         initialState.x, initialState.v, p, settings, h, iter - 1
     )
@@ -106,12 +89,10 @@ def dGdp(p, iter, h, m_numDoFs, initialState, targets, settings):
 
         i -= 1
 
-    # print(x, _dGdp.tolist())
-
     return _dGdp
 
 
-def Minimize(method="L-BFGS-B", costFunction=G, jacobian=dGdp, callback=None):
+def Minimize(method="L-BFGS-B", costFunction=G, jacobian=dGdp):
 
     # scipy.optimize.show_options(solver="minimize", method=method, disp=True)
 
@@ -187,7 +168,7 @@ def Minimize(method="L-BFGS-B", costFunction=G, jacobian=dGdp, callback=None):
         args=args,
         bounds=bnds,
         options=options,
-        callback=callback,
+        callback=ShowProgress,
     )
     end = time.time()
 
@@ -257,7 +238,7 @@ def ShowProgress(p):
         a = 0
 
 
-Minimize(callback=ShowProgress)
+Minimize()
 
 # scipy.optimize.show_options(solver="minimize", method="L-BFGS-B", disp=True)
 # print(UnityDLL.test())
@@ -278,14 +259,3 @@ for m in methods:
 
 # https://gist.github.com/yuyay/3067185
 # python -m pip install "d:/Projects/MassSpringSimulator/UnityDLL"
-
-
-"""  F  nF
-nn
-Gn  
-Ln
-nG
-nL
-GG  +   -
-LL
-"""
