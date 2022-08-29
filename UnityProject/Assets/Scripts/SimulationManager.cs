@@ -33,10 +33,9 @@ public class SimulationManager : MonoBehaviour
         SimulateMultiThread
     }
 
+    [Header("Simulation parameters")]
     [SerializeField]
     Mode mode = Mode.SimulateMultiThread;
-
-    [Header("Simulation parameters")]
     [SerializeField]
     Integration integrationMethod = Integration.Implicit;
     [SerializeField]
