@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Face.h"
 #include "Node.h"
+#include "PhysicsManager.h"
 
 Face::Face(Node* A, Node* B, Node* C, double dragCoefficient)
 {
@@ -21,7 +22,7 @@ void Face::GetForce(Eigen::VectorXd* force)
 	normal = side1.cross(side2);
 	area = 0.5 * normal.norm();
 
-	Eigen::Vector3d windForce = dragCoefficient * area  * (normal * normal.transpose()) * (wind - avgVel) / 3.0;
+	Eigen::Vector3d windForce = dragCoefficient * area  * (normal * normal.transpose()) * (PhysicsManager::windVelocity - avgVel) / 3.0;
 
 	(*force)[A->index] += windForce.x();
 	(*force)[A->index + 1] += windForce.y();

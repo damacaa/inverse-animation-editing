@@ -111,7 +111,6 @@ public class SimulationObject : MonoBehaviour
                 }
             }
 
-            vertMass[i] = 0;
             vertVol[i] = 0;
         }
         data.vertPos = vertices;
@@ -181,6 +180,7 @@ public class SimulationObject : MonoBehaviour
         {
             vertMass[i] = vertVol[i] * density;
         }
+
         data.vertMass = vertMass;
 
         data.triangles = mesh.triangles;
