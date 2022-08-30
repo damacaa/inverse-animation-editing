@@ -36,6 +36,10 @@ public:
 		Eigen::VectorXd dGdp;//Tantos como parametros haya
 		Eigen::VectorXd dGdx, dGdv;
 	};
+
+	static int count;
+	static Eigen::Vector3d windVelocity;
+
 private:
 
 	bool Paused = false;

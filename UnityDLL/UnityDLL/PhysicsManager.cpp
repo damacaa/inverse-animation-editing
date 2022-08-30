@@ -6,10 +6,13 @@
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
-
+int PhysicsManager::count = 0;
+Eigen::Vector3d PhysicsManager::windVelocity = Eigen::Vector3d(0, 0, 0);
 
 PhysicsManager::PhysicsManager(std::string info)
 {
+	//PhysicsManager::count = 1;
+
 	debugHelper = DebugHelper();
 
 	//debugHelper.PrintValue(info, "scene");
@@ -18,6 +21,9 @@ PhysicsManager::PhysicsManager(std::string info)
 
 	integrationMethod = (Integration)js["integrationMethod"];
 	tolerance = js["tolerance"];
+
+	json wind = js["windVel"];
+	PhysicsManager::windVelocity = Eigen::Vector3d(wind["x"], wind["y"], wind["z"]);
 
 	for (size_t i = 0; i < js["objects"].size(); i++)
 	{
@@ -69,6 +75,7 @@ PhysicsManager::PhysicsManager(std::string info)
 
 		int id = AddObject(vertPos, vertIsFixed, vertMass, nVerts, springs, springStiffness, nSprings, triangles, nTriangles, dragCoefficient, damping, optimizationSettings);
 		//Vector3f* vertPos, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping
+		PhysicsManager::count++;
 	}
 
 	for (size_t i = 0; i < js["colliders"].size(); i++)
@@ -78,7 +85,10 @@ PhysicsManager::PhysicsManager(std::string info)
 		Vector3f rot = Vector3f(obj["rot"]["x"], obj["rot"]["y"], obj["rot"]["z"]);
 		Vector3f scale = Vector3f(obj["scale"]["x"], obj["scale"]["y"], obj["scale"]["z"]);
 		int id = AddCollider(obj["type"], pos, rot, scale);
+		PhysicsManager::count++;
 	}
+
+	debugHelper.PrintValue(std::to_string(PhysicsManager::count), "count");
 }
 
 PhysicsManager::PhysicsManager(Integration _IntegrationMethod, double tolerance)

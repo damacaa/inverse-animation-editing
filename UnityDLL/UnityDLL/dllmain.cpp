@@ -12,8 +12,9 @@ using std::chrono::duration_cast;
 using std::chrono::duration;
 using std::chrono::milliseconds;
 
-#include "PhysicsManager.h"
 #include "DLLMAIN.H"
+#include "PhysicsManager.h"
+
 
 bool initialized = false;
 bool newFixers = false;

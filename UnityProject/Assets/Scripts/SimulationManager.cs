@@ -8,6 +8,7 @@ using System.IO;
 
 public class SimulationManager : MonoBehaviour
 {
+
     public static SimulationManager instance;
     public static SimulationManager Instance
     {
@@ -33,6 +34,7 @@ public class SimulationManager : MonoBehaviour
         SimulateMultiThread
     }
 
+
     [Header("Simulation parameters")]
     [SerializeField]
     Mode mode = Mode.SimulateMultiThread;
@@ -42,6 +44,7 @@ public class SimulationManager : MonoBehaviour
     float timeStep = 0.01f;
     [SerializeField]
     float tolerance = 1e-2f;
+
 
     [Header("Optimization parameters")]
     [SerializeField]
@@ -54,6 +57,8 @@ public class SimulationManager : MonoBehaviour
     [Header("Scene")]
     public List<SimulationObject> simulationObjects = new List<SimulationObject>();
     public List<MSSCollider> colliders = new List<MSSCollider>();
+    [SerializeField]
+    Wind wind;
 
     ICPPWrapper cpp;
     private void Awake()
@@ -126,6 +131,11 @@ public class SimulationManager : MonoBehaviour
 
         info.objects = objects;
         info.colliders = colliders_;
+
+        if (wind)
+            info.windVel = wind.windVelocity;
+        else
+            info.windVel = Vector3.zero;
 
         return JsonUtility.ToJson(info);
     }
@@ -237,6 +247,7 @@ public class SimulationManager : MonoBehaviour
         public int optimizationIterations;
         public SimulationObjectData[] objects;
         public ColliderData[] colliders;
+        public Vector3 windVel;
     }
 }
 

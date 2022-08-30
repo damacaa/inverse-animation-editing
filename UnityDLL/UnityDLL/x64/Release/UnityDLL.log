@@ -1,7 +1,33 @@
-﻿     Creating library D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.lib and object D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.exp
+﻿  PhysicsManager.cpp
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(32,37): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(33,43): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(34,43): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(327,28): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(539,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(848,29): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(850,65): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(851,65): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+D:\Projects\MassSpringSimulator\UnityDLL\UnityDLL\PhysicsManager.cpp(852,65): warning C4267: 'argument': conversion from 'size_t' to 'const StorageIndex', possible loss of data
+          with
+          [
+              StorageIndex=int
+          ]
+     Creating library D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.lib and object D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.exp
   Generating code
-  0 of 5985 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
+  1 of 5986 functions (<0.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    0 functions had inline decision re-evaluated but remain unchanged
+    35 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   UnityDLL.vcxproj -> D:\Projects\MassSpringSimulator\UnityDLL\x64\Release\UnityDLL.dll
