@@ -74,7 +74,8 @@ void Node::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel, 
 		{
 			for (size_t j = 0; j < 3; j++)
 			{
-				derivPos->push_back(T(index + i, index + j, dfdx(i, j)));
+				if (dfdx(i, j) != 0)
+					derivPos->push_back(T(index + i, index + j, dfdx(i, j)));
 			}
 		}
 	}

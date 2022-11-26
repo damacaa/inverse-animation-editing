@@ -51,13 +51,13 @@ ForwardResult Initialize(std::string info, std::string settings)
 	return result;
 }*/
 
-ForwardResult Forward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd parameters, std::string settings, float h)
+ForwardResult Forward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd parameters, std::string settings, float h, int forwardSubSteps)
 {
 	PhysicsManager physicsManager = PhysicsManager(_info);
 	physicsManager.Start();
 	physicsManager.SetParam(parameters, settings);
 
-	auto info = physicsManager.Forward(x, v, h);
+	auto info = physicsManager.Forward(x, v, h, forwardSubSteps);
 
 	ForwardResult result;
 	result.x = info.x;
@@ -66,7 +66,7 @@ ForwardResult Forward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd para
 	return result;
 }
 
-std::vector<ForwardResult> ForwardLoop(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd parameters, std::string settings, float h, int iter)
+std::vector<ForwardResult> ForwardLoop(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd parameters, std::string settings, float h, int iter, int forwardSubSteps)
 {
 	PhysicsManager physicsManager = PhysicsManager(_info);
 	physicsManager.Start();
@@ -77,10 +77,12 @@ std::vector<ForwardResult> ForwardLoop(Eigen::VectorXd x, Eigen::VectorXd v, Eig
 	PhysicsManager::SimulationInfo info = PhysicsManager::SimulationInfo(x, v);
 	for (size_t i = 0; i < iter; i++)
 	{
-		info = physicsManager.Forward(info.x, info.v, h);
+		info = physicsManager.Forward(info.x, info.v, h, forwardSubSteps);
+
 		result[i].x = info.x;
 		result[i].v = info.v;
 	}
+
 
 	return result;
 }

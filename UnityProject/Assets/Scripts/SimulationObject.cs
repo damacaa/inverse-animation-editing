@@ -7,12 +7,7 @@ using UnityEngine;
 
 public class SimulationObject : MonoBehaviour
 {
-    public int id = -1;
-
-    Mesh mesh;
-
     [Header("Parameters")]
-
     [SerializeField]
     public float stiffness = 100f;
     [SerializeField]
@@ -28,13 +23,6 @@ public class SimulationObject : MonoBehaviour
     bool parametrize = true;
 
 
-    enum OptimizationMode
-    {
-        None,
-        Homogeneous,
-        Heterogeneous
-    }
-
     [Header("Optimization parameters")]
     [SerializeField]
     OptimizationMode massOptimizationMode = OptimizationMode.None;
@@ -42,10 +30,32 @@ public class SimulationObject : MonoBehaviour
     OptimizationMode stiffnessOptimizationMode = OptimizationMode.None;
 
     string optimizationSettings = "nn";
+    enum OptimizationMode
+    {
+        None,
+        Homogeneous,
+        Heterogeneous
+    }
 
+    [Header("Stuff")]
+    [SerializeField]
+    SimulationObjectData _data;
+
+    Vector3[] debugVerts;
+    int[] debugSprings;
+
+    [HideInInspector]
+    public int id = -1;
+    Mesh mesh;
+    MeshFilter meshFilter;
     public SimulationObjectData Data
     {
-        get { return Init(); }
+        get
+        {
+            if (_data == null || _data.vertPos.Length != mesh.vertexCount)
+                BuildData();
+            return _data;
+        }
         set
         {
             _data = value;
@@ -54,36 +64,28 @@ public class SimulationObject : MonoBehaviour
         }
     }
 
-    [Header("Stuff")]
-    [SerializeField]
-    SimulationObjectData _data;
-    [SerializeField]
-    Vector3[] debugVerts;
-    [SerializeField]
-    int[] debugSprings;
-
-    public SimulationObjectData Init()
+    private void Awake()
     {
-        mesh = GetComponent<MeshFilter>().mesh;
-        _data = BuildData(mesh);
-        GenerateDebugInfo();
-
-        return _data;
+        meshFilter = GetComponent<MeshFilter>();
+        mesh = meshFilter.mesh;
     }
 
-    private SimulationObjectData BuildData(Mesh mesh)
-    {
-        if (parametrize)
-            return BuildDataP(mesh);
-        else
-            return BuildDataO(mesh);
-    }
-
-    private SimulationObjectData BuildDataP(Mesh mesh)
+    private void BuildData()
     {
         if (TryGetComponent<PlaneGenerator>(out PlaneGenerator pg))
-            pg.BuildMesh();
+            mesh = pg.Mesh;
+        else
+            mesh = GetComponent<MeshFilter>().sharedMesh;
 
+        if (parametrize)
+            _data = BuildDataP();
+        else
+            _data = BuildDataO();
+
+        GenerateDebugInfo();
+    }
+    private SimulationObjectData BuildDataP()
+    {
         Debug.Log("Building " + name);
 
         SimulationObjectData data = new SimulationObjectData();
@@ -147,6 +149,7 @@ public class SimulationObject : MonoBehaviour
 
                         Edge newEdge = new Edge(edges[x].other, otherEdge.other, -1, stiffness / 4f);
                         newEdge.volume += 2f * area;
+                        newEdge.edgeType = Edge.EdgeType.Bending;
                         edgeDictionary.Add(newEdge, newEdge);
                     }
                 }
@@ -163,6 +166,8 @@ public class SimulationObject : MonoBehaviour
         data.springs = new int[nSprings * 2];
         data.springStiffness = new float[nSprings];
 
+        debugColors = new Color[nSprings];
+
         int id = 0;
         foreach (Edge e in edgeDictionary.Values)
         {
@@ -172,8 +177,12 @@ public class SimulationObject : MonoBehaviour
             data.springStiffness[id] = e.stiffness * e.volume / (length * length);
             //stiffness * volume / (length0 * length0);
 
+            debugColors[id] = e.edgeType == Edge.EdgeType.Traction ? Color.red : Color.blue;
+
             id++;
         }
+
+
 
         //Node mass
         for (int i = 0; i < vertices.Length; i++)
@@ -190,7 +199,7 @@ public class SimulationObject : MonoBehaviour
 
         return data;
     }
-    private SimulationObjectData BuildDataO(Mesh mesh)
+    private SimulationObjectData BuildDataO()
     {
         Debug.Log("Building " + name);
 
@@ -299,11 +308,14 @@ public class SimulationObject : MonoBehaviour
         mesh.vertices = vertices;
         mesh.RecalculateNormals();
         mesh.RecalculateTangents();
+
+        //meshFilter.mesh = mesh;
     }
 
     Gradient gradient;
     GradientColorKey[] colorKey;
     GradientAlphaKey[] alphaKey;
+    [SerializeField]
     Color[] debugColors;
     float maxStiffness;
     void GenerateDebugInfo()
@@ -327,11 +339,11 @@ public class SimulationObject : MonoBehaviour
         gradient.SetKeys(colorKey, alphaKey);
 
         maxStiffness = _data.springStiffness.Max();
-        debugColors = new Color[_data.springStiffness.Length];
+        /*debugColors = new Color[_data.springStiffness.Length];
         for (int i = 0; i < debugColors.Length; i++)
         {
             debugColors[i] = gradient.Evaluate(_data.springStiffness[i] / maxStiffness);
-        }
+        }*/
 
         debugVerts = _data.vertPos;
         debugSprings = _data.springs;
@@ -345,14 +357,21 @@ public class SimulationObject : MonoBehaviour
 
         for (int i = 0; i < mesh.vertices.Length; i++)
         {
-            Handles.Label(debugVerts[i], i.ToString());
+            //Handles.Label(debugVerts[i], i.ToString());
+            //Handles.DrawSolidDisc(debugVerts[i], Vector3.up, 1);
+            Gizmos.color = Color.black;
+            Gizmos.DrawSphere(debugVerts[i], 0.1f);
         }
 
         for (int i = 0; i < debugSprings.Length / 2; i++)
         {
-            Gizmos.color = debugColors[i];
-            Gizmos.DrawLine(debugVerts[debugSprings[2 * i]], debugVerts[debugSprings[(2 * i) + 1]]);
+            //Gizmos.color = debugColors[i];
+            //Gizmos.DrawLine(debugVerts[debugSprings[2 * i]], debugVerts[debugSprings[(2 * i) + 1]]);
             //Gizmos.DrawLine(transform.TransformPoint( mesh.vertices[debugSprings[i]]), transform.TransformPoint(mesh.vertices[debugSprings[i + 1]]));
+            var p1 = debugVerts[debugSprings[2 * i]];
+            var p2 = debugVerts[debugSprings[(2 * i) + 1]];
+            var thickness = 5;
+            Handles.DrawBezier(p1, p2, p1, p2, debugColors[i], null, thickness);
         }
     }
 
@@ -362,7 +381,7 @@ public class SimulationObject : MonoBehaviour
             return;
         mesh = GetComponent<MeshFilter>().sharedMesh;
         BuildData();*/
-
+        
         optimizationSettings = "";
         switch (massOptimizationMode)
         {
@@ -392,12 +411,13 @@ public class SimulationObject : MonoBehaviour
             default:
                 break;
         }
+
+        BuildData();
     }
 
     public SimulationObjectData GetDataInEditor()
     {
-        SimulationObjectData data = BuildData(GetComponent<PlaneGenerator>().Mesh);
-        return data;
+        return Data;
     }
 
 #endif

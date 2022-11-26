@@ -8,7 +8,9 @@ public class CameraBehaviour : MonoBehaviour
 {
     public static CameraBehaviour instance;
 
+    [SerializeField]
     private float _rotationY = 0;
+    [SerializeField]
     private float _rotationX = 0;
 
     [SerializeField]

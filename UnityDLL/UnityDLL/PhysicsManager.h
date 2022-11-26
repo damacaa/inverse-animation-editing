@@ -65,6 +65,11 @@ private:
 	SimulationInfo info;
 
 	DebugHelper debugHelper;
+	bool printTimes = false;
+
+	int nodeCount = 0;
+	int springCount = 0;
+
 
 public:
 
@@ -101,7 +106,7 @@ public:
 
 	SimulationInfo GetInitialState();
 
-	SimulationInfo Forward(Eigen::VectorXd x, Eigen::VectorXd v, float h);
+	SimulationInfo Forward(Eigen::VectorXd x, Eigen::VectorXd v, float h, int subSteps);
 
 	PhysicsManager::BackwardStepInfo Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h, std::string settings);
 

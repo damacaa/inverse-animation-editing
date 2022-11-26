@@ -8,7 +8,7 @@ private:
 	Eigen::Vector3d position;
 	Eigen::Vector3d rotation;
 	Eigen::Vector3d scale;
-	double k = 10.0;
+	double k = 1000.0;
 public:
 	Collider(int _type, Eigen::Vector3d _pos, Eigen::Vector3d _rot, Eigen::Vector3d _scale) :
 		type(_type), position(_pos), rotation(_rot), scale(_scale) {}

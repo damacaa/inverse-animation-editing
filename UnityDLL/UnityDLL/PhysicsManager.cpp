@@ -21,6 +21,7 @@ PhysicsManager::PhysicsManager(std::string info)
 
 	integrationMethod = (Integration)js["integrationMethod"];
 	tolerance = js["tolerance"];
+	printTimes = js["printTimes"];
 
 	json wind = js["windVel"];
 	PhysicsManager::windVelocity = Eigen::Vector3d(wind["x"], wind["y"], wind["z"]);
@@ -75,7 +76,6 @@ PhysicsManager::PhysicsManager(std::string info)
 
 		int id = AddObject(vertPos, vertIsFixed, vertMass, nVerts, springs, springStiffness, nSprings, triangles, nTriangles, dragCoefficient, damping, optimizationSettings);
 		//Vector3f* vertPos, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping
-		PhysicsManager::count++;
 	}
 
 	for (size_t i = 0; i < js["colliders"].size(); i++)
@@ -85,10 +85,7 @@ PhysicsManager::PhysicsManager(std::string info)
 		Vector3f rot = Vector3f(obj["rot"]["x"], obj["rot"]["y"], obj["rot"]["z"]);
 		Vector3f scale = Vector3f(obj["scale"]["x"], obj["scale"]["y"], obj["scale"]["z"]);
 		int id = AddCollider(obj["type"], pos, rot, scale);
-		PhysicsManager::count++;
 	}
-
-	debugHelper.PrintValue(std::to_string(PhysicsManager::count), "count");
 }
 
 PhysicsManager::PhysicsManager(Integration _IntegrationMethod, double tolerance)
@@ -100,10 +97,10 @@ PhysicsManager::PhysicsManager(Integration _IntegrationMethod, double tolerance)
 
 PhysicsManager::~PhysicsManager()
 {
-	if (SimObjects.size() > 0) {
-		std::string description = std::to_string(SimObjects[0]->nVerts) + " vertices and ";
-		description += std::to_string(SimObjects[0]->nSprings) + " springs.";
-		//debugHelper.PrintTimes("SimulationTimes", description);
+	if (printTimes) {
+		std::string description = std::to_string(nodeCount) + " vertices and ";
+		description += std::to_string(springCount) + " springs.";
+		debugHelper.PrintTimes("SimulationTimes", description);
 	}
 
 	for (int i = 0; i < SimObjects.size(); i++)
@@ -133,7 +130,7 @@ PhysicsManager::~PhysicsManager()
 
 int PhysicsManager::AddObject(Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass)
 {
-	//Obsolete
+	//Deprecated
 	Object* o = new Object(vertices, nVertices, triangles, nTriangles, stiffness, mass);
 	o->id = (int)SimObjects.size() + (int)PendingSimObjects.size();
 	PendingSimObjects.push_back(o);
@@ -155,6 +152,9 @@ int PhysicsManager::AddObject(Vector3f* vertPos, bool* vertIsFixed, float* vertM
 	o->id = (int)SimObjects.size() + (int)PendingSimObjects.size();
 	SimObjects.push_back(o);
 
+	nodeCount += nVerts;
+	springCount += nSprings;
+
 	needsRestart = true;
 	return o->id;
 }
@@ -165,13 +165,13 @@ int PhysicsManager::AddCollider(int type, Vector3f pos, Vector3f rot, Vector3f s
 	Eigen::Vector3d _rot = Eigen::Vector3d(rot.x, rot.y, rot.z);
 	Eigen::Vector3d _scale = Eigen::Vector3d(scale.x, scale.y, scale.z);
 
-	Eigen::IOFormat VecFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
+	/*Eigen::IOFormat VecFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
 	std::stringstream ss;
 	ss << "pos: " << _pos.format(VecFormat) << "\n";
 	ss << "rot: " << _rot.format(VecFormat) << "\n";
 	ss << "scale: " << _scale.format(VecFormat) << "\n";
 
-	debugHelper.PrintValue(ss.str(), "collider");
+	debugHelper.PrintValue(ss.str(), "collider");*/
 
 	Colliders.push_back(new Collider(type, _pos, _rot, _scale));
 	return 0;
@@ -707,9 +707,9 @@ PhysicsManager::SimulationInfo PhysicsManager::GetInitialState()
 	return SimulationInfo(x, v);
 }
 
-PhysicsManager::SimulationInfo PhysicsManager::Forward(Eigen::VectorXd x, Eigen::VectorXd v, float h)
+PhysicsManager::SimulationInfo PhysicsManager::Forward(Eigen::VectorXd x, Eigen::VectorXd v, float h, int subSteps)
 {
-	return StepImplicit(h, SimulationInfo(x, v), 10);
+	return StepImplicit(h, SimulationInfo(x, v), subSteps);
 }
 
 PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h, std::string settings)

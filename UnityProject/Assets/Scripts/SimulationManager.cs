@@ -50,11 +50,18 @@ public class SimulationManager : MonoBehaviour
     [SerializeField]
     int iterations = 100;
     [SerializeField]
+    int forwardSubSteps = 3;
+    [SerializeField]
     bool useFile = false;
+    [SerializeField]
+    bool printTimes = false;
     [SerializeField]
     TextAsset sceneInfo;
 
     [Header("Scene")]
+    [SerializeField]
+    public string title;
+
     public List<SimulationObject> simulationObjects = new List<SimulationObject>();
     public List<MSSCollider> colliders = new List<MSSCollider>();
     [SerializeField]
@@ -67,44 +74,47 @@ public class SimulationManager : MonoBehaviour
         //cpp = new ICPPWrapper(integrationMethod, timeStep, tolerance);
     }
 
-    private void Start()
+    IEnumerator Start()
     {
-        if (sceneInfo == null || !useFile)
+        //Collect information from scene
+        SimulationObjectData[] objects = new SimulationObjectData[simulationObjects.Count];
+        for (int i = 0; i < objects.Length; i++)
         {
-            //Collect information from scene
-            SimulationObjectData[] objects = new SimulationObjectData[simulationObjects.Count];
-            for (int i = 0; i < objects.Length; i++)
-            {
-                objects[i] = simulationObjects[i].Data;
-                simulationObjects[i].id = i;
-            }
-
-            ColliderData[] colliders_ = new ColliderData[colliders.Count];
-            for (int i = 0; i < colliders_.Length; i++)
-            {
-                colliders_[i] = colliders[i].Data;
-                colliders[i].id = i;
-            }
-
-            string json = SceneToJson(objects, colliders_);
-            //File.WriteAllText(Application.dataPath+"\\scene.txt", json);
-            cpp = new ICPPWrapper(json);
+            objects[i] = simulationObjects[i].Data;
+            simulationObjects[i].id = i;
         }
-        else
+
+        ColliderData[] colliders_ = new ColliderData[colliders.Count];
+        for (int i = 0; i < colliders_.Length; i++)
         {
-            //Read scene file
+            if (!colliders[i].gameObject.activeInHierarchy)
+                continue;
+
+            colliders_[i] = colliders[i].Data;
+            colliders[i].id = i + objects.Length;
+        }
+
+
+        if (sceneInfo != null && useFile)
+        {
+            //Read scene file and convert to object
             SimulationInfo si = JsonUtility.FromJson<SimulationInfo>(sceneInfo.text);
 
-            for (int i = 0; i < simulationObjects.Count; i++)
+            //Replace node mass and spring stiffness
+            for (int i = 0; i < si.objects.Length; i++)
             {
-                simulationObjects[i].Data = si.objects[i];
-                simulationObjects[i].id = i;
+                objects[i].vertMass = si.objects[i].vertMass;
+                objects[i].springStiffness = si.objects[i].springStiffness;
             }
-
-            cpp = new ICPPWrapper(sceneInfo.text);
         }
 
+        string json = SceneToJson(objects, colliders_);
+        cpp = new ICPPWrapper(json);
 
+        while (!Input.GetKey(KeyCode.Space))
+        {
+            yield return null;
+        }
 
         switch (mode)
         {
@@ -119,6 +129,8 @@ public class SimulationManager : MonoBehaviour
             default:
                 break;
         }
+
+        yield return null;
     }
 
     private string SceneToJson(SimulationObjectData[] objects, ColliderData[] colliders_)
@@ -128,27 +140,18 @@ public class SimulationManager : MonoBehaviour
         info.integrationMethod = (int)integrationMethod;
         info.tolerance = tolerance;
         info.optimizationIterations = iterations;
+        info.forwardSubSteps = forwardSubSteps;
+        info.printTimes = printTimes;
 
         info.objects = objects;
         info.colliders = colliders_;
+
+        info.title = title;
 
         if (wind)
             info.windVel = wind.windVelocity;
         else
             info.windVel = Vector3.zero;
-
-        return JsonUtility.ToJson(info);
-    }
-
-    public string SceneToJson(SimulationObjectData[] objects)
-    {
-        SimulationInfo info = new SimulationInfo();
-        info.delta = timeStep;
-        info.integrationMethod = (int)integrationMethod;
-        info.tolerance = tolerance;
-        info.optimizationIterations = iterations;
-
-        info.objects = objects;
 
         return JsonUtility.ToJson(info);
     }
@@ -167,11 +170,16 @@ public class SimulationManager : MonoBehaviour
         for (int i = 0; i < colliders_.Length; i++)
         {
             colliders_[i] = manager.colliders[i].Data;
-            manager.colliders[i].id = i;
         }
 
         string json = manager.SceneToJson(objects, colliders_);
         return json;
+    }
+
+    public static string GetName()
+    {
+        SimulationManager manager = FindObjectOfType<SimulationManager>();
+        return manager.title + ".txt";
     }
 
     /*public int AddObject(Vector3[] vertices, int[] triangles, float stiffness, float mass)
@@ -248,6 +256,9 @@ public class SimulationManager : MonoBehaviour
         public SimulationObjectData[] objects;
         public ColliderData[] colliders;
         public Vector3 windVel;
+        public bool printTimes;
+        public int forwardSubSteps;
+        public string title;
     }
 }
 

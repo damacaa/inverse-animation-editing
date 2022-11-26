@@ -12,6 +12,13 @@ public class Edge
     public float volume = 0;
     public float stiffness = 0;
 
+    public enum EdgeType
+    {
+        Traction,
+        Bending
+    }
+
+    public EdgeType edgeType = EdgeType.Traction;
 
     public Edge(int x, int y, int other, float stiffness)
     {
