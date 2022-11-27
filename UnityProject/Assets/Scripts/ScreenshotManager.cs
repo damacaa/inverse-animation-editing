@@ -6,6 +6,8 @@ public class ScreenshotManager : MonoBehaviour
 {
     [SerializeField]
     int frameRate = 10;
+    [SerializeField]
+    int maxFrames = 100;
     private Coroutine movieCoroutine;
 
     private void Update()
@@ -46,9 +48,11 @@ public class ScreenshotManager : MonoBehaviour
         float nextTime = 0;
         float delay = 1f / frameRate;
 
-        while (Application.isPlaying)
+        yield return null;
+
+        while (Application.isPlaying && count < maxFrames)
         {
-            if (Time.time > nextTime)
+            if (!SimulationManager.Instance.Waiting && Time.time > nextTime)
             {
                 nextTime = Time.time + delay;
                 TakeScreenshot(name + "-" + count, "C:/Screenshots/");
@@ -56,6 +60,8 @@ public class ScreenshotManager : MonoBehaviour
             }
             yield return null;
         }
+
+        print("Stopped recording");
 
         yield return null;
     }

@@ -68,6 +68,8 @@ public class SimulationManager : MonoBehaviour
     Wind wind;
 
     ICPPWrapper cpp;
+
+    public bool Waiting { get; private set; }
     private void Awake()
     {
         instance = this;
@@ -111,10 +113,12 @@ public class SimulationManager : MonoBehaviour
         string json = SceneToJson(objects, colliders_);
         cpp = new ICPPWrapper(json);
 
+        Waiting = true;
         while (!Input.GetKey(KeyCode.Space))
         {
             yield return null;
         }
+        Waiting = false;
 
         switch (mode)
         {

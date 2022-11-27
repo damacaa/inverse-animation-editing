@@ -370,7 +370,7 @@ public class SimulationObject : MonoBehaviour
             //Gizmos.DrawLine(transform.TransformPoint( mesh.vertices[debugSprings[i]]), transform.TransformPoint(mesh.vertices[debugSprings[i + 1]]));
             var p1 = debugVerts[debugSprings[2 * i]];
             var p2 = debugVerts[debugSprings[(2 * i) + 1]];
-            var thickness = 5;
+            var thickness = 3;
             Handles.DrawBezier(p1, p2, p1, p2, debugColors[i], null, thickness);
         }
     }
