@@ -322,4 +322,4 @@ def ShowProgress(p):
 
 
 # https://gist.github.com/yuyay/3067185
-# python -m pip install "d:/Projects/MassSpringSimulator/UnityDLL"
+# python -m pip install "../UnityDLL"
