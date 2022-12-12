@@ -1,4 +1,0 @@
-Scene: side
-Scene: side
-Gn 2,42 28,7
-Ln 0,92 38,2
