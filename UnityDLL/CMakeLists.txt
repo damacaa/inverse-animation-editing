@@ -47,9 +47,9 @@ target_compile_definitions(UnityDLL
 
 # 
 
-set(PYTHON_INCLUDE "C:/Users/Dani/AppData/Local/Programs/Python/Python310/include" CACHE PATH "") 
-set(PYTHON_LIB "C:/Users/Dani/AppData/Local/Programs/Python/Python310/libs/python310.lib" CACHE FILEPATH "")
-set(PYBIND11_INCLUDE "C:/Users/Dani/cmake_example/pybind11/include" CACHE PATH "") 
+set(PYTHON_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include/Python310/include" CACHE PATH "") 
+set(PYTHON_LIB "${CMAKE_CURRENT_SOURCE_DIR}/include/Python310/libs/python310.lib" CACHE FILEPATH "")
+set(PYBIND11_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include/pybind11" CACHE PATH "") 
 
 target_include_directories(
         UnityDLL
@@ -73,4 +73,4 @@ target_link_libraries(UnityDLL PUBLIC
 #project(UnityDLL VERSION 1.0.1 DESCRIPTION "mylib description")
 #add_library(UnityDLL SHARED ${CMAKE_CURRENT_SOURCE_DIR}/UnityDLL/dllmain.cpp)
 
-#python -m pip install "d:/Projects/MassSpringSimulator/UnityDLL"
+#python -m pip install "../UnityDLL"
