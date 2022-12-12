@@ -12,3 +12,9 @@ Requires Python 3.10 (only version that works).
 To install the engine module for Python:
 
     python -m pip install "/UnityDLL"
+
+NumPy and SciPy are also required:
+
+    python -m pip install numpy
+    
+    python -m pip install scipy
