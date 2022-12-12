@@ -49,7 +49,7 @@ target_compile_definitions(UnityDLL
 
 set(PYTHON_INCLUDE "C:/Users/Dani/AppData/Local/Programs/Python/Python310/include" CACHE PATH "") 
 set(PYTHON_LIB "C:/Users/Dani/AppData/Local/Programs/Python/Python310/libs/python310.lib" CACHE FILEPATH "")
-set(PYBIND11_INCLUDE "D:/Projects/MassSpringSimulator/UnityDLL/include/pybind11/include" CACHE PATH "") 
+set(PYBIND11_INCLUDE "/include/pybind11/include" CACHE PATH "") 
 
 target_include_directories(
         UnityDLL
