@@ -4,7 +4,7 @@ It includes a differentiable physics engine built from scratch in C++, a Python 
 
 ![My Image](Screenshots/4corners.gif)
 
-The objective of my thesis was to generate a simulation with some parameters for the mass and stiffness of a cloth and use numerical optimization combined with differentiable simulation and the backpropagation algorithm to guess those parameters based on the position of that simulation over many frames.
+The framework is able to generate a simulation with some parameters for the mass and stiffness of a cloth and use numerical optimization combined with differentiable simulation and the backpropagation algorithm to guess those parameters based on the position of that simulation over many frames.
 
 # Installation
 Requires Python 3.10 (only version that works).
