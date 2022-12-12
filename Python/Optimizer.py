@@ -13,7 +13,7 @@ import time
 from numpy import random
 import json
 
-import UnityDLL
+import DifferentiablePhysicsEngine
 
 import os.path
 from os import path
@@ -55,7 +55,7 @@ def g(p, nSteps, forwardSubSteps, h, m_numDoFs, initialState, targets):
     steps.append(initialState)
 
     for i in range(nSteps - 1):
-        current = UnityDLL.forward(current.x, current.v, p, h)
+        current = DifferentiablePhysicsEngine.forward(current.x, current.v, p, h)
         steps.append(current)
 
     g = np.sum(targets[nSteps - 1].x - steps[nSteps - 1].x) ** 2
@@ -65,7 +65,7 @@ def g(p, nSteps, forwardSubSteps, h, m_numDoFs, initialState, targets):
 
 def G(p, nSteps, forwardSubSteps, h, m_numDoFs, initialState, targets, settings):
 
-    steps = [initialState] + UnityDLL.forwardLoop(
+    steps = [initialState] + DifferentiablePhysicsEngine.forwardLoop(
         initialState.x, initialState.v, p, settings, h, nSteps - 1, forwardSubSteps
     )
 
@@ -85,7 +85,7 @@ def G(p, nSteps, forwardSubSteps, h, m_numDoFs, initialState, targets, settings)
 
 def dGdp(p, nSteps, forwardSubSteps, h, m_numDoFs, initialState, targets, settings):
 
-    steps = [initialState] + UnityDLL.forwardLoop(
+    steps = [initialState] + DifferentiablePhysicsEngine.forwardLoop(
         initialState.x, initialState.v, p, settings, h, nSteps - 1, forwardSubSteps
     )
 
@@ -108,7 +108,7 @@ def dGdp(p, nSteps, forwardSubSteps, h, m_numDoFs, initialState, targets, settin
 
     i = nSteps - 2
     while i >= 0:
-        backward = UnityDLL.backward(
+        backward = DifferentiablePhysicsEngine.backward(
             steps[i].x,
             steps[i].v,
             steps[i + 1].x,
@@ -167,12 +167,12 @@ def Minimize(data, method="L-BFGS-B", costFunction=G, jacobian=dGdp, cuadraticEr
     desiredParameter = np.array(p)
 
     # INITIALIZATION
-    initialState = UnityDLL.initialize(data, settings)
+    initialState = DifferentiablePhysicsEngine.initialize(data, settings)
 
     m_numDoFs = initialState.x.size
 
     # CALCULATING TARGET
-    targets = [initialState] + UnityDLL.forwardLoop(
+    targets = [initialState] + DifferentiablePhysicsEngine.forwardLoop(
         initialState.x,
         initialState.v,
         np.full(0, 0,),
@@ -240,14 +240,14 @@ def Minimize(data, method="L-BFGS-B", costFunction=G, jacobian=dGdp, cuadraticEr
         abs(abs(desiredParameter - res.x)/desiredParameter)*100)/len(res.x), 2)
 
     # Error with n steps
-    steps = [initialState] + UnityDLL.forwardLoop(
+    steps = [initialState] + DifferentiablePhysicsEngine.forwardLoop(
         initialState.x, initialState.v, res.x, settings, h, len(
             targets)-1, forwardSubSteps
     )
     cuadraticError = round(QuadraticError(steps, targets, len(res.x)), 2)
 
     # Error with constant steps
-    targets = [initialState] + UnityDLL.forwardLoop(
+    targets = [initialState] + DifferentiablePhysicsEngine.forwardLoop(
         initialState.x,
         initialState.v,
         np.full(0, 0,),
@@ -257,7 +257,7 @@ def Minimize(data, method="L-BFGS-B", costFunction=G, jacobian=dGdp, cuadraticEr
         forwardSubSteps
     )
 
-    steps = [initialState] + UnityDLL.forwardLoop(
+    steps = [initialState] + DifferentiablePhysicsEngine.forwardLoop(
         initialState.x, initialState.v, res.x, settings, h, len(
             targets)-1, forwardSubSteps
     )
@@ -326,4 +326,4 @@ def ShowProgress(p):
 
 
 # https://gist.github.com/yuyay/3067185
-# python -m pip install "../UnityDLL"
+# python -m pip install "../DifferentiablePhysicsEngine"

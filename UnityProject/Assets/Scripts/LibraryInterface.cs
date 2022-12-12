@@ -239,7 +239,7 @@ public class ICPPWrapper
     /************************************************************
      *                      C++ Functions
      * **********************************************************/
-    private const string moduleName = "UnityDLL";
+    private const string moduleName = "DifferentiablePhysicsEngine";
 
     public class CPPWrapper
     {

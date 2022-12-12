@@ -11,7 +11,7 @@ Requires Python 3.10 (only version that works).
 
 To install the engine module for Python:
 
-    python -m pip install "/UnityDLL"
+    python -m pip install "/DifferentiablePhysicsEngine"
 
 NumPy and SciPy are also required:
 
