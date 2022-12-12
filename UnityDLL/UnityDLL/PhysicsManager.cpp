@@ -13,7 +13,7 @@ PhysicsManager::PhysicsManager(std::string info)
 {
 	//PhysicsManager::count = 1;
 
-	debugHelper = DebugHelper();
+
 
 	//debugHelper.PrintValue(info, "scene");
 
@@ -22,6 +22,9 @@ PhysicsManager::PhysicsManager(std::string info)
 	integrationMethod = (Integration)js["integrationMethod"];
 	tolerance = js["tolerance"];
 	printTimes = js["printTimes"];
+
+	debugHelper = DebugHelper();
+	debugHelper.enabled = printTimes;
 
 	json wind = js["windVel"];
 	PhysicsManager::windVelocity = Eigen::Vector3d(wind["x"], wind["y"], wind["z"]);
@@ -261,6 +264,7 @@ void PhysicsManager::UpdatePhysics(float time, float h)
 	switch (integrationMethod)
 	{
 	case Integration::Explicit:
+		//newSimulationInfo = StepExplicit(h, info);
 		break;
 	case Integration::Symplectic:
 		newSimulationInfo = StepSymplectic(h, info);
@@ -288,8 +292,6 @@ void PhysicsManager::UpdatePhysics(float time, float h)
 
 PhysicsManager::SimulationInfo PhysicsManager::StepSymplectic(float h, SimulationInfo simulationInfo)
 {
-	debugHelper.enabled = false;
-
 	debugHelper.RecordTime("1.Set up");
 	Eigen::VectorXd x = simulationInfo.x;
 	Eigen::VectorXd v = simulationInfo.v;

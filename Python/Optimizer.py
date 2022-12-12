@@ -279,9 +279,9 @@ def Minimize(data, method="L-BFGS-B", costFunction=G, jacobian=dGdp, cuadraticEr
         log += f"Message: {res.message}\n"
         log += f"Time elapsed: {elapsedTime}s\n\n"
 
-        log += f"Error: {round(res.fun,2)}\n"
-        log += f"Cuadratic error: {cost}\n"
-        log += f"Fixed cuadratic error: {cost}\n"
+        log += f"Cost: {round(res.fun,2)}\n"
+        log += f"Cuadratic error: {cuadraticError}\n"
+        log += f"Fixed cuadratic error: {cuadraticErrorConstantSteps}\n"
         log += f"Parameter deviation: {parameterDeviation}%\n\n"
 
         # log += f"nfev: {res.nfev}\n"
