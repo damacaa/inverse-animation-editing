@@ -9,8 +9,8 @@ public class Optimizer
     [MenuItem("Optimizer/Generate scene file")]
     public static void GenerateSceneFile()
     {
-        string path = (Application.dataPath).ToString() +"/scene.txt";
-        string path_f = (Application.dataPath).ToString() +"/Files/"+ SimulationManager.GetName();
+        string path = (Application.dataPath).ToString() + "/scene.txt";
+        string path_f = (Application.dataPath).ToString() + "/Files/" + SimulationManager.GetName();
 
         Debug.Log(path + " has been updated");
         File.WriteAllText(path, SimulationManager.SceneToJsonInEditor());
@@ -21,10 +21,12 @@ public class Optimizer
     public static void Optimize()
     {
         string strCmdText;
-        strCmdText = "/c python d:/Projects/MassSpringSimulator/Python/OptimizerForUnity.py & pause";   //This command to open a new notepad
+        string root = Directory.GetParent(Directory.GetParent(Application.dataPath).ToString()).ToString();
+        // C:/Users/danie/AppData/Local/Programs/Python/Python310/python.exe
+        strCmdText = $"/c cd ../Python & python {root}/Python/OptimizerForUnity.py & pause";// Path to Python script
         System.Diagnostics.Process.Start("CMD.exe", strCmdText); //Start cmd process
     }
-    
+
 
     [MenuItem("Optimizer/Generate and optimize")]
     public static void GenerateAndOptimize()

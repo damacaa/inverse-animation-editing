@@ -15,6 +15,9 @@ import json
 
 import UnityDLL
 
+import os.path
+from os import path
+
 
 class OptimizationResult:
     newData = NULL
@@ -294,7 +297,8 @@ def Minimize(data, method="L-BFGS-B", costFunction=G, jacobian=dGdp, cuadraticEr
         for i in range(min(10, len(desiredParameter))):
             print(f" {round(desiredParameter[i], 4)} --> {round(res.x[i], 4)}")
 
-        log_file = open("C:/debug/log.txt", "a+")
+        
+        log_file = open("log.txt", "a+")
         log_file.write(log)
         log_file.close()
 

@@ -7,7 +7,7 @@ import json
 files = ["side", ]  # "flag_noWind", "flag"
 for f in files:
     sceneData = open(
-        f"D:/Projects/MassSpringSimulator/UnityProject/Assets/Files/{f}.txt", "r"
+        f"../UnityProject/Assets/Files/{f}.txt", "r"
     ).read()
 
     """small = np.arange(10, 101, 10)
@@ -30,6 +30,6 @@ for f in files:
             f"{v} {result.cuadraticError} {result.cuadraticErrorConstant} {result.parameterDeviation} {result.elapsedTime}".replace('.', ','), f"test2_{f}_2")
 
         text_file = open(
-            f"D:/Projects/MassSpringSimulator/UnityProject/Assets/Files/Test2/{f}_{v}_optimized.txt", "w")
+            f"../UnityProject/Assets/Files/Test2/{f}_{v}_optimized.txt", "w")
         text_file.write(result.newData)
         text_file.close()

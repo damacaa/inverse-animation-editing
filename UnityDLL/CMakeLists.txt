@@ -47,9 +47,9 @@ target_compile_definitions(UnityDLL
 
 # 
 
-set(PYTHON_INCLUDE "/include/Python310/include" CACHE PATH "") 
-set(PYTHON_LIB "/include/Python310/libs/python310.lib" CACHE FILEPATH "")
-set(PYBIND11_INCLUDE "/include/pybind11/include" CACHE PATH "") 
+set(PYTHON_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include/Python310/include" CACHE PATH "") 
+set(PYTHON_LIB "${CMAKE_CURRENT_SOURCE_DIR}/include/Python310/libs/python310.lib" CACHE FILEPATH "")
+set(PYBIND11_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include/pybind11" CACHE PATH "") 
 
 target_include_directories(
         UnityDLL

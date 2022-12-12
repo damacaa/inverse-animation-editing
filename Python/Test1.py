@@ -17,7 +17,7 @@ for f in files:
     DebugHelper.AddToLog("Scene: " + f, "test1")
 
     sceneData = open(
-        f"D:/Projects/MassSpringSimulator/UnityProject/Assets/{f}.txt", "r"
+        f"../UnityProject/Assets/Files/{f}.txt", "r"
     ).read()
 
     # Get optimized scene
@@ -34,7 +34,7 @@ for f in files:
             f"{s} {result.cuadraticError} {result.elapsedTime}".replace('.', ','), "test1")
 
         text_file = open(
-            f"D:/Projects/MassSpringSimulator/UnityProject/Assets/Files/Test1/{f}_{s}_optimized.txt", "w")
+            f"../UnityProject/Assets/Files/Test1/{f}_{s}_optimized.txt", "w")
         text_file.write(result.newData)
         text_file.close()
 
