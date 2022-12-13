@@ -4,118 +4,8 @@
 #include <map>
 #include "DebugHelper.h"
 
-Object::Object(Vector3f* vertices, int nVerts, int* _triangles, int nTriangles, float stiffness, float density)
-{
-	this->stiffness = stiffness;
-	this->density = density;
-	this->nVerts = nVerts;
-	//positon = Eigen::Vector3d((double)pos.x, (double)pos.y, (double)pos.z);
-
-	vertexArray = new Vector3f[nVerts];
-	vertexArray2 = new Vector3f[nVerts];
-
-	memcpy(vertexArray, vertices, sizeof(Vector3f) * nVerts);
-	memcpy(vertexArray2, vertexArray, sizeof(Vector3f) * nVerts);
-
-	//Create nodes
-	_nodes = std::vector<Node>(nVerts);
-	//nodes = new Node[nVerts];
-	for (int i = 0; i < nVerts; i++) {
-		vertexArray[i] = (Vector3f)vertices[i];
-		_nodes[i].position = Eigen::Vector3d(
-			(double)vertexArray[i].x,
-			(double)vertexArray[i].y,
-			(double)vertexArray[i].z);
-
-		_nodes[i].meshId = i;
-		_nodes[i].damping = damping;
-	}
-
-	//Creating springs
-	int* triangles = new int[nTriangles];
-	memcpy(triangles, _triangles, sizeof(int) * nTriangles);
-
-	std::map<std::string, Spring> springMap;
-
-	Spring* newsprings = new Spring[3];
-	for (int i = 0; i < nTriangles; i += 3)
-	{
-		newsprings[0] = Spring(&_nodes[triangles[i]], &_nodes[triangles[i + 1]]);
-		newsprings[1] = Spring(&_nodes[triangles[i]], &_nodes[triangles[i + 2]]);
-		newsprings[2] = Spring(&_nodes[triangles[i + 1]], &_nodes[triangles[i + 2]]);
-
-		newsprings[0].oppositeNode = &_nodes[triangles[i + 2]];
-		newsprings[1].oppositeNode = &_nodes[triangles[i + 1]];
-		newsprings[2].oppositeNode = &_nodes[triangles[i]];
-
-		newsprings[0].stiffness = stiffness;
-		newsprings[1].stiffness = stiffness;
-		newsprings[2].stiffness = stiffness;
-
-		Eigen::Vector3d side1 = _nodes[triangles[i + 1]].position - _nodes[triangles[i]].position;
-		Eigen::Vector3d side2 = _nodes[triangles[i + 2]].position - _nodes[triangles[i]].position;
-
-		double area = 0.5 * side1.cross(side2).norm();
-
-		for (int x = 0; x < 3; x++)
-		{//Add the proper mass to each node
-
-			_nodes[triangles[i + x]].volume += area / 3.0;
-
-			std::map<std::string, Spring>::iterator it = springMap.find(newsprings[x].id);
-
-			if (it != springMap.end())
-			{
-				Node* a = newsprings[x].oppositeNode;
-				Node* b = springMap[newsprings[x].id].oppositeNode;
-
-				Spring extraSpring = Spring(a, b);//stiffness / 10.0/////////////////////////////////////////
-				extraSpring.stiffness = stiffness / 2.0;
-				extraSpring.volume += 2.0 * area;
-				springMap[extraSpring.id] = extraSpring;
-			}
-			else
-			{
-				//La arista no está en el diccionario
-				springMap[newsprings[x].id] = newsprings[x];
-			}
-
-			springMap[newsprings[x].id].volume += area;
-		}
-	}
-
-
-	nSprings = (int)springMap.size();
-	//springs = new Spring[nSprings];
-	_springs = std::vector<Spring>(nSprings);
-
-	std::map<std::string, Spring>::iterator it;
-	int i = 0;
-	for (it = springMap.begin(); it != springMap.end(); ++it) {
-		_springs[i] = springMap[it->first];
-		i++;
-	}
-
-	//Setting simulation parameters
-	for (int i = 0; i < nVerts; i++) {
-		_nodes[i].SetMass(density);
-		_nodes[i].SetDamping(damping);
-	}
-
-	for (size_t i = 0; i < nSprings; i++)
-	{
-		_springs[i].SetStiffness(_springs[i].stiffness);
-		_springs[i].SetDamping(damping);
-	}
-
-	delete[] newsprings;
-	delete[] triangles;
-
-}
-
 Object::Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, int* triangles, int nTriangles, double dragCoefficient, float damping, std::string optimizationSettings, PhysicsManager* physicsManager)
 {
-	//this->density = density;
 	this->stiffness = stiffness;
 	this->damping = damping;
 
@@ -140,7 +30,6 @@ Object::Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts
 			(double)vertPos[i].y,
 			(double)vertPos[i].z);
 
-		//nodes[i].volume = vertVolume[i];
 		_nodes[i].SetMass(vertMass[i]);
 		_nodes[i].SetDamping(damping);
 		_nodes[i].isFixed = vertIsFixed[i];
@@ -152,7 +41,6 @@ Object::Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts
 		int a = springs[2 * i];
 		int b = springs[(2 * i) + 1];
 		_springs[i] = Spring(&_nodes[a], &_nodes[b]);
-		//springs[i].volume = springVolume[i];
 		_springs[i].SetStiffness(springStiffness[i]);
 		_springs[i].SetDamping(damping / 2.0);
 	}
@@ -199,13 +87,11 @@ void Object::Initialize(int* ind)
 
 	// Start scene nodes/edges
 	for (int i = 0; i < nVerts; ++i) {
-		//d.PrintValue("", std::to_string(i));
-		_nodes[i].Initialize(index + 3 * i); // Prepare
+		_nodes[i].Initialize(index + 3 * i);
 	}
 
-
 	for (int i = 0; i < nSprings; ++i)
-		_springs[i].Initialize(stiffness, damping); // Prepare
+		_springs[i].Initialize(stiffness, damping);
 }
 
 int Object::GetNumDoFs()

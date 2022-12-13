@@ -133,19 +133,8 @@ extern "C" {
 		}
 	}
 
-	__declspec(dllexport) float Estimate(float value, int iterations) {
-		return physicsManager->Estimate(value, iterations, delta, new Eigen::VectorXd());
-	}
-
-	/*__declspec(dllexport) int AddObject(Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass)
-	{
-		std::lock_guard<std::mutex> lock(vertexMutex);
-		return physicsManager->AddObject(vertices, nVertices, triangles, nTriangles, stiffness, mass);
-	}*/
-
 	__declspec(dllexport) int AddObject(Vector3f* vertPos, float vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, float damping)
 	{
-		//return physicsManager->AddObject(vertPos, new bool[nVerts], vertMass, nVerts, springs, springStiffness, nSprings, damping);
 		return -1;
 	}
 
@@ -207,26 +196,14 @@ extern "C" {
 	}
 
 
-
 	__declspec(dllexport) Vector3f* GetVertices(int id, int* count) {
-		/*Depending on how Update is being executed, vertexArray might being updated at the same time. To prevent race conditions, we have to wait
-		for the lock of vertexArray and copy all data to a second array. Unity/C# will process the data in the second array. In the meantime
-		the data in the first array can be updated.*/
-
 
 		if (!running) {
 			*count = 0;
-			return new Vector3f;
+			return nullptr;
 		}
 
 		return physicsManager->GetVertices(id, count);
-
-		/*std::lock_guard<std::mutex> lock(vertexMutex);
-		if (physicsManager->Updated) {
-			std::lock_guard<std::mutex> lock(vertexMutex2);
-		}*/
-
-
 	}
 #ifdef __cplusplus
 }

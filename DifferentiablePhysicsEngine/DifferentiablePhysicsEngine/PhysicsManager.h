@@ -33,11 +33,10 @@ public:
 	};
 
 	struct BackwardStepInfo {
-		Eigen::VectorXd dGdp;//Tantos como parametros haya
+		Eigen::VectorXd dGdp;
 		Eigen::VectorXd dGdx, dGdv;
 	};
 
-	static int count;
 	static Eigen::Vector3d windVelocity;
 
 private:
@@ -49,7 +48,6 @@ private:
 	PhysicsManager::Integration integrationMethod = PhysicsManager::Integration::Implicit;
 
 	std::mutex vertexMutex;
-	std::mutex vertexMutex2;
 	std::mutex sceneObjectsMutex;
 
 	std::vector<Object*> SimObjects;
@@ -76,9 +74,7 @@ public:
 	PhysicsManager(std::string info);
 	PhysicsManager(PhysicsManager::Integration _IntegrationMethod = PhysicsManager::Integration::Implicit, double tolerance = 1e-2);
 	~PhysicsManager();
-	PhysicsManager(const PhysicsManager&) {}
-
-	int AddObject(Vector3f* vertices, int nVertices, int* triangles, int nTriangles, float stiffness, float mass);
+	PhysicsManager(const PhysicsManager&);
 
 	int AddObject(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, int* triangles, int nTriangles, double dragCoefficient, float damping, std::string optimizationSettings);
 
@@ -90,8 +86,8 @@ public:
 
 	void UpdatePhysics(float time, float h);
 
-	float Estimate(float parameter, int iter, float h, Eigen::VectorXd* _dGdp);
-
+	SimulationInfo StepExplicit(float h, SimulationInfo simulationInfo);
+	
 	SimulationInfo StepSymplectic(float h, SimulationInfo simulationInfo);
 
 	SimulationInfo StepImplicit(float h, SimulationInfo simulationInfo, int iterations = 1);
@@ -100,8 +96,6 @@ public:
 
 	Vector3f* GetVertices(int id, int* count);
 
-	void SetParam(float param);
-
 	void SetParam(Eigen::VectorXd params, std::string settings);
 
 	SimulationInfo GetInitialState();
@@ -109,7 +103,6 @@ public:
 	SimulationInfo Forward(Eigen::VectorXd x, Eigen::VectorXd v, float h, int subSteps);
 
 	PhysicsManager::BackwardStepInfo Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h, std::string settings);
-
 
 };
 

@@ -40,14 +40,9 @@ public:
 
 	PhysicsManager* physicsManager;
 
-
-	Object(Vector3f* vertices, int nVerts, int* triangles, int nTriangles, float stiffness, float mass);
-
 	Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings,  int* triangles, int nTriangles, double dragCoefficient, float damping, std::string optimizationSettings, PhysicsManager* physicsManager);
 	
 	~Object();
-
-
 
 	void Initialize(int* ind);
 
