@@ -369,11 +369,12 @@ PhysicsManager::SimulationInfo PhysicsManager::StepSymplectic(float h, Simulatio
 	return newSimulationInfo;
 }
 
-PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationInfo simulationInfo, int iterations)
+PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationInfo previousState, int iterations)
 {
 	debugHelper.RecordTime("1.Set up");
-	Eigen::VectorXd x = simulationInfo.x;
-	Eigen::VectorXd v = simulationInfo.v;
+	
+	Eigen::VectorXd x = previousState.x;// Node positions
+	Eigen::VectorXd v = previousState.v;// Node velocities
 
 	for (int iter = 0; iter < iterations; iter++)
 	{
@@ -429,7 +430,7 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationI
 			b = firstPart * v + h * f;
 		}
 		else {
-			b = (M * simulationInfo.v) + (h * f) - (h * dFdv * v) - (h * h * dFdx * x);
+			b = (M * previousState.v) + (h * f) - (h * dFdv * v) - (h * h * dFdx * x);
 		}
 
 		//FIXING
@@ -460,7 +461,7 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationI
 		cg.compute(A);
 
 		v = cg.solveWithGuess(b, v);
-		x = simulationInfo.x + h * v; // xi+1 = x0 + h vi+1
+		x = previousState.x + h * v; // xi+1 = x0 + h vi+1
 	}
 
 	debugHelper.Wait();
