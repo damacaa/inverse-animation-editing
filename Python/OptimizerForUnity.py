@@ -1,5 +1,4 @@
 # Read scene file
-from unittest import result
 from Optimizer import Minimize
 
 

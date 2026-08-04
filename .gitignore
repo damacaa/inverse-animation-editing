@@ -1,0 +1,36 @@
+# Build artifacts
+build/
+out/
+*.o
+*.a
+*.so
+*.dll
+*.dylib
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+log.txt
+test*.txt
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Unity generated folders
+UnityProject/Library/
+UnityProject/Logs/
+UnityProject/Temp/
+UnityProject/Obj/
+UnityProject/obj/
+UnityProject/UserSettings/
+UnityProject/MemoryCaptures/
+*.log
