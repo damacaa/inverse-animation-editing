@@ -1,23 +1,16 @@
 #include "Object.h"
-#include <cstring>
-#include "DebugHelper.h"
 
 Object::Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, int* triangles, int nTriangles, double dragCoefficient, float damping, std::string optimizationSettings, PhysicsManager* physicsManager)
 {
-	this->stiffness = stiffness;
 	this->damping = damping;
 
 	this->nVerts = nVerts;
 	this->nSprings = nSprings;
 	this->nFaces = nTriangles / 3;
 
-	vertexArray = new Vector3f[nVerts];
-	vertexArray2 = new Vector3f[nVerts];
+	vertexArray = std::vector<Vector3f>(vertPos, vertPos + nVerts);
+	vertexArray2 = vertexArray;
 
-	memcpy(vertexArray, vertPos, sizeof(Vector3f) * nVerts);
-	memcpy(vertexArray2, vertexArray, sizeof(Vector3f) * nVerts);
-
-	//Create nodes
 	_nodes = std::vector<Node>(nVerts);
 	for (int i = 0; i < nVerts; i++) {
 
@@ -53,18 +46,10 @@ Object::Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts
 	this->dragCoefficient = dragCoefficient;
 
 	this->optimizationSettings = optimizationSettings;
-
-	this->physicsManager = physicsManager;
-
 }
 
 Object::~Object()
 {
-	delete[] vertexArray;
-	delete[] vertexArray2;
-
-	vertexArray = 0;
-	vertexArray2 = 0;
 }
 
 void Object::Fixnodes(Fixer* f)
@@ -80,10 +65,8 @@ void Object::Fixnodes(Fixer* f)
 
 void Object::Initialize(int* ind)
 {
-	DebugHelper d = DebugHelper();
 	index = *ind;
 
-	// Start scene nodes/edges
 	for (int i = 0; i < nVerts; ++i) {
 		_nodes[i].Initialize(index + 3 * i);
 	}
@@ -178,7 +161,7 @@ void Object::UpdateVertices()
 			(float)_nodes[i].position.z());
 	}
 
-	memcpy(vertexArray2, vertexArray, sizeof(Vector3f) * nVerts);
+	vertexArray2 = vertexArray;
 
 	updated = true;
 }
@@ -198,7 +181,7 @@ void Object::GetMassInverse(std::vector<T>* massInv)
 Vector3f* Object::GetVertices() {
 	updated = false;
 
-	return vertexArray2;
+	return vertexArray2.data();
 }
 
 void Object::SetMass(double mass)

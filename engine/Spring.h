@@ -1,5 +1,4 @@
 #pragma once
-#include <string>
 #include "Types.h"
 
 class Node;
@@ -9,32 +8,19 @@ private:
 	Eigen::Vector3d dir;
 
 public:
-	Node* nodeA = 0;
-	Node* nodeB = 0;
-	Node* oppositeNode = 0;
+	Node* nodeA = nullptr;
+	Node* nodeB = nullptr;
 
 	float length0 = 0;
 	float length = 0;
 
 	float stiffness = 150.0f;
 
-	float volume = 0;
 	float damping = 0;
-
-	std::string id = "";
-
-	enum class SpringType {
-		traction,
-		bending
-	};
-
-	SpringType springType = SpringType::traction;
 
 	Spring() {};
 
 	Spring(Node* A, Node* B);
-
-	void ComputeForces();
 
 	void Initialize(float stiffness, float damping);
 

@@ -2,6 +2,8 @@
 #include "Object.h"
 #include "Collider.h"
 
+#include <memory>
+
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
@@ -29,20 +31,19 @@ PhysicsManager::PhysicsManager(std::string info)
 		int nSprings = obj["springs"].size() / 2;
 		int nTriangles = obj["triangles"].size();
 
-		Vector3f* vertPos = new Vector3f[nVerts];
-		bool* vertIsFixed = new bool[nVerts];
-		float* vertMass = new float[nVerts];
+		std::vector<Vector3f> vertPos(nVerts);
+		auto vertFixed = std::make_unique<bool[]>(nVerts);
+		std::vector<float> vertMass(nVerts);
 
-		int* springs = new int[(size_t)(nSprings * 2.0)];
-		float* springStiffness = new float[nSprings];
+		std::vector<int> springs((size_t)(nSprings * 2));
+		std::vector<float> springStiffness(nSprings);
 
-		int* triangles = new int[(size_t)obj["triangles"].size()];
+		std::vector<int> triangles(obj["triangles"].size());
 		double dragCoefficient = obj["dragCoefficient"];
 
 		float damping = obj["damping"];
 		std::string optimizationSettings = obj["optimizationSettings"];
 
-		std::string s = "";
 		for (size_t j = 0; j < nVerts; j++)
 		{
 			json pos = obj["vertPos"][j];
@@ -53,7 +54,7 @@ PhysicsManager::PhysicsManager(std::string info)
 
 			vertPos[j] = Vector3f(x, y, z);
 			vertMass[j] = obj["vertMass"][j];
-			vertIsFixed[j] = obj["vertIsFixed"][j];
+			vertFixed[j] = obj["vertIsFixed"][j];
 		}
 
 		for (size_t j = 0; j < nSprings; j++)
@@ -69,7 +70,9 @@ PhysicsManager::PhysicsManager(std::string info)
 		}
 
 
-		int id = AddObject(vertPos, vertIsFixed, vertMass, nVerts, springs, springStiffness, nSprings, triangles, nTriangles, dragCoefficient, damping, optimizationSettings);
+		int id = AddObject(vertPos.data(), vertFixed.get(), vertMass.data(), nVerts,
+			springs.data(), springStiffness.data(), nSprings,
+			triangles.data(), nTriangles, dragCoefficient, damping, optimizationSettings);
 	}
 
 	for (size_t i = 0; i < js["colliders"].size(); i++)
@@ -98,32 +101,24 @@ PhysicsManager::~PhysicsManager()
 	}
 
 	for (int i = 0; i < SimObjects.size(); i++)
-	{
 		delete SimObjects[i];
-	}
 	SimObjects.clear();
 
 	for (int i = 0; i < Fixers.size(); i++)
-	{
 		delete Fixers[i];
-	}
 	Fixers.clear();
 
+	for (size_t i = 0; i < Colliders.size(); i++)
+		delete Colliders[i];
+	Colliders.clear();
+
 	for (size_t i = 0; i < PendingSimObjects.size(); i++)
-	{
 		delete PendingSimObjects[i];
-	}
 	PendingSimObjects.clear();
 
 	for (size_t i = 0; i < PendingFixers.size(); i++)
-	{
 		delete PendingFixers[i];
-	}
 	PendingFixers.clear();
-}
-
-PhysicsManager::PhysicsManager(const PhysicsManager&)
-{
 }
 
 int PhysicsManager::AddObject(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts,
@@ -595,13 +590,11 @@ PhysicsManager::SimulationInfo PhysicsManager::Forward(Eigen::VectorXd x, Eigen:
 
 PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h, std::string settings)
 {
-	//Eigen::VectorXd f1 = Eigen::VectorXd::Constant(m_numDoFs, 0.0);//Forces
 	Eigen::VectorXd dFdp = Eigen::VectorXd::Constant(m_numDoFs, 0.0);
 
-	//Eigen::VectorXd x = current.x;
-	SpMat dFdx(m_numDoFs, m_numDoFs);;
-	SpMat dFdv(m_numDoFs, m_numDoFs);;
-	SpMat M(m_numDoFs, m_numDoFs);;
+	SpMat dFdx(m_numDoFs, m_numDoFs);
+	SpMat dFdv(m_numDoFs, m_numDoFs);
+	SpMat M(m_numDoFs, m_numDoFs);
 
 	std::vector<T> derivPos = std::vector<T>();
 	std::vector<T> derivVel = std::vector<T>();
@@ -617,11 +610,10 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 		SimObjects[i]->SetPosition(&x);
 		SimObjects[i]->SetVelocity(&v);
 		SimObjects[i]->GetMass(&masses);
-		//SimObjects[i]->GetForce(&f1);
 		SimObjects[i]->GetForceJacobian(&derivPos, &derivVel, Colliders);
 		SimObjects[i]->GetFixedIndices(&fixedIndices);
 
-		SimObjects[i]->GetdFdp(&dFdp); //Podr�a pasar uT a esta funci�n para hacer el c�lculo dentro de la funci�n
+		SimObjects[i]->GetdFdp(&dFdp);
 		SimObjects[i]->GetdFdp(&dFdpTriplets, nSprings);
 		nSprings += SimObjects[i]->nSprings;
 	}
@@ -633,39 +625,19 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 	SpMat A = M - (h * dFdv) + ((-h * h) * dFdx);
 	Eigen::VectorXd b = (h * dGdx1) + dGdv1;
 
-	/*for (int i = 0; i < A.outerSize(); i++) {
-		for (SpMat::InnerIterator j(A, i); j; ++j) {
-			if (fixedIndices[i] || fixedIndices[j.row()])
-				if (i == j.row())
-					j.valueRef() = 1;
-				else
-					j.valueRef() = 0;
-		}
-	}
-
-	for (size_t i = 0; i < m_numDoFs; i++)
-	{
-		if (fixedIndices[i]) {
-			b[i] = 0;
-		}
-	}*/
-
 	Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::UnitLower | Eigen::UnitUpper> cg;
 	cg.setTolerance(tolerance);
 	cg.compute(A);
 
 	Eigen::VectorXd u = cg.solve(b);
 
-	//Backward
 	BackwardStepInfo info = BackwardStepInfo();
 
-	// Constraint din�mica --> c = M * v1 - M * v - h * f1
-	// Constraint fixing --> S * v1 = 0 ,S matriz de selecci�n (diagonal con 1 donde est� fijado)
-
-	//Constraint din�mica + fixing --> c = M * v1 � M * v � h * (I � ST * S) f1 = 0
-
-	//Derivada constraint din�mica --> dcdp = uT * dGdp
-	//Derivada constraint din�mica + fixing --> dcdp = uT * dGdp
+	// Dynamic constraint: c = M*v1 - M*v - h*f1
+	// Fixing constraint: S*v1 = 0, S is a selection matrix (diagonal ones at fixed indices)
+	//
+	// Combined: c = M*v1 - M*v - h*(I - S^T*S)*f1 = 0
+	// Derivative: dcdp = u^T * dGdp   (adjoint method)
 
 	std::vector <Eigen::VectorXd>  ds;
 

@@ -1,6 +1,5 @@
 #pragma once
 #include "Types.h"
-#include <cmath>
 
 class Collider;
 class Node
@@ -12,19 +11,11 @@ public:
 	int meshId = -1;
 
 	Eigen::Index index = 0;
-	Eigen::Vector3d position = Eigen::Vector3d(0.0f, 0.0f, 0.0f);
-	Eigen::Vector3d vel = Eigen::Vector3d(0.0f, 0.0f, 0.0f);
-	Eigen::Vector3d acc = Eigen::Vector3d(0.0f, 0.0f, 0.0f);
-	Eigen::Vector3d force = Eigen::Vector3d(0.0f, 0.0f, 0.0f);
+	Eigen::Vector3d position = Eigen::Vector3d(0, 0, 0);
+	Eigen::Vector3d vel = Eigen::Vector3d(0, 0, 0);
 
-	double penalty = 0;
-	double thickness = 0;
 	double damping = 1;
-	double gravity = -9.81f;
-
 	double mass = 1;
-	double volume = 1;
-	double density = 1;
 
 	bool isFixed;
 

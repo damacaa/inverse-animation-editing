@@ -20,6 +20,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 option(DPE_BUILD_PYTHON "Build the Python bindings (pybind11 module)" ON)
 option(DPE_BUILD_UNITY_BRIDGE "Build the Unity C API bridge (shared library)" ON)
+option(DPE_BUILD_TESTS "Build the unit tests (requires GoogleTest)" ON)
 
 # ---------------------------------------------------------------------------
 # Dependencies (fetched at configure time, nothing vendored in the repo)
@@ -97,4 +98,22 @@ if(DPE_BUILD_UNITY_BRIDGE)
     COMMAND ${CMAKE_COMMAND} -E copy
       $<TARGET_FILE:dpe_unity>
       ${CMAKE_SOURCE_DIR}/UnityProject/Assets/$<TARGET_FILE_NAME:dpe_unity>)
+endif()
+
+# ---------------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------------
+if(DPE_BUILD_TESTS)
+  FetchContent_Declare(googletest
+    URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.tar.gz
+    URL_HASH SHA256=7b42b4d6ed48810c5362c265a17faebe90dc2373c885e5216439d37927f02926)
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
+  enable_testing()
+
+  add_executable(dpe_tests test/test_physics.cpp)
+  target_link_libraries(dpe_tests PRIVATE dpe_core gtest_main)
+  include(GoogleTest)
+  gtest_discover_tests(dpe_tests)
 endif()

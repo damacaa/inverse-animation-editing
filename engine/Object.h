@@ -11,23 +11,17 @@ class Collider;
 class Object
 {
 private:
-	//Eigen::Vector3d GetNormal(Eigen::Vector3d a, Eigen::Vector3d b, Eigen::Vector3d c);
 
 public:
-	//PhysicsManager* manager;
-
-	int id = -1;//Id to return vertices
-	int index = -1;//Id in matrix
+	int id = -1;
+	int index = -1;
 	bool updated = false;
-	float damping = 0.5f;//Needs to be separated into two
+	float damping = 0.5f;
 	float stiffness = 150.0f;
-	float density = 1.0f;
 	double dragCoefficient = 1.0f;
 
-	//Eigen::Vector3d positon;
-
-	Vector3f* vertexArray = 0;
-	Vector3f* vertexArray2 = 0;
+	std::vector<Vector3f> vertexArray;
+	std::vector<Vector3f> vertexArray2;
 	int nVerts = 0;
 	int nSprings = 0;
 	int nFaces = 0;
@@ -37,8 +31,6 @@ public:
 	std::vector<Face> _faces;
 
 	std::string optimizationSettings;
-
-	PhysicsManager* physicsManager;
 
 	Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings,  int* triangles, int nTriangles, double dragCoefficient, float damping, std::string optimizationSettings, PhysicsManager* physicsManager);
 	

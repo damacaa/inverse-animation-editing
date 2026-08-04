@@ -64,7 +64,6 @@ void Node::GetForce(Eigen::VectorXd* force, std::vector<Collider*> colliders)
 
 void Node::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel, std::vector<Collider*> colliders)
 {
-	//Needs fix!
 	for (Collider* collider : colliders)
 	{
 		Eigen::Matrix3d dfdx = collider->GetJacobian(position);
@@ -86,8 +85,6 @@ void Node::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel, 
 
 void Node::SetMass(double value)
 {
-	//density = value;
-	//mass = volume * density;
 	mass = value;
 }
 

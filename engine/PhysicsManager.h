@@ -76,7 +76,8 @@ public:
 	PhysicsManager(std::string info);
 	PhysicsManager(PhysicsManager::Integration _IntegrationMethod = PhysicsManager::Integration::Implicit, double tolerance = 1e-2);
 	~PhysicsManager();
-	PhysicsManager(const PhysicsManager&);
+	PhysicsManager(const PhysicsManager&) = delete;
+	PhysicsManager& operator=(const PhysicsManager&) = delete;
 
 	int AddObject(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, int* triangles, int nTriangles, double dragCoefficient, float damping, std::string optimizationSettings);
 

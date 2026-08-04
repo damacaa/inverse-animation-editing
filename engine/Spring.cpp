@@ -8,13 +8,6 @@ Spring::Spring(Node* A, Node* B)
 
 	length = (nodeA->position - nodeB->position).norm();
 	length0 = length;
-
-	if (nodeA->meshId > nodeB->meshId) {
-		id = std::to_string(10000 * nodeA->meshId) + std::to_string(nodeB->meshId);
-	}
-	else {
-		id = std::to_string(10000 * nodeB->meshId) + std::to_string(nodeA->meshId);
-	}
 }
 
 void Spring::Initialize(float stiffness, float damping)
@@ -34,8 +27,7 @@ void Spring::UpdateState()
 // Get Force
 void Spring::GetForce(Eigen::VectorXd* force)
 {
-	Eigen::Vector3d f = -stiffness * (length - length0) * dir;//
-	//Eigen::Vector3d f = -(volume / (length0 * length0)) * stiffness * (length - length0) * dir;
+	Eigen::Vector3d f = -stiffness * (length - length0) * dir;
 	f += -damping * dir.dot(nodeA->vel - nodeB->vel) * dir;
 
 	(*force)[nodeA->index] += f.x();
@@ -49,7 +41,7 @@ void Spring::GetForce(Eigen::VectorXd* force)
 
 void Spring::GetdFdstiffness(Eigen::VectorXd* dforce)
 {
-	Eigen::Vector3d f = -(length - length0) * dir;//
+	Eigen::Vector3d f = -(length - length0) * dir;
 
 	if (!nodeA->isFixed) {
 		(*dforce)[nodeA->index] += f.x();
@@ -88,7 +80,6 @@ void Spring::GetForceJacobian(std::vector<T>* derivPos, std::vector<T>* derivVel
 	Eigen::Matrix3d dFadxa = (-stiffness * (length - length0) / length * Eigen::Matrix3d::Identity()) - (stiffness * length0 / length * dirMat);
 	Eigen::Matrix3d dFadva = -damping * dirMat;
 
-	//damping = beta * stiffness
 	for (size_t i = 0; i < 3; i++)
 	{
 		for (size_t j = 0; j < 3; j++)
@@ -114,27 +105,10 @@ bool Spring::operator==(const Spring& p) const
 
 void Spring::SetStiffness(float stiffness)
 {
-	//this->stiffness = stiffness * volume / (length0 * length0);
 	this->stiffness = stiffness;
 }
 
 void Spring::SetDamping(float beta)
 {
 	damping = beta * stiffness;
-}
-
-void Spring::ComputeForces()
-{
-	Eigen::Vector3d u = nodeA->position - nodeB->position;
-
-	length = u.norm();
-
-	u.normalize();
-
-	Eigen::Vector3d force = -(volume / (length0 * length0)) * stiffness * (length - length0) * u;
-
-	force += -damping * u.dot(nodeA->vel - nodeB->vel) * u;
-
-	nodeA->force += force;
-	nodeB->force -= force;
 }
