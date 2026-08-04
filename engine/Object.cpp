@@ -12,6 +12,7 @@ Object::Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts
 	vertexArray2 = vertexArray;
 
 	_nodes = std::vector<Node>(nVerts);
+	initialVertexMass.reserve(nVerts);
 	for (int i = 0; i < nVerts; i++) {
 
 		_nodes[i].meshId = i;
@@ -24,9 +25,12 @@ Object::Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts
 		_nodes[i].SetMass(vertMass[i]);
 		_nodes[i].SetDamping(damping);
 		_nodes[i].isFixed = vertIsFixed[i];
+
+		initialVertexMass.push_back(vertMass[i]);
 	}
 
 	_springs = std::vector<Spring>(nSprings);
+	initialSpringStiffness.reserve(nSprings);
 	for (int i = 0; i < nSprings; i++)
 	{
 		int a = springs[2 * i];
@@ -34,6 +38,8 @@ Object::Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts
 		_springs[i] = Spring(&_nodes[a], &_nodes[b]);
 		_springs[i].SetStiffness(springStiffness[i]);
 		_springs[i].SetDamping(damping / 2.0);
+
+		initialSpringStiffness.push_back(springStiffness[i]);
 	}
 
 	_faces = std::vector<Face>(this->nFaces);
@@ -213,5 +219,21 @@ void Object::SetStiffness(Eigen::VectorXd params)
 	for (size_t i = 0; i < nSprings; i++)
 	{
 		_springs[i].SetStiffness(params(i));
+	}
+}
+
+void Object::ResetMass()
+{
+	for (size_t i = 0; i < nVerts; i++)
+	{
+		_nodes[i].SetMass(initialVertexMass[i]);
+	}
+}
+
+void Object::ResetStiffness()
+{
+	for (size_t i = 0; i < nSprings; i++)
+	{
+		_springs[i].SetStiffness(initialSpringStiffness[i]);
 	}
 }

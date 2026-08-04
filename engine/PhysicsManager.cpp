@@ -578,6 +578,15 @@ void PhysicsManager::SetParam(Eigen::VectorXd params, std::string settings)
 	}
 }
 
+void PhysicsManager::ResetParams()
+{
+	for (size_t i = 0; i < SimObjects.size(); i++)
+	{
+		SimObjects[i]->ResetMass();
+		SimObjects[i]->ResetStiffness();
+	}
+}
+
 PhysicsManager::SimulationInfo PhysicsManager::GetInitialState()
 {
 	Eigen::VectorXd x = Eigen::VectorXd(m_numDoFs);

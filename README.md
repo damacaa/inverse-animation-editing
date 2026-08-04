@@ -201,8 +201,8 @@ visually it should closely follow the target animation you generated.
 
 The error metric is the root mean square position difference between the
 optimized simulation and the target, per vertex per frame.  Reported values
-below were produced on a Ryzen-class desktop; runtimes scale roughly with the
-number of simulation steps and parameters.
+below were produced on a Ryzen-class desktop (Release build); runtimes scale
+roughly with the number of simulation steps and parameters.
 
 ## Experiment 1: parameter recovery
 
@@ -212,29 +212,29 @@ stiffnesses).
 
 | Scene | Settings | Error | Time (s) |
 |-------|----------|-------|----------|
-| side (one edge fixed) | `Gn` | 3.04 | 16.0 |
-|                       | `Ln` | 1.53 | 11.0 |
-|                       | `nG` | 0.50 | 28.4 |
-|                       | `nL` | 0.04 | 16.4 |
-| corners (four corners fixed) | `Gn` | 0.82 | 15.5 |
-|                              | `Ln` | 0.05 | 41.2 |
-|                              | `nG` | 1.00 | 21.8 |
-|                              | `nL` | 0.11 | 44.8 |
-| flag (wind) | `Gn` | 32.69 (fails to converge) | 0.1 |
-|             | `Ln` | 0.72 | 5.2 |
-|             | `nG` | 0.21 | 1.1 |
-|             | `nL` | 0.00 | 46.3 |
+| side (one edge fixed) | `Gn` | 0.18 | 10.5 |
+|                       | `Ln` | 1.08 | 7.7 |
+|                       | `nG` | 0.03 | 17.7 |
+|                       | `nL` | 0.06 | 10.0 |
+| corners (four corners fixed) | `Gn` | 0.05 | 8.2 |
+|                              | `Ln` | 0.04 | 27.9 |
+|                              | `nG` | 0.06 | 12.1 |
+|                              | `nL` | 0.17 | 30.4 |
+| flag (wind) | `Gn` | 1.93 (fails to converge) | 0.1 |
+|             | `Ln` | 0.51 | 3.9 |
+|             | `nG` | 0.01 | 0.7 |
+|             | `nL` | 0.00 | 27.0 |
 
 Observations:
 
 - Local parameterizations (`nL`) recover the parameters almost perfectly
-  (error ≈ 0.04 or less), confirming the analytic gradients through the
+  (error ≤ 0.17 everywhere), confirming the analytic gradients through the
   implicit solver are correct.
 - Global stiffness (`nG`) matches the target well even though the target was
   generated with per-spring stiffnesses — the optimizer finds the single value
   that best reproduces the overall behavior.
-- The flag scene with a single global mass (`Gn`) cannot be fitted at all: the
-  optimizer diverges immediately (error 32.69).  A cloth under wind needs
+- The flag scene with a single global mass (`Gn`) cannot be fitted: the
+  optimizer diverges immediately (error 1.93).  A cloth under wind needs
   spatial parameter variation.
 
 ## Experiment 2: effect of the number of optimization steps
@@ -253,37 +253,38 @@ are reported per run:
 
 | Scene | Steps | Error (N steps) | Error (500 steps) | Time (s) |
 |-------|-------|-----------------|-------------------|----------|
-| side  | 20    | 0.00            | 0.00              | 12.6     |
-|       | 40    | 0.00            | 0.00              | 29.1     |
-|       | 60    | 0.02            | 0.00              | 13.0     |
-|       | 80    | 0.03            | 0.00              | 15.7     |
-|       | 100   | 0.04            | 0.00              | 15.4     |
-|       | 120   | 0.04            | 0.00              | 18.7     |
-|       | 140   | 0.04            | 0.00              | 30.4     |
-|       | 160   | 0.04            | 0.00              | 31.3     |
-|       | 180   | 0.04            | 0.00              | 25.1     |
-|       | 200   | 0.03            | 0.00              | 57.8     |
-| flag  | 20    | 0.00            | 0.00              | 44.2     |
-|       | 40    | 0.05            | 0.00              | 7.4      |
-|       | 60    | 0.08            | 0.00              | 6.0      |
-|       | 80    | 0.48            | 0.00              | 9.8      |
-|       | 100   | 0.61            | 0.00              | 14.6     |
-|       | 120   | 1.14            | 0.00              | 18.5     |
-|       | 140   | 1.02            | 0.00              | 11.6     |
-|       | 160   | 0.67            | 0.00              | 129.0    |
-|       | 180   | 57.89           | 0.00              | 47.1     |
-|       | 200   | 71.00           | 0.00              | 65.3     |
+| side  | 20    | 0.00            | 0.05              | 8.3      |
+|       | 40    | 0.00            | 0.05              | 18.5     |
+|       | 60    | 0.03            | 0.06              | 8.3      |
+|       | 80    | 0.04            | 0.06              | 10.1     |
+|       | 100   | 0.06            | 0.07              | 9.9      |
+|       | 120   | 0.06            | 0.10              | 11.9     |
+|       | 140   | 0.06            | 0.07              | 20.2     |
+|       | 160   | 0.07            | 0.08              | 20.0     |
+|       | 180   | 0.06            | 0.08              | 16.1     |
+|       | 200   | 0.06            | 0.07              | 36.6     |
+| flag  | 20    | 0.00            | 0.85              | 29.8     |
+|       | 40    | 0.07            | 330.63            | 4.6      |
+|       | 60    | 0.13            | 0.99              | 3.8      |
+|       | 80    | 0.76            | 390.22            | 6.3      |
+|       | 100   | 0.97            | 1.37              | 10.2     |
+|       | 120   | 1.81            | 41.94             | 13.3     |
+|       | 140   | 1.62            | 1.56              | 8.7      |
+|       | 160   | 1.07            | 176.26            | 101.7    |
+|       | 180   | 91.91           | 463.32            | 43.8     |
+|       | 200   | 112.72          | 446.19            | 60.4     |
 
 Observations:
 
 - The side scene is robust: the recovered parameters are essentially perfect
-  at every step count (error ≤ 0.04, and 0.00 on the 500-frame evaluation).
-- The flag scene shows the instability discussed in the thesis (§5.4.1):
-  longer optimization horizons lead the optimizer into local minima, and the
-  training error explodes at 180–200 steps.  The 500-frame validation stays at
-  0.00 in these runs, meaning the solutions found there still happen to
-  reproduce the 500-frame target simulation exactly — the failure is in the
-  optimization itself, not in the recovered simulation.
+  at every step count (error ≤ 0.07, and ≤ 0.10 on the 500-frame validation).
+- The flag scene confirms the thesis §5.4.1 finding: solutions can fit the
+  optimization horizon well and diverge later.  E.g. with 40 steps the training
+  error is 0.07 but the 500-frame validation error is 330.63.  Long horizons
+  (180–200 steps) make the optimizer fall into bad local minima altogether
+  (training error jumps to ~100).
+- The 500-step validation is what makes the difference visible — the training
+  error alone would hide the divergence.
 
 ## Using Unity (optional)
 
