@@ -15,6 +15,7 @@ venv/
 *.egg-info/
 dist/
 log.txt
+test*.txt
 
 # IDE
 .vscode/
