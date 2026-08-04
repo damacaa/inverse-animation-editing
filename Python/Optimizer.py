@@ -34,24 +34,6 @@ def QuadraticError(estimated, actual, nVerts):
     return math.sqrt(G/(nVerts*nSteps))
 
 
-def g(p, nSteps, forwardSubSteps, h, m_numDoFs, initialState, targets):
-    print("Deprecated!")
-    global lastP
-    lastP = p
-
-    steps = []
-    current = initialState
-    steps.append(initialState)
-
-    for i in range(nSteps - 1):
-        current = DifferentiablePhysicsEngine.forward(current.x, current.v, p, h)
-        steps.append(current)
-
-    g = np.sum(targets[nSteps - 1].x - steps[nSteps - 1].x) ** 2
-
-    return g
-
-
 def G(p, nSteps, forwardSubSteps, h, m_numDoFs, initialState, targets, settings):
 
     steps = [initialState] + DifferentiablePhysicsEngine.forwardLoop(
