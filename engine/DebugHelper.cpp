@@ -1,7 +1,7 @@
-#include "pch.h"
 #include "DebugHelper.h"
+#include <algorithm>
 #include <iostream>
-#include <fstream>  
+#include <fstream>
 #include <chrono>
 
 using std::chrono::high_resolution_clock;
@@ -61,7 +61,7 @@ void DebugHelper::RecordTime(std::string name)
 	if (!enabled)
 		return;
 
-	std::chrono::steady_clock::time_point now = high_resolution_clock::now();
+	std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
 
 	duration<double, std::milli> ms_double = now - lastTimepoint;
 	double duration = ms_double.count();
@@ -119,7 +119,7 @@ void DebugHelper::PrintTimes(std::string fileName, std::string description)
 		if (it->first.empty())
 			continue;
 
-		maxLength = max(maxLength, it->first.size());
+		maxLength = std::max<int>(maxLength, (int)it->first.size());
 		total += durations[it->first] / (double)occurances[it->first];
 	}
 	maxLength += 10;

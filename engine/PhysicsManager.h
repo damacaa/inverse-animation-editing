@@ -1,4 +1,6 @@
-#pragma once 
+#pragma once
+#include <mutex>
+#include <string>
 #include <vector>
 #include "Types.h"
 #include "DebugHelper.h"

@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Face.h"
 #include "Node.h"
 #include "PhysicsManager.h"

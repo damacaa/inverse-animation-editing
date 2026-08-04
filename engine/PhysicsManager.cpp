@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "PhysicsManager.h"
 #include "Object.h"
 #include "Collider.h"
@@ -622,7 +621,7 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 		SimObjects[i]->GetForceJacobian(&derivPos, &derivVel, Colliders);
 		SimObjects[i]->GetFixedIndices(&fixedIndices);
 
-		SimObjects[i]->GetdFdp(&dFdp); //Podría pasar uT a esta función para hacer el cálculo dentro de la función
+		SimObjects[i]->GetdFdp(&dFdp); //Podrï¿½a pasar uT a esta funciï¿½n para hacer el cï¿½lculo dentro de la funciï¿½n
 		SimObjects[i]->GetdFdp(&dFdpTriplets, nSprings);
 		nSprings += SimObjects[i]->nSprings;
 	}
@@ -660,13 +659,13 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 	//Backward
 	BackwardStepInfo info = BackwardStepInfo();
 
-	// Constraint dinámica --> c = M * v1 - M * v - h * f1
-	// Constraint fixing --> S * v1 = 0 ,S matriz de selección (diagonal con 1 donde esté fijado)
+	// Constraint dinï¿½mica --> c = M * v1 - M * v - h * f1
+	// Constraint fixing --> S * v1 = 0 ,S matriz de selecciï¿½n (diagonal con 1 donde estï¿½ fijado)
 
-	//Constraint dinámica + fixing --> c = M * v1 – M * v – h * (I – ST * S) f1 = 0
+	//Constraint dinï¿½mica + fixing --> c = M * v1 ï¿½ M * v ï¿½ h * (I ï¿½ ST * S) f1 = 0
 
-	//Derivada constraint dinámica --> dcdp = uT * dGdp
-	//Derivada constraint dinámica + fixing --> dcdp = uT * dGdp
+	//Derivada constraint dinï¿½mica --> dcdp = uT * dGdp
+	//Derivada constraint dinï¿½mica + fixing --> dcdp = uT * dGdp
 
 	std::vector <Eigen::VectorXd>  ds;
 
@@ -728,7 +727,7 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 			SpMat dcdpMat((size_t)nVerts * 3, nVerts);
 			dcdpMat.setFromTriplets(dcdpTiplets.begin(), dcdpTiplets.end());
 
-			Eigen::VectorXd dGdp_mass = -u.segment((size_t)vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdpMat; //Vector de tantas posiciones como parámetros haya
+			Eigen::VectorXd dGdp_mass = -u.segment((size_t)vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdpMat; //Vector de tantas posiciones como parï¿½metros haya
 
 			ds.push_back(dGdp_mass);
 			paramOffset += nVerts;
@@ -771,7 +770,7 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 
 			dcdpMat.setFromTriplets(abc.begin(), abc.end());
 
-			Eigen::VectorXd dGdp_stiffness = -u.segment((size_t)vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdpMat; //Vector de tantas posiciones como parámetros haya
+			Eigen::VectorXd dGdp_stiffness = -u.segment((size_t)vertOffset * 3, (size_t)nVerts * 3).transpose() * dcdpMat; //Vector de tantas posiciones como parï¿½metros haya
 			ds.push_back(dGdp_stiffness);
 
 			paramOffset += nSprings;

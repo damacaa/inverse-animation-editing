@@ -1,7 +1,5 @@
-#include "pch.h"
 #include "Object.h"
-#include <set>
-#include <map>
+#include <cstring>
 #include "DebugHelper.h"
 
 Object::Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings, int* triangles, int nTriangles, double dragCoefficient, float damping, std::string optimizationSettings, PhysicsManager* physicsManager)

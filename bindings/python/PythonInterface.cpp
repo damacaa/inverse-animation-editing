@@ -1,10 +1,11 @@
-#include "pch.h"
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
 #include <pybind11/stl.h>
+
+#include <string>
 #include <vector>
 
-#include <PhysicsManager.h>
+#include "PhysicsManager.h"
 
 struct ForwardResult {
 public:
@@ -17,15 +18,15 @@ public:
 	Eigen::VectorXd dGdx, dGdv;
 };
 
-std::string _info;
+namespace {
+	std::string _info;
+}
 
 ForwardResult Initialize(std::string info, std::string settings)
 {
 	_info = info;
 	PhysicsManager physicsManager = PhysicsManager(_info);
 	physicsManager.Start();
-
-	//physicsManager = physicsManager2;
 
 	auto sinfo = physicsManager.GetInitialState();
 
@@ -35,21 +36,6 @@ ForwardResult Initialize(std::string info, std::string settings)
 
 	return result;
 }
-
-/*ForwardResult Forward(Eigen::VectorXd x, Eigen::VectorXd v, float parameter, float h)
-{
-	PhysicsManager physicsManager = PhysicsManager(_info);
-	physicsManager.Start();
-	physicsManager.SetParam(parameter);
-
-	auto info = physicsManager.Forward(x, v, h);
-
-	ForwardResult result;
-	result.x = info.x;
-	result.v = info.v;
-
-	return result;
-}*/
 
 ForwardResult Forward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd parameters, std::string settings, float h, int forwardSubSteps)
 {
@@ -103,55 +89,13 @@ BackwardResult Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1
 	return result;
 }
 
-BackwardResult Estimate(float param, int iter, float h) {
-	PhysicsManager physicsManager = PhysicsManager(_info);
-	physicsManager.Start();
-	Eigen::VectorXd dGdp = Eigen::VectorXd::Constant(1, 0.0);
-	float g = physicsManager.Estimate(param, iter, h, &dGdp);
-
-	BackwardResult result;
-	result.dGdp = dGdp;
-	result.dGdx = Eigen::VectorXd::Constant(1, g);
-
-	return result;
-}
-
-
-int a = 0;
-int add(int i, int j) {
-	a += i;
-	return a;
-}
-
-Eigen::VectorXd Test() {
-	Eigen::VectorXd a = Eigen::VectorXd::Constant(3, 1);
-	Eigen::VectorXd b = Eigen::VectorXd::Constant(2, 2);
-	Eigen::VectorXd c = Eigen::VectorXd::Constant(1, 3);
-
-	Eigen::VectorXd A(a.size() + b.size());
-	A << a, b;
-
-	Eigen::VectorXd B(A.size() + c.size());
-	B << A, c;
-
-	return  B;
-}
-
-
-
 PYBIND11_MODULE(DifferentiablePhysicsEngine, m) {
-	m.doc() = "pybind11 example plugin"; // optional module docstring
-
-	m.def("add", &add, "A function that adds two numbers");
+	m.doc() = "Differentiable physics engine for inverse animation editing";
 
 	m.def("initialize", &Initialize, "Initializes simulator");
 	m.def("forward", &Forward, "Step forward");
 	m.def("forwardLoop", &ForwardLoop, "Take n steps forward");
 	m.def("backward", &Backward, "Step backwards");
-	m.def("test", &Test, "Test");
-
-	m.def("estimate", &Estimate, "Estimate for debug purposes");
-
 
 	pybind11::class_<ForwardResult>(m, "ForwardResult")
 		.def_readwrite("x", &ForwardResult::x)

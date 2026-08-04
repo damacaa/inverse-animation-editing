@@ -1,4 +1,7 @@
 #pragma once
+#include <chrono>
+#include <map>
+#include <string>
 #include <vector>
 #include "Types.h"
 
@@ -12,7 +15,7 @@ private:
 	std::map<std::string, double> durations;
 	std::map<std::string, int> occurances;
 
-	std::string path = "C:/Debug/";
+	std::string path = "";
 
 public:
 	DebugHelper() {};

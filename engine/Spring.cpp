@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Spring.h"
 #include "Node.h"
 

@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Collider.h"
 
 Eigen::Vector3d Collider::GetForce(Eigen::Vector3d position)

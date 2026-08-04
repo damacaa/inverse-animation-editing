@@ -1,4 +1,3 @@
-from unittest import result
 from Optimizer import Minimize
 import numpy as np
 import DebugHelper

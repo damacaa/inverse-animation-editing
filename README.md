@@ -6,15 +6,19 @@ It includes a differentiable physics engine built from scratch in C++, a Python 
 
 The framework is able to generate a simulation with some parameters for the mass and stiffness of a cloth and use numerical optimization combined with differentiable simulation and the backpropagation algorithm to guess those parameters based on the position of that simulation over many frames.
 
-# Installation
-Requires Python 3.10 (only version that works).
+# Building
+Requirements: CMake >= 3.18, a C++17 compiler and, for the Python module, Python 3 with development headers. Works on Linux, Windows and macOS.
 
-To install the engine module for Python:
+    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+    cmake --build build -j
 
-    python -m pip install "/DifferentiablePhysicsEngine"
+Build artifacts:
 
-NumPy and SciPy are also required:
+* `build/python/DifferentiablePhysicsEngine` — Python module. Add `build/python` to `PYTHONPATH` (or copy the file next to your script) and `import DifferentiablePhysicsEngine`.
+* `build/unity/(lib)DifferentiablePhysicsEngine.(so|dll)` — Unity native plugin, also copied automatically into `UnityProject/Assets/`.
 
-    python -m pip install numpy
-    
-    python -m pip install scipy
+CMake options: `-DDPE_BUILD_PYTHON=OFF` (skip Python module, no Python headers needed), `-DDPE_BUILD_UNITY_BRIDGE=OFF` (skip Unity plugin).
+
+Python dependencies for the optimizer:
+
+    python -m pip install -r requirements.txt

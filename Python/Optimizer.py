@@ -1,26 +1,15 @@
-from ast import arg
-from asyncio.windows_events import NULL
-from cmath import sqrt
-
-from math import fabs
+import json
 import math
-import re
-from sre_constants import SUCCESS
-from unittest import result
+import time
+
 import numpy as np
 import scipy.optimize
-import time
-from numpy import random
-import json
 
 import DifferentiablePhysicsEngine
 
-import os.path
-from os import path
-
 
 class OptimizationResult:
-    newData = NULL
+    newData = None
     elapsedTime = 0
     cost = 0
     cuadraticError = 0

@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Node.h"
 #include "Collider.h"
 
