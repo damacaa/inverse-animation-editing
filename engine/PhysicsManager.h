@@ -112,6 +112,9 @@ public:
 
 	void SetParam(Eigen::VectorXd params, std::string settings);
 
+	// Restore the masses and stiffnesses loaded from the scene
+	void ResetParams();
+
 	SimulationInfo GetInitialState();
 
 	SimulationInfo Forward(Eigen::VectorXd x, Eigen::VectorXd v, float h, int subSteps);

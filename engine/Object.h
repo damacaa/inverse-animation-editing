@@ -30,6 +30,10 @@ public:
 	std::vector<Spring> _springs;
 	std::vector<Face> _faces;
 
+	// Parameter values loaded from the scene, restored by ResetMass/ResetStiffness
+	std::vector<double> initialVertexMass;
+	std::vector<double> initialSpringStiffness;
+
 	std::string optimizationSettings;
 
 	Object(Vector3f* vertPos, bool* vertIsFixed, float* vertMass, int nVerts, int* springs, float* springStiffness, int nSprings,  int* triangles, int nTriangles, double dragCoefficient, float damping, std::string optimizationSettings, PhysicsManager* physicsManager);
@@ -75,5 +79,9 @@ public:
 	void SetStiffness(double param);
 
 	void SetStiffness(Eigen::VectorXd params);
+
+	void ResetMass();
+
+	void ResetStiffness();
 };
 

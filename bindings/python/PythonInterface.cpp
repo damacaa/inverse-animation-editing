@@ -41,7 +41,10 @@ ForwardResult Initialize(std::string info, std::string settings)
 
 ForwardResult Forward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd parameters, std::string settings, float h, int forwardSubSteps)
 {
-	_pm->SetParam(parameters, settings);
+	if (parameters.size() > 0)
+		_pm->SetParam(parameters, settings);
+	else
+		_pm->ResetParams();
 
 	auto info = _pm->Forward(x, v, h, forwardSubSteps);
 
@@ -54,7 +57,10 @@ ForwardResult Forward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd para
 
 std::vector<ForwardResult> ForwardLoop(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd parameters, std::string settings, float h, int iter, int forwardSubSteps)
 {
-	_pm->SetParam(parameters, settings);
+	if (parameters.size() > 0)
+		_pm->SetParam(parameters, settings);
+	else
+		_pm->ResetParams();
 
 	std::vector<ForwardResult> result(iter);
 
@@ -72,7 +78,10 @@ std::vector<ForwardResult> ForwardLoop(Eigen::VectorXd x, Eigen::VectorXd v, Eig
 
 BackwardResult Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, Eigen::VectorXd parameters, std::string settings, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h)
 {
-	_pm->SetParam(parameters, settings);
+	if (parameters.size() > 0)
+		_pm->SetParam(parameters, settings);
+	else
+		_pm->ResetParams();
 
 	auto info = _pm->Backward(x, v, x1, v1, dGdx1, dGdv1, h, settings);
 
