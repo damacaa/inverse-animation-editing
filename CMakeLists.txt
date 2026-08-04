@@ -117,3 +117,8 @@ if(DPE_BUILD_TESTS)
   include(GoogleTest)
   gtest_discover_tests(dpe_tests)
 endif()
+
+# ---------------------------------------------------------------------------
+# Viewer (Vulkan + GLFW + ImGui standalone app)
+# ---------------------------------------------------------------------------
+include(${CMAKE_CURRENT_SOURCE_DIR}/viewer/CMakeLists.txt)

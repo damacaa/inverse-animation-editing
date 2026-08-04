@@ -439,11 +439,12 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationI
 
 		for (int i = 0; i < A.outerSize(); i++) {
 			for (SpMat::InnerIterator j(A, i); j; ++j) {
-				if (fixedIndices[i] || fixedIndices[j.row()])
-					if (i == j.row())
-						j.valueRef() = 1;
-					else
-						j.valueRef() = 0;
+			if (fixedIndices[i] || fixedIndices[j.row()]) {
+				if (i == j.row())
+					j.valueRef() = 1;
+				else
+					j.valueRef() = 0;
+			}
 			}
 		}
 
