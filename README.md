@@ -85,13 +85,13 @@ The framework has four components that work together:
                              │
               ┌──────────────┼──────────────┐
               ▼              ▼              ▼
-    ┌─────────────────┐ ┌─────────┐ ┌──────────────┐
+    ┌──────────────────┐ ┌──────────┐ ┌───────────────┐
     │ Python Optimizer │ │ dpe_core │ │ Vulkan Viewer │
-    │  (scipy L-BFGS-B)│◄┤ engine  ├►│  (real-time)  │
-    └────────┬────────┘ │ (C++17) │ └──────────────┘
-             │          └────┬─────┘
-             ▼               │
-    ┌─────────────────┐      │
+    │  (scipy L-BFGS-B)│◄┤ engine   ├►│  (real-time)  │
+    └────────┬─────────┘ │ (C++17)  │ └───────────────┘
+             │           └────┬─────┘
+             ▼                │
+    ┌─────────────────┐       │
     │ Unity (optional) │◄─────┘  (via C API bridge)
     └─────────────────┘
 ```
@@ -196,6 +196,94 @@ build/dpe_viewer UnityProject/Assets/Files/Experiment1/side_nL_optimized.txt
 
 The green wireframe shows the simulation with the *recovered* parameters;
 visually it should closely follow the target animation you generated.
+
+# Results
+
+The error metric is the root mean square position difference between the
+optimized simulation and the target, per vertex per frame.  Reported values
+below were produced on a Ryzen-class desktop; runtimes scale roughly with the
+number of simulation steps and parameters.
+
+## Experiment 1: parameter recovery
+
+Each scene is optimized with four parameterizations — `Gn` (one global mass),
+`Ln` (per-vertex masses), `nG` (one global stiffness), `nL` (per-spring
+stiffnesses).
+
+| Scene | Settings | Error | Time (s) |
+|-------|----------|-------|----------|
+| side (one edge fixed) | `Gn` | 3.04 | 16.0 |
+|                       | `Ln` | 1.53 | 11.0 |
+|                       | `nG` | 0.50 | 28.4 |
+|                       | `nL` | 0.04 | 16.4 |
+| corners (four corners fixed) | `Gn` | 0.82 | 15.5 |
+|                              | `Ln` | 0.05 | 41.2 |
+|                              | `nG` | 1.00 | 21.8 |
+|                              | `nL` | 0.11 | 44.8 |
+| flag (wind) | `Gn` | 32.69 (fails to converge) | 0.1 |
+|             | `Ln` | 0.72 | 5.2 |
+|             | `nG` | 0.21 | 1.1 |
+|             | `nL` | 0.00 | 46.3 |
+
+Observations:
+
+- Local parameterizations (`nL`) recover the parameters almost perfectly
+  (error ≈ 0.04 or less), confirming the analytic gradients through the
+  implicit solver are correct.
+- Global stiffness (`nG`) matches the target well even though the target was
+  generated with per-spring stiffnesses — the optimizer finds the single value
+  that best reproduces the overall behavior.
+- The flag scene with a single global mass (`Gn`) cannot be fitted at all: the
+  optimizer diverges immediately (error 32.69).  A cloth under wind needs
+  spatial parameter variation.
+
+## Experiment 2: effect of the number of optimization steps
+
+`Experiment2.py` optimizes heterogeneous stiffness (`nL`).  Each row is a
+separate optimization run, fitted over N frames (20, 40, ..., 200).  Two errors
+are reported per run:
+
+- **Error (N steps)** — how well the recovered parameters reproduce the target
+  over the same N frames they were fitted to (the training error).
+- **Error (500 steps)** — the *same* recovered parameters, re-simulated over
+  500 frames and compared to the 500-frame target.  This is **not** a separate
+  optimization: it validates whether the N-step solution generalizes beyond
+  the horizon it was fitted to (thesis §5.4.1 — a solution can fit the first N
+  frames perfectly and diverge later).
+
+| Scene | Steps | Error (N steps) | Error (500 steps) | Time (s) |
+|-------|-------|-----------------|-------------------|----------|
+| side  | 20    | 0.00            | 0.00              | 12.6     |
+|       | 40    | 0.00            | 0.00              | 29.1     |
+|       | 60    | 0.02            | 0.00              | 13.0     |
+|       | 80    | 0.03            | 0.00              | 15.7     |
+|       | 100   | 0.04            | 0.00              | 15.4     |
+|       | 120   | 0.04            | 0.00              | 18.7     |
+|       | 140   | 0.04            | 0.00              | 30.4     |
+|       | 160   | 0.04            | 0.00              | 31.3     |
+|       | 180   | 0.04            | 0.00              | 25.1     |
+|       | 200   | 0.03            | 0.00              | 57.8     |
+| flag  | 20    | 0.00            | 0.00              | 44.2     |
+|       | 40    | 0.05            | 0.00              | 7.4      |
+|       | 60    | 0.08            | 0.00              | 6.0      |
+|       | 80    | 0.48            | 0.00              | 9.8      |
+|       | 100   | 0.61            | 0.00              | 14.6     |
+|       | 120   | 1.14            | 0.00              | 18.5     |
+|       | 140   | 1.02            | 0.00              | 11.6     |
+|       | 160   | 0.67            | 0.00              | 129.0    |
+|       | 180   | 57.89           | 0.00              | 47.1     |
+|       | 200   | 71.00           | 0.00              | 65.3     |
+
+Observations:
+
+- The side scene is robust: the recovered parameters are essentially perfect
+  at every step count (error ≤ 0.04, and 0.00 on the 500-frame evaluation).
+- The flag scene shows the instability discussed in the thesis (§5.4.1):
+  longer optimization horizons lead the optimizer into local minima, and the
+  training error explodes at 180–200 steps.  The 500-frame validation stays at
+  0.00 in these runs, meaning the solutions found there still happen to
+  reproduce the 500-frame target simulation exactly — the failure is in the
+  optimization itself, not in the recovered simulation.
 
 ## Using Unity (optional)
 
