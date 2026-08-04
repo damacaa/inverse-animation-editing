@@ -233,7 +233,10 @@ def Minimize(data, method="L-BFGS-B", costFunction=G, jacobian=dGdp, cuadraticEr
         initialState.x, initialState.v, res.x, settings, h, len(
             targets)-1, forwardSubSteps
     )
-    cuadraticError = round(QuadraticError(steps, targets, len(res.x)), 2)
+    # nVerts must be the actual vertex count (3 components per DoF), not the
+    # number of optimized parameters
+    nVerts = m_numDoFs // 3
+    cuadraticError = round(QuadraticError(steps, targets, nVerts), 2)
 
     # Error with constant steps
     targets = [initialState] + DifferentiablePhysicsEngine.forwardLoop(
@@ -252,7 +255,7 @@ def Minimize(data, method="L-BFGS-B", costFunction=G, jacobian=dGdp, cuadraticEr
     )
 
     cuadraticErrorConstantSteps = round(
-        QuadraticError(steps, targets, len(res.x)), 2)
+        QuadraticError(steps, targets, nVerts), 2)
 
     # Error with average parameters
     # avg = np.full(1, Average(data_dict["objects"][0]["springStiffness"]),)
