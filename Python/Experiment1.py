@@ -1,68 +1,65 @@
-from Optimizer import Minimize
-import numpy as np
-import DebugHelper
-import json
+"""Experiment 1: recover simulation parameters for the three thesis scenes.
 
+For each scene the optimizer estimates the cloth parameters with four
+parameterizations, and we report the final error and runtime.
 
-# All availabe methods for the optimizer
-methods = ["CG", "BFGS", "Newton-CG",
-           "L-BFGS-B", "TNC", "SLSQP", "trust-constr"]
+Scenes:
+  side     - one edge fixed, no wind
+  corners  - four corners fixed, no wind
+  flag     - one edge fixed, wind
 
-files = ["side", "corners", "flag"]
-settingsOptions = ["Gn", "Ln", "nG", "nL"]
-
-# Read scene file
-for f in files:
-    DebugHelper.AddToLog("Scene: " + f, "test1")
-
-    sceneData = open(
-        f"../UnityProject/Assets/Files/{f}.txt", "r"
-    ).read()
-
-    # Get optimized scene
-    for s in settingsOptions:
-
-        data_dict = json.loads(sceneData)
-        data_dict["objects"][0]["optimizationSettings"] = s
-        sceneData = json.dumps(data_dict)
-
-        result = Minimize(
-            data=sceneData, printResult=False)
-
-        DebugHelper.AddToLog(
-            f"{s} {result.cuadraticError} {result.elapsedTime}".replace('.', ','), "test1")
-
-        text_file = open(
-            f"../UnityProject/Assets/Files/Test1/{f}_{s}_optimized.txt", "w")
-        text_file.write(result.newData)
-        text_file.close()
-
-
-"""small = np.arange(100, 101, 10)
-big = np.arange(100, 501, 100)
-values = np.concatenate((small, big))
-for i in big:
-    optimizedSceneData, error, error100, t = Minimize(
-        data=sceneData, nSteps=i, h=0.08, printResult=False)
-    print(f"{i} {error} {error100} {t}")
-    text_file = open(
-        "D:/Projects/MassSpringSimulator/UnityProject/Assets/scene_optimizedd"+str(i)+".txt", "w")
-    text_file.write(optimizedSceneData)
-    text_file.close()"""
-
-
-# scipy.optimize.show_options(solver="minimize", method="L-BFGS-B", disp=True)
-
+Parameterizations (settings = mass-mode + stiffness-mode):
+  Gn  homogeneous masses        Ln  heterogeneous masses
+  nG  homogeneous stiffness     nL  heterogeneous stiffness
 """
-methods2 = ["Nelder-Mead", "Powell", "COBYLA"]
-for m in methods:
-    print(m)
-    Minimize(m)
-    print("-" * 60) """
+import json
+import os
+
+import DebugHelper
+from Optimizer import Minimize
+
+SCENES = ["side", "corners", "flag"]
+SETTINGS = ["Gn", "Ln", "nG", "nL"]
+SETTING_NAMES = {
+    "Gn": "mass (homogeneous)",
+    "Ln": "mass (heterogeneous)",
+    "nG": "stiffness (homogeneous)",
+    "nL": "stiffness (heterogeneous)",
+}
+OUT_DIR = "../UnityProject/Assets/Files/Experiment1"
 
 
-# print("-" * 60)
+def main():
+    os.makedirs(OUT_DIR, exist_ok=True)
 
-# res2 = fmin_bfgs(G, p0, fprime=dGdp)
-# print(res2)
-# print("ERROR: ", abs(desiredMass - res2))
+    for scene in SCENES:
+        with open(f"../UnityProject/Assets/Files/{scene}.txt") as f:
+            data = json.load(f)
+
+        print(f"\n===== Scene: {scene} =====")
+
+        rows = []
+        for settings in SETTINGS:
+            data["objects"][0]["optimizationSettings"] = settings
+
+            result = Minimize(data=json.dumps(data), printResult=False)
+
+            rows.append([
+                settings,
+                SETTING_NAMES[settings],
+                f"{result.cuadraticError:.2f}",
+                f"{result.elapsedTime:.1f}",
+            ])
+
+            with open(f"{OUT_DIR}/{scene}_{settings}_optimized.txt", "w") as f:
+                f.write(result.newData)
+
+        DebugHelper.AddTable(
+            "experiment1",
+            f"Scene: {scene}",
+            ["Settings", "Parameter", "Error", "Time (s)"],
+            rows)
+
+
+if __name__ == "__main__":
+    main()

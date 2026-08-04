@@ -172,19 +172,26 @@ export PYTHONPATH="$PWD/build/python:$PYTHONPATH"   # Linux / macOS
 pip install -r requirements.txt
 ```
 
-Run one of the test scripts from the `Python/` directory:
+Run one of the experiment scripts from the `Python/` directory:
 
 ```sh
 cd Python
-python Test1.py
+python Experiment1.py
 ```
 
-This loads scene files from `UnityProject/Assets/Files/`, runs the L‑BFGS‑B
-optimization, prints the results, and writes optimized scene files into
-`UnityProject/Assets/Files/Test1/`.  You can then open these in the viewer:
+`Experiment1.py` recovers the cloth parameters for each scene
+(`side`, `corners`, `flag`) with four parameterizations (homogeneous /
+heterogeneous mass, homogeneous / heterogeneous stiffness) and prints a
+results table.  `Experiment2.py` repeats this with different numbers of
+simulation steps to study how the error metric behaves (thesis Chapter 5).
+
+The scripts load scene files from `UnityProject/Assets/Files/`, run the
+L‑BFGS‑B optimization, print the results, and write optimized scene files into
+`UnityProject/Assets/Files/Experiment1/` and `Experiment2/`.  You can then open
+these in the viewer:
 
 ```sh
-build/dpe_viewer UnityProject/Assets/Files/Test1/side_nG_optimized.txt
+build/dpe_viewer UnityProject/Assets/Files/Experiment1/side_nL_optimized.txt
 ```
 
 The green wireframe shows the simulation with the *recovered* parameters;
