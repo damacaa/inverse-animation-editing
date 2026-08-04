@@ -1,4 +1,5 @@
 #pragma once
+#include <Eigen/IterativeLinearSolvers>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -69,6 +70,16 @@ private:
 
 	int nodeCount = 0;
 	int springCount = 0;
+
+	// Reusable sparse-matrix triplet buffers (reserved in Start)
+	std::vector<T> _derivPos;
+	std::vector<T> _derivVel;
+	std::vector<T> _masses;
+	std::vector<T> _massesInv;
+
+	// Reusable iterative solver
+	Eigen::DiagonalPreconditioner<double> _precond;
+	Eigen::ConjugateGradient<SpMat, Eigen::Lower | Eigen::Upper, Eigen::DiagonalPreconditioner<double>> _cg;
 
 
 public:

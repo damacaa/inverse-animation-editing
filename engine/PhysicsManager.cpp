@@ -211,6 +211,13 @@ void PhysicsManager::Start()
 	info.x = x;
 	info.v = v;
 
+	_derivPos.reserve((size_t)m_numDoFs * 3);
+	_derivVel.reserve((size_t)m_numDoFs * 3);
+	_masses.reserve(m_numDoFs);
+	_massesInv.reserve(m_numDoFs);
+
+	_cg.setTolerance(tolerance);
+
 	needsRestart = false;
 	initialized = false;
 }
@@ -263,16 +270,16 @@ PhysicsManager::SimulationInfo PhysicsManager::StepExplicit(float h, SimulationI
 	SpMat M(m_numDoFs, m_numDoFs);
 	SpMat Minv(m_numDoFs, m_numDoFs);
 
-	std::vector<T> masses = std::vector<T>();
-	std::vector<T> massesInv = std::vector<T>();
+	_masses.clear();
+	_massesInv.clear();
 
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
 		SimObjects[i]->SetPosition(&x);
 		SimObjects[i]->SetVelocity(&v);
 
-		SimObjects[i]->GetMassInverse(&massesInv);
-		SimObjects[i]->GetMass(&masses);
+		SimObjects[i]->GetMassInverse(&_massesInv);
+		SimObjects[i]->GetMass(&_masses);
 	}
 
 	debugHelper.RecordTime("2.Forces");
@@ -290,10 +297,10 @@ PhysicsManager::SimulationInfo PhysicsManager::StepExplicit(float h, SimulationI
 	for (size_t i = 0; i < m_numDoFs; i++)
 	{
 		if (fixedIndices[i]) {
-			massesInv[i] = T(i, i, 0);
+			_massesInv[i] = T(i, i, 0);
 		}
 	}
-	Minv.setFromTriplets(massesInv.begin(), massesInv.end());
+	Minv.setFromTriplets(_massesInv.begin(), _massesInv.end());
 
 	debugHelper.RecordTime("4.Calculations");
 	x += h * info.v;
@@ -318,16 +325,16 @@ PhysicsManager::SimulationInfo PhysicsManager::StepSymplectic(float h, Simulatio
 	SpMat M(m_numDoFs, m_numDoFs);
 	SpMat Minv(m_numDoFs, m_numDoFs);
 
-	std::vector<T> masses = std::vector<T>();
-	std::vector<T> massesInv = std::vector<T>();
+	_masses.clear();
+	_massesInv.clear();
 
 	for (int i = 0; i < SimObjects.size(); i++)
 	{
 		SimObjects[i]->SetPosition(&x);
 		SimObjects[i]->SetVelocity(&v);
 
-		SimObjects[i]->GetMassInverse(&massesInv);
-		SimObjects[i]->GetMass(&masses);
+		SimObjects[i]->GetMassInverse(&_massesInv);
+		SimObjects[i]->GetMass(&_masses);
 	}
 
 	debugHelper.RecordTime("2.Forces");
@@ -345,10 +352,10 @@ PhysicsManager::SimulationInfo PhysicsManager::StepSymplectic(float h, Simulatio
 	for (size_t i = 0; i < m_numDoFs; i++)
 	{
 		if (fixedIndices[i]) {
-			massesInv[i] = T(i, i, 0);
+			_massesInv[i] = T(i, i, 0);
 		}
 	}
-	Minv.setFromTriplets(massesInv.begin(), massesInv.end());
+	Minv.setFromTriplets(_massesInv.begin(), _massesInv.end());
 
 	debugHelper.RecordTime("4.Calculations");
 	v += h * (Minv * f);
@@ -377,11 +384,11 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationI
 
 		SpMat dFdx(m_numDoFs, m_numDoFs);
 		SpMat dFdv(m_numDoFs, m_numDoFs);
-		std::vector<T> derivPos = std::vector<T>();
-		std::vector<T> derivVel = std::vector<T>();
+		_derivPos.clear();
+		_derivVel.clear();
 
 		SpMat M(m_numDoFs, m_numDoFs);
-		std::vector<T> masses = std::vector<T>();
+		_masses.clear();
 
 		std::vector<bool> fixedIndices(m_numDoFs);
 
@@ -390,7 +397,7 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationI
 			SimObjects[i]->SetPosition(&x);
 			SimObjects[i]->SetVelocity(&v);
 
-			SimObjects[i]->GetMass(&masses);
+			SimObjects[i]->GetMass(&_masses);
 			SimObjects[i]->GetFixedIndices(&fixedIndices);
 		}
 
@@ -399,15 +406,15 @@ PhysicsManager::SimulationInfo PhysicsManager::StepImplicit(float h, SimulationI
 		for (int i = 0; i < SimObjects.size(); i++)
 		{
 			SimObjects[i]->GetForce(&f, Colliders);
-			SimObjects[i]->GetForceJacobian(&derivPos, &derivVel, Colliders);
+			SimObjects[i]->GetForceJacobian(&_derivPos, &_derivVel, Colliders);
 		}
 
 		debugHelper.RecordTime("3.Building matrices from triples");
 		//For future reference maybe
 		//https://stackoverflow.com/questions/45301305/set-sparsity-pattern-of-eigensparsematrix-without-memory-overhead
-		dFdx.setFromTriplets(derivPos.begin(), derivPos.end(), [](const double& a, const double& b) { return a + b; });
-		dFdv.setFromTriplets(derivVel.begin(), derivVel.end(), [](const double& a, const double& b) { return a + b; });
-		M.setFromTriplets(masses.begin(), masses.end());
+		dFdx.setFromTriplets(_derivPos.begin(), _derivPos.end(), [](const double& a, const double& b) { return a + b; });
+		dFdv.setFromTriplets(_derivVel.begin(), _derivVel.end(), [](const double& a, const double& b) { return a + b; });
+		M.setFromTriplets(_masses.begin(), _masses.end());
 
 		//MATRIX OPERATIONS
 		debugHelper.RecordTime("4.Calculating A and b");
@@ -596,9 +603,9 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 	SpMat dFdv(m_numDoFs, m_numDoFs);
 	SpMat M(m_numDoFs, m_numDoFs);
 
-	std::vector<T> derivPos = std::vector<T>();
-	std::vector<T> derivVel = std::vector<T>();
-	std::vector<T> masses = std::vector<T>();
+	_derivPos.clear();
+	_derivVel.clear();
+	_masses.clear();
 	std::vector<T> dFdpTriplets = std::vector<T>();
 
 	std::vector<bool> fixedIndices(m_numDoFs);
@@ -609,8 +616,8 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 	{
 		SimObjects[i]->SetPosition(&x);
 		SimObjects[i]->SetVelocity(&v);
-		SimObjects[i]->GetMass(&masses);
-		SimObjects[i]->GetForceJacobian(&derivPos, &derivVel, Colliders);
+		SimObjects[i]->GetMass(&_masses);
+		SimObjects[i]->GetForceJacobian(&_derivPos, &_derivVel, Colliders);
 		SimObjects[i]->GetFixedIndices(&fixedIndices);
 
 		SimObjects[i]->GetdFdp(&dFdp);
@@ -618,9 +625,9 @@ PhysicsManager::BackwardStepInfo PhysicsManager::Backward(Eigen::VectorXd x, Eig
 		nSprings += SimObjects[i]->nSprings;
 	}
 
-	dFdx.setFromTriplets(derivPos.begin(), derivPos.end(), [](const double& a, const double& b) { return a + b; });
-	dFdv.setFromTriplets(derivVel.begin(), derivVel.end(), [](const double& a, const double& b) { return a + b; });
-	M.setFromTriplets(masses.begin(), masses.end());
+	dFdx.setFromTriplets(_derivPos.begin(), _derivPos.end(), [](const double& a, const double& b) { return a + b; });
+	dFdv.setFromTriplets(_derivVel.begin(), _derivVel.end(), [](const double& a, const double& b) { return a + b; });
+	M.setFromTriplets(_masses.begin(), _masses.end());
 
 	SpMat A = M - (h * dFdv) + ((-h * h) * dFdx);
 	Eigen::VectorXd b = (h * dGdx1) + dGdv1;

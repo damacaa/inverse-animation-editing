@@ -2,6 +2,7 @@
 #include <pybind11/eigen.h>
 #include <pybind11/stl.h>
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -14,21 +15,22 @@ public:
 
 struct BackwardResult {
 public:
-	Eigen::VectorXd dGdp;//Tantos como parametros haya
+	Eigen::VectorXd dGdp;
 	Eigen::VectorXd dGdx, dGdv;
 };
 
 namespace {
 	std::string _info;
+	std::unique_ptr<PhysicsManager> _pm;
 }
 
 ForwardResult Initialize(std::string info, std::string settings)
 {
 	_info = info;
-	PhysicsManager physicsManager = PhysicsManager(_info);
-	physicsManager.Start();
+	_pm = std::make_unique<PhysicsManager>(info);
+	_pm->Start();
 
-	auto sinfo = physicsManager.GetInitialState();
+	auto sinfo = _pm->GetInitialState();
 
 	ForwardResult result;
 	result.x = sinfo.x;
@@ -39,11 +41,9 @@ ForwardResult Initialize(std::string info, std::string settings)
 
 ForwardResult Forward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd parameters, std::string settings, float h, int forwardSubSteps)
 {
-	PhysicsManager physicsManager = PhysicsManager(_info);
-	physicsManager.Start();
-	physicsManager.SetParam(parameters, settings);
+	_pm->SetParam(parameters, settings);
 
-	auto info = physicsManager.Forward(x, v, h, forwardSubSteps);
+	auto info = _pm->Forward(x, v, h, forwardSubSteps);
 
 	ForwardResult result;
 	result.x = info.x;
@@ -54,32 +54,27 @@ ForwardResult Forward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd para
 
 std::vector<ForwardResult> ForwardLoop(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd parameters, std::string settings, float h, int iter, int forwardSubSteps)
 {
-	PhysicsManager physicsManager = PhysicsManager(_info);
-	physicsManager.Start();
-	physicsManager.SetParam(parameters, settings);
+	_pm->SetParam(parameters, settings);
 
-	std::vector<ForwardResult> result = std::vector<ForwardResult>(iter);
+	std::vector<ForwardResult> result(iter);
 
-	PhysicsManager::SimulationInfo info = PhysicsManager::SimulationInfo(x, v);
+	PhysicsManager::SimulationInfo info(x, v);
 	for (size_t i = 0; i < iter; i++)
 	{
-		info = physicsManager.Forward(info.x, info.v, h, forwardSubSteps);
+		info = _pm->Forward(info.x, info.v, h, forwardSubSteps);
 
 		result[i].x = info.x;
 		result[i].v = info.v;
 	}
-
 
 	return result;
 }
 
 BackwardResult Backward(Eigen::VectorXd x, Eigen::VectorXd v, Eigen::VectorXd x1, Eigen::VectorXd v1, Eigen::VectorXd parameters, std::string settings, Eigen::VectorXd dGdx1, Eigen::VectorXd dGdv1, float h)
 {
-	PhysicsManager physicsManager = PhysicsManager(_info);
-	physicsManager.Start();
-	physicsManager.SetParam(parameters, settings);
+	_pm->SetParam(parameters, settings);
 
-	auto info = physicsManager.Backward(x, v, x1, v1, dGdx1, dGdv1, h, settings);
+	auto info = _pm->Backward(x, v, x1, v1, dGdx1, dGdv1, h, settings);
 
 	BackwardResult result;
 	result.dGdp = info.dGdp;
