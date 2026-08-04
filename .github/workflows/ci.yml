@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # Build the core engine + unit tests on all three OSes
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DDPE_BUILD_TESTS=ON
+          -DDPE_BUILD_PYTHON=OFF
+          -DDPE_BUILD_UNITY_BRIDGE=OFF
+          -DDPE_BUILD_VIEWER=OFF
+
+      - name: Build
+        run: cmake --build build --config Release -j
+
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure
+
+  # Build the Python module and run an end-to-end simulation smoke test
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python deps
+        run: pip install numpy
+
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DDPE_BUILD_TESTS=OFF
+          -DDPE_BUILD_PYTHON=ON
+          -DDPE_BUILD_UNITY_BRIDGE=OFF
+          -DDPE_BUILD_VIEWER=OFF
+
+      - name: Build
+        run: cmake --build build --config Release -j
+
+      - name: Smoke test
+        run: python .github/scripts/smoke_test.py

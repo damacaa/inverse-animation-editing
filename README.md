@@ -1,4 +1,7 @@
 # Framework for inverse animation editing based on differentiable simulation
+
+[![CI](https://github.com/damacaa/inverse-animation-editing/actions/workflows/ci.yml/badge.svg)](https://github.com/damacaa/inverse-animation-editing/actions/workflows/ci.yml)
+
 This is my Bachelor's thesis. The aim was to develop a tool for Unity which allowed the estimation of various simulation parameters within Unity.
 It includes a differentiable physics engine built from scratch in C++, a Python module that does the optimizing using backpropagation to calculate the gradient of the loss function and a Unity project to display the results.
 
